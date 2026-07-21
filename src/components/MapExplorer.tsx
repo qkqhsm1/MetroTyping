@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { LINES } from '../data/lines'
 
 const seoulLines = LINES.filter(line => line.id !== 'yamanote')
-const unsupported = ['서울 3호선', '서울 4호선', '서울 5호선', '서울 6호선', '서울 7호선', '서울 8호선', '서울 9호선']
+const unsupported = ['서울 4호선', '서울 5호선', '서울 6호선', '서울 7호선', '서울 8호선', '서울 9호선']
 const yamanote = LINES.find(line => line.id === 'yamanote')!
 const asset=(path:string)=>`${import.meta.env.BASE_URL}assets/${path}`
 const hitPaths = [
   { id:'seoul-1', name:'서울 1호선', color:'#0052A4' },
   { id:'seoul-2', name:'서울 2호선', color:'#00A84D' },
+  { id:'seoul-3', name:'서울 3호선', color:'#EF7C1C' },
+  { id:'suin-bundang', name:'수인·분당선', color:'#F5A200' },
   { id:'incheon-1', name:'인천 1호선', color:'#7CA8D5' },
   { id:'incheon-2', name:'인천 2호선', color:'#ED8B00' },
   { id:'arex', name:'공항철도', color:'#0090D2' },

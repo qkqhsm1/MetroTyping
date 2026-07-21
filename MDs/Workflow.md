@@ -50,7 +50,7 @@ Build a polished Korean subway typing game for six lines with route and random m
 
 ### In progress
 
-- Executing the approved route-expansion plan; Task 4 now connects quick/custom starts through one transition and fixes Pages-safe home navigation.
+- Executing the approved route-expansion plan; Task 5 now adds official overview overlays and focused gameplay geometry for Seoul Line 3 and Suin·Bundang.
 
 ### Next
 
@@ -60,6 +60,7 @@ Build a polished Korean subway typing game for six lines with route and random m
 
 ## Verification
 
+- Task 5 isolated the official PDF-vector color profiles to 30 Seoul Line 3 paths and 41 Suin·Bundang paths; 1440 px overlay captures follow the raster routes while preserving 1.2× highlight thickness, 150 ms intent delay, and base-map dimming.
 - `npm run check` passed on 2026-07-21 after Task 4: ESLint, 38 client tests, 2 server tests, strict TypeScript, and the production Vite build.
 
 - On 2026-07-21, Korail's current operating material confirmed Line 1 `연천↔인천`, Line 3 `대화↔삼송`, and Suin·Bundang `청량리/왕십리↔죽전↔고색↔오이도↔인천`; the official Seoul map confirmed Line 3's physical `오금` endpoint, and Seoul's public timetable sample returned 191 `구파발` destination rows. Review extended Line 1 through `연천→전곡→청산→소요산` and mapped each terminus to its claim-matching primary source.
@@ -77,6 +78,7 @@ Build a polished Korean subway typing game for six lines with route and random m
 
 ## Mistakes
 
+- 2026-07-21 | Task 5 runtime tests passed but strict TypeScript rejected geometry-test coordinate arrays | New test parsers inferred variable-length `number[]` instead of two-coordinate tuples | Typed parsed paths and sampled station coordinates as the existing `Point` tuple | Run the strict typecheck with focused tests before the full gate when adding numerical test helpers.
 - 2026-07-21 | Seoul 1 omitted the Yeoncheon extension and Seoul 3 assigned one timetable-catalog URL to every candidate terminus without a reproduced row query | Reused stale endpoint data and treated API availability as endpoint evidence | Added `연천→전곡→청산`, mapped each endpoint to the primary source that names it, and restored `구파발` only after the public sample returned destination rows | Tests must assert current leaf endpoints and each terminus's non-empty, claim-matching source.
 - 2026-07-21 | Initial inspection emitted missing-path and Git errors | Assumed an optional Codex reference path and Git repository existed | Confirmed the workspace is empty and not a Git repository | Test paths and repository state before reading or running Git commands.
 - 2026-07-21 | First Vitest suite reported `test is not defined` | Test globals were not enabled or imported | Imported `test` and `expect` explicitly | Keep Vitest tests explicit unless `globals: true` is deliberately configured.

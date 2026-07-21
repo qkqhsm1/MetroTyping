@@ -23,6 +23,20 @@ test('selects supported lines and explains unsupported lines', () => {
   expect(screen.getByText('현재 공사 중인 노선입니다.')).toBeInTheDocument()
 })
 
+test.each([
+  ['서울 3호선', 'seoul-3'],
+  ['수인·분당선', 'suin-bundang'],
+])('selects %s from its official map geometry', (name, id) => {
+  const onSelect = vi.fn()
+  render(<MapExplorer onSelect={onSelect} />)
+
+  const mapLine = screen.getByRole('button', { name: `지도에서 ${name} 선택` })
+  expect(mapLine.querySelector('.line-highlight')).toHaveAttribute('href', expect.stringContaining(`#${id}`))
+  fireEvent.click(mapLine)
+
+  expect(onSelect).toHaveBeenCalledWith(id)
+})
+
 test('links dock hover to the matching map highlight', () => {
   vi.useFakeTimers()
   render(<MapExplorer onSelect={vi.fn()} />)

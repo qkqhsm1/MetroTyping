@@ -1,9 +1,12 @@
-import { readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 
-const source = readFileSync('.artifacts/seoul-map.svg', 'utf8')
+const sourcePath = existsSync('.artifacts/seoul-map.svg') ? '.artifacts/seoul-map.svg' : '../../.artifacts/seoul-map.svg'
+const source = readFileSync(sourcePath, 'utf8')
 const lines = {
   'seoul-1': '13.975525%, 32.061768%, 55.384827%',
   'seoul-2': '13.000488%, 68.972778%, 27.290344%',
+  'seoul-3': '94.703674%, 31.959534%, 10.5896%',
+  'suin-bundang': '91.685486%, 58.009338%, 9.550476%',
   'incheon-1': '51.05896%, 69.056702%, 88.70697%',
   'incheon-2': '96.755981%, 56.323242%, 34.22699%',
   arex: '10.438538%, 41.053772%, 59.489441%',
