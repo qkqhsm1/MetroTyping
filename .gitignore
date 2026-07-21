@@ -1,4 +1,5 @@
 .superpowers/
+.worktrees/
 .artifacts/
 node_modules/
 dist/
