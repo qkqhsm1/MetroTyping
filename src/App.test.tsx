@@ -1,6 +1,19 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import { expect, test } from 'vitest'
+import { afterEach, expect, test, vi } from 'vitest'
 import App from './App'
+import { playSound } from './audio/sounds'
+
+vi.mock('./audio/sounds',()=>({playSound:vi.fn()}))
+afterEach(()=>vi.mocked(playSound).mockClear())
+
+test('passes the header mute state into gameplay sounds', () => {
+  render(<App />)
+  fireEvent.click(screen.getByRole('button',{name:'사운드 끄기'}))
+  fireEvent.click(screen.getByRole('button',{name:'서울 1호선 선택'}))
+  fireEvent.click(screen.getByRole('button',{name:'인천에서 신창까지 바로 시작'}))
+  fireEvent.change(screen.getByRole('textbox'),{target:{value:'인천'}})
+  expect(playSound).toHaveBeenCalledWith('key',false)
+})
 
 test('shows the product and city map entry', () => {
   render(<App />)

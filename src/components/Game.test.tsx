@@ -1,8 +1,33 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
 import Game from './Game'
+import { playSound } from '../audio/sounds'
 
-afterEach(() => vi.useRealTimers())
+vi.mock('../audio/sounds',()=>({playSound:vi.fn()}))
+
+afterEach(() => {vi.useRealTimers();vi.mocked(playSound).mockClear()})
+
+test('routes key, error, correct, and complete sounds through gameplay and honors sound=false', () => {
+  const inputFor=()=>screen.getByRole('textbox')
+  render(<Game stations={['신도림','문래']} color="#00A84D" onExit={() => {}} />)
+  fireEvent.change(inputFor(),{target:{value:'틀림'}})
+  fireEvent.keyDown(inputFor(),{key:'Enter',isComposing:false})
+  fireEvent.change(inputFor(),{target:{value:'신도림'}})
+  fireEvent.keyDown(inputFor(),{key:'Enter',isComposing:false})
+  fireEvent.change(inputFor(),{target:{value:'문래'}})
+  fireEvent.keyDown(inputFor(),{key:'Enter',isComposing:false})
+  expect(vi.mocked(playSound).mock.calls).toEqual([
+    ['key',true],['error',true],['key',true],['correct',true],['key',true],['complete',true],
+  ])
+
+  vi.mocked(playSound).mockClear()
+  render(<Game stations={['신도림']} color="#00A84D" sound={false} onExit={() => {}} />)
+  const muted=screen.getAllByRole('textbox').at(-1)!
+  fireEvent.change(muted,{target:{value:'신도림'}})
+  fireEvent.keyDown(muted,{key:'Enter',isComposing:false})
+  expect(playSound).toHaveBeenCalledWith('key',false)
+  expect(playSound).toHaveBeenCalledWith('complete',false)
+})
 
 test('does not submit Enter during Korean composition', () => {
   render(<Game stations={['신도림', '문래']} color="#00A84D" onExit={() => {}} />)
