@@ -42,10 +42,11 @@ describe('route data', () => {
       expect(new Set(stations).size).toBe(stations.length)
     }
     expect(getLine('seoul-3').serviceTermini?.map(({ station }) => station)).toEqual([
-      '대화', '삼송', '오금',
+      '대화', '구파발', '삼송', '오금',
     ])
     expect(getLine('seoul-3').serviceTermini).toEqual([
       { station: '대화', source: 'https://info.korail.com/info/selectBbsNttView.do?bbsNo=199&key=911&nttNo=23761' },
+      { station: '구파발', source: 'https://data.seoul.go.kr/dataList/OA-101/A/1/datasetView.do' },
       { station: '삼송', source: 'https://info.korail.com/info/selectBbsNttView.do?bbsNo=199&key=911&nttNo=23761' },
       { station: '오금', source: 'https://data.seoul.go.kr/dataList/OA-22535/F/1/datasetView.do' },
     ])
