@@ -48,17 +48,17 @@ Build a polished Korean subway typing game for six lines with route and random m
 
 ### In progress
 
-- GitHub Pages publication; local repository, commit, remote, base path, and deployment workflow are ready, but the remote GitHub repository does not exist yet.
+- Final responsive visual QA and Firebase leaderboard client presentation.
 
 ### Next
 
-- Create the empty `qkqhsm1/MetroTyping` repository, push `main`, and enable GitHub Actions as the Pages source.
 - Connect the leaderboard read model to the UI after a Firebase project/config is supplied.
 - Re-run official station-order verification before freezing production data.
 
 ## Verification
 
-- `npm run check` passed on 2026-07-21: ESLint, 28 client tests, 2 server tests, strict TypeScript, and Vite production build.
+- `npm run check` passed on 2026-07-21: ESLint, 29 client tests, 2 server tests, strict TypeScript, and Vite production build.
+- GitHub Pages deployment succeeded on 2026-07-21 and `https://qkqhsm1.github.io/MetroTyping/` returned HTTP 200.
 - Numerical geometry tests confirm sampled station/train points remain on the declared route polyline.
 - Captured and visually inspected the home explorer at 360, 768, and 1440 output widths; the official map remains sharp and the line dock stays horizontally scrollable.
 - The official and user-provided PDF/JPG copies were hash-identical; the web asset uses that same high-resolution original.
