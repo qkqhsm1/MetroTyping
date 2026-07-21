@@ -41,7 +41,7 @@ export default function App() {
         {mode==='route'&&<><QuickRoutes pairs={getQuickRoutePairs(line.id)} color={line.color} onStart={startRoute}/><div className="trip-form"><StationSelect label="출발역" value={from} options={stations} onChange={value=>{setFrom(value);setRouteOverride(null)}}/><StationSelect label="도착역" value={to} options={stations} onChange={value=>{setTo(value);setRouteOverride(null)}}/></div>{line.loop&&<div className="direction"><button className={direction==='clockwise'?'active':''} onClick={()=>{setDirection('clockwise');setRouteOverride(null)}}>{line.id==='yamanote'?'외선순환':'시계 방향'}</button><button className={direction==='counterclockwise'?'active':''} onClick={()=>{setDirection('counterclockwise');setRouteOverride(null)}}>{line.id==='yamanote'?'내선순환':'반시계 방향'}</button></div>}</>}
         <button className="primary" style={{background:line.color}} disabled={mode==='route'&&(!from||!to||from===to)} onClick={()=>{if(mode==='random'){setRouteOverride(null);setPlaying(true)}else startRoute()}}>운행 시작 →</button>
       </section> : <MapExplorer onSelect={id=>{setLineId(id);setMode('route');setFrom('');setTo('');setRouteOverride(null)}} />}
-      <footer><span>SEOUL · INCHEON · TOKYO</span><span>6 LINES</span></footer>
+      <footer><span>SEOUL · INCHEON · TOKYO</span><span>8 LINES</span></footer>
       {profileOpen&&<ProfilePanel onSave={setNickname} onClose={()=>setProfileOpen(false)}/>} 
     </main>
   )

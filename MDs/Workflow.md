@@ -2,7 +2,7 @@
 
 ## Goal
 
-Build a polished Korean subway typing game for six lines with route and random modes, animated SVG trains, sound, anonymous nickname accounts, and online rankings.
+Build a polished Korean subway typing game for eight lines with route and random modes, animated SVG trains, sound, anonymous nickname accounts, and online rankings.
 
 ## Decisions
 

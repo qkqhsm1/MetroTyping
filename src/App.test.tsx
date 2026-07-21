@@ -20,6 +20,7 @@ test('shows the product and city map entry', () => {
   expect(screen.getByRole('link', { name: 'METRO/TYPE' })).toHaveAttribute('href', import.meta.env.BASE_URL)
   expect(screen.getByRole('button', { name: '서울' })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: '도쿄' })).toBeInTheDocument()
+  expect(screen.getByText('8 LINES')).toBeInTheDocument()
 })
 
 test('starts a quick route by asking for its departure station first', () => {
