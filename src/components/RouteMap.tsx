@@ -34,7 +34,7 @@ export default function RouteMap({ lineId,progress,color,stations,showAllLabels=
           <rect x="-14" y="-8" width="10" height="8" rx="2" fill="#20252a" /><rect x="4" y="-8" width="10" height="8" rx="2" fill="#20252a" />
           <path d="M-17 7 H17" stroke={color} strokeWidth="5" />
         </g>
-        <path className="train-light" d="M -2 -4 L 7 -4" />
+        <path className="train-light" d="M -2 -4 L 7 -4" stroke={color} strokeWidth="3" strokeLinecap="round" />
       </g>
     </g>}
   </svg>

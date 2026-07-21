@@ -38,6 +38,9 @@ test('renders train visibility and entrance state from props', () => {
   expect(container.querySelector('.train')).not.toBeInTheDocument()
   rerender(<RouteMap {...props} trainVisible trainEntering />)
   expect(container.querySelector('.train')).toHaveClass('train-entering')
+  expect(container.querySelector('.train-light')).toHaveAttribute('stroke','#00A84D')
+  expect(container.querySelector('.train-light')).toHaveAttribute('stroke-width','3')
+  expect(container.querySelector('.train-light')).toHaveAttribute('stroke-linecap','round')
 })
 
 test.each(['seoul-3', 'suin-bundang'])('%s uses distinct focused geometry with sampled stations on its path', lineId => {

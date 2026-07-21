@@ -56,7 +56,7 @@ test('asks for the departure station first, then advances to the next station', 
 
 test('reveals the train after departure without blocking the next answer', () => {
   vi.useFakeTimers()
-  const { container }=render(<Game stations={['신도림','문래','영등포구청']} color="#00A84D" onExit={() => {}} />)
+  const { container,unmount }=render(<Game stations={['신도림','문래','영등포구청']} color="#00A84D" onExit={() => {}} />)
   const input=screen.getByRole('textbox')
 
   expect(container.querySelector('.train')).not.toBeInTheDocument()
@@ -68,6 +68,20 @@ test('reveals the train after departure without blocking the next answer', () =>
   fireEvent.keyDown(input,{key:'Enter',isComposing:false})
   expect(screen.getByRole('heading',{name:'영등포구청'})).toBeInTheDocument()
   expect(container.querySelector('.train')).toBeInTheDocument()
+  act(()=>vi.advanceTimersByTime(259))
+  expect(container.querySelector('.train')).toHaveClass('train-entering')
+  act(()=>vi.advanceTimersByTime(1))
+  expect(container.querySelector('.train')).not.toHaveClass('train-entering')
+  unmount()
+
+  const error=vi.spyOn(console,'error').mockImplementation(()=>{})
+  const pending=render(<Game stations={['신도림','문래']} color="#00A84D" onExit={() => {}} />)
+  fireEvent.change(screen.getByRole('textbox'),{target:{value:'신도림'}})
+  fireEvent.keyDown(screen.getByRole('textbox'),{key:'Enter',isComposing:false})
+  pending.unmount()
+  act(()=>vi.advanceTimersByTime(260))
+  expect(error).not.toHaveBeenCalled()
+  error.mockRestore()
 })
 
 test('starts Korean keystrokes per minute at the first printable key', () => {

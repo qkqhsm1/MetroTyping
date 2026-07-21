@@ -27,3 +27,11 @@
 ## Concerns
 
 - None.
+
+## Review fix
+
+- Fix: `.train-light` now has `stroke={color}`, `strokeWidth="3"`, and `strokeLinecap="round"`, so the open SVG path is visible without changing its coordinates.
+- RED: `npm test -- src/components/Game.test.tsx src/components/RouteMap.test.tsx` — 1 failed, 14 passed; the light assertion received `stroke=null`.
+- GREEN: `npm test -- src/components/Game.test.tsx src/components/RouteMap.test.tsx` — 2 test files passed, 15 tests passed.
+- Timer coverage: `.train-entering` remains at 259 ms, is removed at 260 ms, and unmounting with the timer pending produces no `console.error` after timers advance.
+- Full verification: `npm run check` — ESLint passed; 9 client files/44 tests passed; 2 server tests passed; strict TypeScript passed; Vite built 40 modules successfully in 131 ms.
