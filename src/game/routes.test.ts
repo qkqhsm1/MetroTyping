@@ -35,13 +35,19 @@ describe('route data', () => {
     for (const line of LINES.filter(line => !line.loop)) {
       expect(line.serviceTermini?.length).toBeGreaterThan(1)
       expect(line.serviceTermini?.every(({ station }) => line.sequences.flat().includes(station))).toBe(true)
+      expect(line.serviceTermini?.every(({ source }) => source.trim().length > 0)).toBe(true)
     }
     for (const id of ['seoul-3', 'suin-bundang']) {
       const stations = getLine(id).sequences.flat()
       expect(new Set(stations).size).toBe(stations.length)
     }
     expect(getLine('seoul-3').serviceTermini?.map(({ station }) => station)).toEqual([
-      '대화', '구파발', '삼송', '오금',
+      '대화', '삼송', '오금',
+    ])
+    expect(getLine('seoul-3').serviceTermini).toEqual([
+      { station: '대화', source: 'https://info.korail.com/info/selectBbsNttView.do?bbsNo=199&key=911&nttNo=23761' },
+      { station: '삼송', source: 'https://info.korail.com/info/selectBbsNttView.do?bbsNo=199&key=911&nttNo=23761' },
+      { station: '오금', source: 'https://data.seoul.go.kr/dataList/OA-22535/F/1/datasetView.do' },
     ])
     expect(getLine('suin-bundang').serviceTermini?.map(({ station }) => station)).toEqual([
       '청량리', '왕십리', '죽전', '고색', '오이도', '인천',
@@ -52,6 +58,14 @@ describe('route data', () => {
     expect(getLine('yamanote').loopPreset).toMatchObject({
       origin: '도쿄', directions: [{ value: 'outer' }, { value: 'inner' }],
     })
+  })
+
+  test('includes the current Line 1 northern extension and endpoint', () => {
+    expect(getLine('seoul-1').sequences[0]?.slice(0, 4)).toEqual(['연천', '전곡', '청산', '소요산'])
+    expect(getLine('seoul-1').serviceTermini?.map(({ station }) => station)).toEqual(['연천', '인천', '신창'])
+    expect(getLine('seoul-1').serviceTermini?.every(({ source }) =>
+      source === 'https://info.korail.com/info/selectBbsNttView.do?bbsNo=199&key=911&nttNo=23761',
+    )).toBe(true)
   })
 
   test('wraps Seoul line 2 in the selected direction', () => {

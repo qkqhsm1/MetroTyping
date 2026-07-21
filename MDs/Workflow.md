@@ -60,8 +60,8 @@ Build a polished Korean subway typing game for six lines with route and random m
 
 ## Verification
 
-- On 2026-07-21, Korail's current operating-status page and 2024-11-18 operating notice confirmed Suin·Bundang endpoints `청량리/왕십리↔죽전↔고색↔오이도↔인천` and Line 3 `대화↔삼송`; Seoul Data Hub's official Seoul Metro timetable API catalog confirmed station-timetable coverage for the Seoul-operated Line 3 segment and the bundled official map confirmed full station order/colors. Direct row-level API access requires a key, so `구파발`/`오금` were retained from the candidate timetable set with that access limitation recorded; no primary source contradicted them.
-- `npm run check` passed on 2026-07-21 after Task 1: ESLint, 31 client tests, 2 server tests, strict TypeScript, and the production Vite build.
+- On 2026-07-21, Korail's current operating material confirmed Line 1 `연천↔인천`, Line 3 `대화↔삼송`, and Suin·Bundang `청량리/왕십리↔죽전↔고색↔오이도↔인천`; the official Seoul map confirmed Line 3's physical `오금` endpoint. Review removed unsupported `구파발` quick-route metadata and extended the Line 1 sequence through `연천→전곡→청산→소요산`.
+- `npm run check` passed on 2026-07-21 after Task 1 review fixes: ESLint, 32 client tests, 2 server tests, strict TypeScript, and the production Vite build.
 - The approved design was converted into a seven-task TDD implementation plan; placeholder scan and `git diff --check` passed on 2026-07-21.
 - `npm run check` passed on 2026-07-21: ESLint, 29 client tests, 2 server tests, strict TypeScript, and Vite production build.
 - GitHub Pages deployment succeeded on 2026-07-21 and `https://qkqhsm1.github.io/MetroTyping/` returned HTTP 200.
@@ -75,6 +75,7 @@ Build a polished Korean subway typing game for six lines with route and random m
 
 ## Mistakes
 
+- 2026-07-21 | Seoul 1 omitted the Yeoncheon extension and Seoul 3 assigned one inaccessible timetable-catalog URL to every candidate terminus | Reused stale endpoint data and treated API availability as endpoint evidence | Added `연천→전곡→청산`, mapped each verified endpoint to the primary source that names it, and removed unsupported `구파발` quick-route metadata | Tests must assert current leaf endpoints and each terminus's non-empty, claim-matching source.
 - 2026-07-21 | Initial inspection emitted missing-path and Git errors | Assumed an optional Codex reference path and Git repository existed | Confirmed the workspace is empty and not a Git repository | Test paths and repository state before reading or running Git commands.
 - 2026-07-21 | First Vitest suite reported `test is not defined` | Test globals were not enabled or imported | Imported `test` and `expect` explicitly | Keep Vitest tests explicit unless `globals: true` is deliberately configured.
 - 2026-07-21 | Route test could not parse the BFS queue declaration | A type annotation was written inside a comma-separated declaration | Split the graph and typed queue into separate declarations | Run TypeScript parsing immediately after each new logic module.
