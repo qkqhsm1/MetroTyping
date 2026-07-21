@@ -1,0 +1,10 @@
+.superpowers/
+.artifacts/
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+SeoulMetro.png
+지하철_국문노선도_20250929.jpg
+지하철_국문노선도_20250929.pdf
