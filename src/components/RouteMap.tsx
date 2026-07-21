@@ -11,7 +11,7 @@ const routes: Record<string, Point[]> = {
   yamanote: [[150,255],[70,210],[70,80],[150,35],[450,35],[530,90],[530,210],[460,255]],
 }
 
-export default function RouteMap({ lineId,progress,color,stations,showAllLabels=true,targetIndex }:{ lineId:string; progress:number; color:string; stations:string[]; showAllLabels?:boolean; targetIndex?:number }) {
+export default function RouteMap({ lineId,progress,color,stations,showAllLabels=true,targetIndex,trainVisible=true,trainEntering=false }:{ lineId:string; progress:number; color:string; stations:string[]; showAllLabels?:boolean; targetIndex?:number; trainVisible?:boolean; trainEntering?:boolean }) {
   const route = routes[lineId]
   if (!route) throw new Error(`Missing route geometry: ${lineId}`)
   const train = pointAt(route, progress)
@@ -27,12 +27,15 @@ export default function RouteMap({ lineId,progress,color,stations,showAllLabels=
       const isTarget=index===targetIndex
       return <g key={`${station}-${index}`} data-target={isTarget||undefined}>{isTarget&&<circle className="target-ring" cx={point.x} cy={point.y} r="14" fill="none" stroke={color} strokeWidth="3" />}<circle cx={point.x} cy={point.y} r={isTarget?9:7} fill="white" stroke={index/(stations.length-1)<=progress||isTarget?color:'#b9bab5'} strokeWidth="5" />{showLabel&&<text className={isTarget?'target-label':undefined} x={point.x} y={labelY} textAnchor="middle"><tspan x={point.x}>{station.slice(0,split)}</tspan>{split<station.length&&<tspan x={point.x} dy="10">{station.slice(split)}</tspan>}</text>}</g>
     })}
-    <g className="train" style={{transform:`translate(${train.x}px,${train.y}px) rotate(${train.angle}deg)`}}>
-      <g className="train-body" transform="translate(-22 0)">
-        <rect x="-22" y="-14" width="44" height="28" rx="9" fill="white" stroke="#111" strokeWidth="3" />
-        <rect x="-14" y="-8" width="10" height="8" rx="2" fill="#20252a" /><rect x="4" y="-8" width="10" height="8" rx="2" fill="#20252a" />
-        <path d="M-17 7 H17" stroke={color} strokeWidth="5" />
+    {trainVisible&&<g className={`train${trainEntering?' train-entering':''}`} style={{transform:`translate(${train.x}px,${train.y}px) rotate(${train.angle}deg)`}}>
+      <g className="train-entrance-shell">
+        <g className="train-body" transform="translate(-22 0)">
+          <rect x="-22" y="-14" width="44" height="28" rx="9" fill="white" stroke="#111" strokeWidth="3" />
+          <rect x="-14" y="-8" width="10" height="8" rx="2" fill="#20252a" /><rect x="4" y="-8" width="10" height="8" rx="2" fill="#20252a" />
+          <path d="M-17 7 H17" stroke={color} strokeWidth="5" />
+        </g>
+        <path className="train-light" d="M -2 -4 L 7 -4" />
       </g>
-    </g>
+    </g>}
   </svg>
 }

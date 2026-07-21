@@ -24,6 +24,7 @@ Build a polished Korean subway typing game for six lines with route and random m
 
 ### Done
 
+- Hid the route train until the departure station is typed, then added a non-blocking 260 ms SVG entrance that preserves the front-edge path anchor and accepts rapid answers.
 - Inspected the empty workspace and reference website flow.
 - Completed and approved product brainstorming, architecture, gameplay, animation, failure handling, and verification design.
 - Researched official web platform, accessibility, Firebase, and rail-operator sources.
@@ -50,7 +51,7 @@ Build a polished Korean subway typing game for six lines with route and random m
 
 ### In progress
 
-- Executing the approved route-expansion plan; Task 5 now adds official overview overlays and focused gameplay geometry for Seoul Line 3 and Suin·Bundang.
+- Executing the approved route-expansion plan; Task 6 is complete.
 
 ### Next
 
@@ -60,6 +61,7 @@ Build a polished Korean subway typing game for six lines with route and random m
 
 ## Verification
 
+- Task 6 RED: focused Game/RouteMap tests failed because the train rendered unconditionally; GREEN: 15 focused tests passed after conditional SVG rendering and presentation-only state. `npm run check` passed with 44 client tests, 2 server tests, strict TypeScript, and the production build.
 - Task 5 isolated the official PDF-vector color profiles to 30 Seoul Line 3 paths and 41 Suin·Bundang paths; 1440 px overlay captures follow the raster routes while preserving 1.2× highlight thickness, 150 ms intent delay, and base-map dimming.
 - `npm run check` passed on 2026-07-21 after Task 4: ESLint, 38 client tests, 2 server tests, strict TypeScript, and the production Vite build.
 
@@ -78,6 +80,7 @@ Build a polished Korean subway typing game for six lines with route and random m
 
 ## Mistakes
 
+- 2026-07-21 | Task 6 tests passed but strict TypeScript rejected an argumentless timer ref | Assumed React's `useRef` still allowed an omitted initial value | Initialized the timer ref explicitly with `undefined` | Run strict typecheck immediately after adding React refs.
 - 2026-07-21 | Task 5 runtime tests passed but strict TypeScript rejected geometry-test coordinate arrays | New test parsers inferred variable-length `number[]` instead of two-coordinate tuples | Typed parsed paths and sampled station coordinates as the existing `Point` tuple | Run the strict typecheck with focused tests before the full gate when adding numerical test helpers.
 - 2026-07-21 | Seoul 1 omitted the Yeoncheon extension and Seoul 3 assigned one timetable-catalog URL to every candidate terminus without a reproduced row query | Reused stale endpoint data and treated API availability as endpoint evidence | Added `연천→전곡→청산`, mapped each endpoint to the primary source that names it, and restored `구파발` only after the public sample returned destination rows | Tests must assert current leaf endpoints and each terminus's non-empty, claim-matching source.
 - 2026-07-21 | Initial inspection emitted missing-path and Git errors | Assumed an optional Codex reference path and Git repository existed | Confirmed the workspace is empty and not a Git repository | Test paths and repository state before reading or running Git commands.

@@ -54,6 +54,22 @@ test('asks for the departure station first, then advances to the next station', 
   expect(document.querySelector('[data-target="true"]')?.textContent).toContain('문래')
 })
 
+test('reveals the train after departure without blocking the next answer', () => {
+  vi.useFakeTimers()
+  const { container }=render(<Game stations={['신도림','문래','영등포구청']} color="#00A84D" onExit={() => {}} />)
+  const input=screen.getByRole('textbox')
+
+  expect(container.querySelector('.train')).not.toBeInTheDocument()
+  fireEvent.change(input,{target:{value:'신도림'}})
+  fireEvent.keyDown(input,{key:'Enter',isComposing:false})
+  expect(container.querySelector('.train')).toHaveClass('train-entering')
+
+  fireEvent.change(input,{target:{value:'문래'}})
+  fireEvent.keyDown(input,{key:'Enter',isComposing:false})
+  expect(screen.getByRole('heading',{name:'영등포구청'})).toBeInTheDocument()
+  expect(container.querySelector('.train')).toBeInTheDocument()
+})
+
 test('starts Korean keystrokes per minute at the first printable key', () => {
   vi.useFakeTimers()
   render(<Game stations={['신도림', '문래']} color="#00A84D" onExit={() => {}} />)

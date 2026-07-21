@@ -32,6 +32,14 @@ test('anchors the front of the train at the current station', () => {
   expect(container.querySelector('.train-body')).toHaveAttribute('transform', 'translate(-22 0)')
 })
 
+test('renders train visibility and entrance state from props', () => {
+  const props={lineId:'seoul-2',stations:['신도림','문래'],color:'#00A84D',progress:0}
+  const { container,rerender }=render(<RouteMap {...props} trainVisible={false} />)
+  expect(container.querySelector('.train')).not.toBeInTheDocument()
+  rerender(<RouteMap {...props} trainVisible trainEntering />)
+  expect(container.querySelector('.train')).toHaveClass('train-entering')
+})
+
 test.each(['seoul-3', 'suin-bundang'])('%s uses distinct focused geometry with sampled stations on its path', lineId => {
   const stations = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
   const { container, rerender } = render(<RouteMap lineId={lineId} stations={stations} color="#f58220" progress={0.5} />)
