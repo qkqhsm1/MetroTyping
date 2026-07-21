@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { getLine, LINES } from '../data/lines'
-import { dailyStations, getRoute } from './routes'
+import { dailyStations, getFullLoopRoute, getQuickRoutePairs, getRoute } from './routes'
 
 describe('route data', () => {
   test('contains the eight approved lines', () => {
@@ -83,6 +83,44 @@ describe('route data', () => {
   test('supports both Seoul line 1 branches from Guro', () => {
     expect(getRoute('seoul-1', '구로', '인천').stationIds.at(-1)).toBe('인천')
     expect(getRoute('seoul-1', '구로', '신창').stationIds.at(-1)).toBe('신창')
+  })
+
+  test('generates unique reachable quick-route pairs for every declared terminus', () => {
+    for (const line of LINES) {
+      const pairs = getQuickRoutePairs(line.id)
+      expect(new Set(pairs.map(pair => pair.id)).size).toBe(pairs.length)
+
+      for (const pair of pairs) {
+        expect(pair.routes).toHaveLength(2)
+        expect(pair.routes[0].direction).not.toBe(pair.routes[1].direction)
+        if (!line.loop) {
+          expect(pair.routes[0].from).toBe(pair.routes[1].to)
+          expect(pair.routes[0].to).toBe(pair.routes[1].from)
+        }
+        for (const route of pair.routes) {
+          expect(route.stationIds[0]).toBe(route.from)
+          expect(route.stationIds.at(-1)).toBe(route.to)
+          expect(route.stationIds.length).toBeGreaterThan(1)
+        }
+      }
+
+      for (const { station } of line.serviceTermini ?? []) {
+        expect(pairs.some(pair => pair.routes.some(route => route.from === station || route.to === station))).toBe(true)
+      }
+    }
+  })
+
+  test('builds exact one-lap routes without repeating the origin', () => {
+    const clockwise = getFullLoopRoute('seoul-2', '신도림', 'clockwise')
+    expect(clockwise.stationIds[0]).toBe('신도림')
+    expect(clockwise.stationIds).toHaveLength(getLine('seoul-2').sequences[0]!.length)
+    expect(clockwise.stationIds.at(-1)).not.toBe('신도림')
+    expect(new Set(clockwise.stationIds).size).toBe(clockwise.stationIds.length)
+
+    const outer = getFullLoopRoute('yamanote', '도쿄', 'outer')
+    expect(outer.stationIds[0]).toBe('도쿄')
+    expect(outer.stationIds.at(-1)).not.toBe('도쿄')
+    expect(() => getFullLoopRoute('seoul-1', '인천', 'clockwise')).toThrow('Not a loop line')
   })
 
   test('daily stations are deterministic without adjacent duplicates', () => {
