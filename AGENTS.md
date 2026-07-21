@@ -22,5 +22,6 @@
 - Keep Seoul Line 3 and Suin·Bundang service termini synchronized with current Seoul Metro and Korail timetable material.
 - Assert that station points and train motion remain on the declared SVG path.
 - Capture and inspect route renders at 360, 768, and 1440 CSS-pixel viewport widths before completion.
+- Verify Pages preview assets by MIME/content and rendered DOM under `/MetroTyping/`; HTTP 200 alone may be an HTML fallback.
 - Test rapid consecutive correct inputs, Korean IME Enter handling, reduced motion, audio mute, and mobile layout.
 - Use official railway sources again immediately before freezing route data.

@@ -51,15 +51,21 @@ Build a polished Korean subway typing game for six lines with route and random m
 
 ### In progress
 
-- Executing the approved route-expansion plan; Task 6 is complete.
+- None. Route-expansion implementation and local verification are complete; external publication remains intentionally unperformed.
 
 ### Next
 
-- Execute `docs/superpowers/plans/2026-07-21-departure-presets-new-lines.md` task by task with TDD checkpoints.
+- Obtain explicit user authorization before any push or GitHub Pages deployment.
 - Connect the leaderboard read model to the UI after a Firebase project/config is supplied.
 - Re-run official station-order verification before freezing production data.
 
 ## Verification
+
+- Task 7 final gate on 2026-07-21: `npm run check` passed ESLint, 45 client tests in 10 files, 2 server tests, strict `tsc -p tsconfig.json`, and the Vite production build. Focused checks `npm test -- --run src/components/Game.test.tsx` (9 tests) and `npm test -- --run src/audio/sounds.test.ts` (1 test) passed.
+- Route coverage exercises every declared service-terminus quick-route in both directions, Seoul 1 branches, exact Seoul 2 and Yamanote one-lap presets without repeated origins, Seoul 3 and Suin·Bundang frozen orders/custom routing, and Incheon 1/2 plus AREX endpoint pairs. Sources remain the bundled official Seoul map, Seoul Open Data datasets `OA-101` and `OA-22535`, and Korail operating notice `nttNo=23761`; production data must still be rechecked immediately before freezing.
+- Edge 150 production-preview captures at actual CSS viewports 360, 768, and 1440 covered Seoul 3/Suin·Bundang overview focus, Seoul 1 and Seoul 2 quick routes, Seoul 3 gameplay before/after departure, Suin·Bundang at a segment boundary, and Yamanote inner/outer presets. Browser measurements found no page overflow after fixes, no off-viewport gameplay controls, 8 or fewer rendered gameplay labels (7 at the Suin boundary), and train hidden before/visible after departure. The permitted 360 px overview/quick-route horizontal scrollers remained internally scrollable.
+- Production preview requests returned HTTP 200 with `text/html` at `/MetroTyping/` and HTTP 200 with `text/javascript`/`text/css` for emitted assets under `/MetroTyping/assets/`. Clicking `METRO/TYPE` kept `location.pathname === '/MetroTyping/'`.
+- Automated/browser evidence confirms rapid answers during the 260 ms entrance, composing Enter suppression, timer cleanup on unmount, distinct key/correct/error/complete tones with mute suppression, and reduced-motion train visibility with computed `animation-name: none` and `transform: none`. Headless automation cannot validate physical speaker output or a real OS Korean IME candidate window; those remain final-device smoke checks.
 
 - Task 6 RED: focused Game/RouteMap tests failed because the train rendered unconditionally; GREEN: 15 focused tests passed after conditional SVG rendering and presentation-only state. `npm run check` passed with 44 client tests, 2 server tests, strict TypeScript, and the production build.
 - Task 5 isolated the official PDF-vector color profiles to 30 Seoul Line 3 paths and 41 Suin·Bundang paths; 1440 px overlay captures follow the raster routes while preserving 1.2× highlight thickness, 150 ms intent delay, and base-map dimming.
@@ -79,6 +85,10 @@ Build a polished Korean subway typing game for six lines with route and random m
 - Automated gameplay coverage confirms the train remains at Sindorim while Mullae is the next target, then advances to Mullae only after the correct submission.
 
 ## Mistakes
+
+- 2026-07-21 | Production preview loaded a blank page although the HTML returned HTTP 200 | Vite preview used `/` while the built HTML referenced `/MetroTyping/assets/`, so asset requests returned the HTML fallback | Applied the Pages base to build and preview and verified asset MIME types plus browser rendering | Verify response MIME/content and rendered DOM, not status code alone, for base-path checks.
+- 2026-07-21 | Seoul 3 gameplay overflowed horizontally at 360 and 768 CSS pixels | The explorer's generic `.map-stage` 850 px minimum also matched the gameplay map | Overrode the minimum inside `.game` and repeated exact-viewport captures | Scope layout selectors to their owning surface when a class name is shared.
+- 2026-07-21 | Reduced-motion CDP evidence aborted after captures | The evaluator tried to serialize a DOM node with an object reference chain | Evaluated a boolean in the page context and reran the evidence set | Return primitives from browser automation measurements.
 
 - 2026-07-21 | Task 6 tests passed but strict TypeScript rejected an argumentless timer ref | Assumed React's `useRef` still allowed an omitted initial value | Initialized the timer ref explicitly with `undefined` | Run strict typecheck immediately after adding React refs.
 - 2026-07-21 | Task 5 runtime tests passed but strict TypeScript rejected geometry-test coordinate arrays | New test parsers inferred variable-length `number[]` instead of two-coordinate tuples | Typed parsed paths and sampled station coordinates as the existing `Point` tuple | Run the strict typecheck with focused tests before the full gate when adding numerical test helpers.
