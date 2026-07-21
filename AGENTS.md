@@ -2,6 +2,7 @@
 
 ## Product invariants
 
+- Treat `https://github.com/qkqhsm1/MetroTyping` and its `main` branch as the canonical repository for all future work.
 - Support Seoul Lines 1 and 2, Incheon Lines 1 and 2, AREX, and JR Yamanote.
 - Keep station order, branches, directions, labels, and line colors traceable to official operator sources.
 - Render each route, stations, and train in one SVG `viewBox`; never position the train with unrelated CSS pixel coordinates.
