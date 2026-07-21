@@ -45,10 +45,12 @@ Build a polished Korean subway typing game for six lines with route and random m
 - Replaced compressed full-route gameplay maps with readable eight-station focused segments and a 240 ms non-blocking transition between them.
 - Linked the current typing target back to its route station with a larger line-colored marker, pulsing ring, and stronger label.
 - Replaced syllable-count/mount-time speed with first-input Hangul jaso CPM, following Hancom's documented jaso-unit method, and added restrained per-character correct/error motion inspired by typing-focused interfaces.
+- Froze Seoul Line 3 and Suin·Bundang station order, colors, and service-terminus metadata from the bundled official map and current Seoul Metro/Korail operator material.
+- Extended every line record with source-backed service termini or a deterministic loop preset without adding a second route model.
 
 ### In progress
 
-- Approved implementation planning for departure-triggered train reveal, generated quick routes, Seoul Line 3, Suin–Bundang, and GitHub Pages-safe home navigation.
+- Executing the approved route-expansion plan; Task 1 line data and metadata are complete, with quick-route generation next.
 
 ### Next
 
@@ -58,6 +60,8 @@ Build a polished Korean subway typing game for six lines with route and random m
 
 ## Verification
 
+- On 2026-07-21, Korail's current operating-status page and 2024-11-18 operating notice confirmed Suin·Bundang endpoints `청량리/왕십리↔죽전↔고색↔오이도↔인천` and Line 3 `대화↔삼송`; Seoul Data Hub's official Seoul Metro timetable API catalog confirmed station-timetable coverage for the Seoul-operated Line 3 segment and the bundled official map confirmed full station order/colors. Direct row-level API access requires a key, so `구파발`/`오금` were retained from the candidate timetable set with that access limitation recorded; no primary source contradicted them.
+- `npm run check` passed on 2026-07-21 after Task 1: ESLint, 31 client tests, 2 server tests, strict TypeScript, and the production Vite build.
 - The approved design was converted into a seven-task TDD implementation plan; placeholder scan and `git diff --check` passed on 2026-07-21.
 - `npm run check` passed on 2026-07-21: ESLint, 29 client tests, 2 server tests, strict TypeScript, and Vite production build.
 - GitHub Pages deployment succeeded on 2026-07-21 and `https://qkqhsm1.github.io/MetroTyping/` returned HTTP 200.
