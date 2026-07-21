@@ -48,15 +48,17 @@ Build a polished Korean subway typing game for six lines with route and random m
 
 ### In progress
 
-- Final responsive visual QA and Firebase leaderboard client presentation.
+- Approved implementation planning for departure-triggered train reveal, generated quick routes, Seoul Line 3, Suin–Bundang, and GitHub Pages-safe home navigation.
 
 ### Next
 
+- Execute `docs/superpowers/plans/2026-07-21-departure-presets-new-lines.md` task by task with TDD checkpoints.
 - Connect the leaderboard read model to the UI after a Firebase project/config is supplied.
 - Re-run official station-order verification before freezing production data.
 
 ## Verification
 
+- The approved design was converted into a seven-task TDD implementation plan; placeholder scan and `git diff --check` passed on 2026-07-21.
 - `npm run check` passed on 2026-07-21: ESLint, 29 client tests, 2 server tests, strict TypeScript, and Vite production build.
 - GitHub Pages deployment succeeded on 2026-07-21 and `https://qkqhsm1.github.io/MetroTyping/` returned HTTP 200.
 - Numerical geometry tests confirm sampled station/train points remain on the declared route polyline.
