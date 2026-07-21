@@ -48,10 +48,11 @@ Build a polished Korean subway typing game for six lines with route and random m
 
 ### In progress
 
-- Final responsive visual QA and Firebase leaderboard client presentation.
+- GitHub Pages publication; local repository, commit, remote, base path, and deployment workflow are ready, but the remote GitHub repository does not exist yet.
 
 ### Next
 
+- Create the empty `qkqhsm1/MetroTyping` repository, push `main`, and enable GitHub Actions as the Pages source.
 - Connect the leaderboard read model to the UI after a Firebase project/config is supplied.
 - Re-run official station-order verification before freezing production data.
 
