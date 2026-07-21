@@ -50,7 +50,7 @@ Build a polished Korean subway typing game for six lines with route and random m
 
 ### In progress
 
-- Executing the approved route-expansion plan; Task 1 line data and metadata are complete, with quick-route generation next.
+- Executing the approved route-expansion plan; Task 4 now connects quick/custom starts through one transition and fixes Pages-safe home navigation.
 
 ### Next
 
@@ -59,6 +59,8 @@ Build a polished Korean subway typing game for six lines with route and random m
 - Re-run official station-order verification before freezing production data.
 
 ## Verification
+
+- `npm run check` passed on 2026-07-21 after Task 4: ESLint, 38 client tests, 2 server tests, strict TypeScript, and the production Vite build.
 
 - On 2026-07-21, Korail's current operating material confirmed Line 1 `연천↔인천`, Line 3 `대화↔삼송`, and Suin·Bundang `청량리/왕십리↔죽전↔고색↔오이도↔인천`; the official Seoul map confirmed Line 3's physical `오금` endpoint, and Seoul's public timetable sample returned 191 `구파발` destination rows. Review extended Line 1 through `연천→전곡→청산→소요산` and mapped each terminus to its claim-matching primary source.
 - `npm run check` passed on 2026-07-21 after Task 1 review fixes: ESLint, 32 client tests, 2 server tests, strict TypeScript, and the production Vite build.
