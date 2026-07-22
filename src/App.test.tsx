@@ -70,3 +70,22 @@ test('opens setup from a supported line', () => {
   expect(screen.getByRole('heading', { name: '서울 2호선', level: 1 })).toBeInTheDocument()
   expect(screen.queryByText(/TRIP SETUP/)).not.toBeInTheDocument()
 })
+
+test('switches Line 9 setup between local and express service', () => {
+  render(<App />)
+  fireEvent.click(screen.getByRole('button', { name: '서울 9호선 선택' }))
+  expect(screen.getByRole('button', { name: '일반' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: '급행' })).toBeInTheDocument()
+
+  fireEvent.click(screen.getByRole('button', { name: '급행' }))
+  fireEvent.click(screen.getByRole('combobox', { name: '출발역' }))
+  expect(screen.queryByText('개화', { selector: '[role="option"]' })).not.toBeInTheDocument()
+  expect(screen.getByText('김포공항 ↔ 중앙보훈병원')).toBeInTheDocument()
+})
+
+test('does not show service selection for Line 8', () => {
+  render(<App />)
+  fireEvent.click(screen.getByRole('button', { name: '서울 8호선 선택' }))
+  expect(screen.queryByRole('button', { name: '일반' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: '급행' })).not.toBeInTheDocument()
+})

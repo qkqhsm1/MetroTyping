@@ -1,11 +1,12 @@
 import { useRef, useState } from 'react'
 import { LINES } from './data/lines'
-import { dailyStations, getQuickRoutePairs, getRoute, type QuickRoute } from './game/routes'
+import { dailyStations, getQuickRoutePairs, getRoute, getStations, type QuickRoute } from './game/routes'
 import Game from './components/Game'
 import MapExplorer from './components/MapExplorer'
 import ProfilePanel from './components/ProfilePanel'
 import QuickRoutes from './components/QuickRoutes'
 import StationSelect from './components/StationSelect'
+import ServiceSelect from './components/ServiceSelect'
 import { playSound } from './audio/sounds'
 
 export default function App() {
@@ -16,14 +17,17 @@ export default function App() {
   const [sound,setSound]=useState(true)
   const [profileOpen,setProfileOpen]=useState(false)
   const [routeOverride,setRouteOverride]=useState<string[]|null>(null)
+  const [serviceId,setServiceId]=useState<string|undefined>()
+  const [setupError,setSetupError]=useState('')
   const [nickname,setNickname]=useState(()=>localStorage.getItem('metrotyping:nickname')??'')
   const selectedOnce=useRef(false)
   const line=LINES.find(item=>item.id===lineId)
-  const stations=line ? [...new Set([...line.sequences.flat(), ...(line.oneWaySequences?.flat() ?? [])])] : []
+  const stations=line ? getStations(line.id,serviceId) : []
   const [from,setFrom]=useState(''), [to,setTo]=useState('')
   const selectLine=(id:string)=>{
     if(!selectedOnce.current){selectedOnce.current=true;playSound('select',sound)}
-    setLineId(id);setMode('route');setFrom('');setTo('');setRouteOverride(null)
+    const selectedLine=LINES.find(item=>item.id===id)
+    setLineId(id);setMode('route');setServiceId(selectedLine?.services?.[0]?.id);setFrom('');setTo('');setRouteOverride(null);setSetupError('')
   }
   const startRoute=(selection?:QuickRoute)=>{
     if(selection){setFrom(selection.from);setTo(selection.to);setDirection(selection.direction);setRouteOverride(selection.stationIds)}
@@ -31,9 +35,19 @@ export default function App() {
     setMode('route')
     setPlaying(true)
   }
+  const tryStartRoute=()=>{
+    try {
+      setRouteOverride(null)
+      getRoute(line!.id,from,to,line!.loop?direction:'forward',serviceId)
+      setSetupError('')
+      setPlaying(true)
+    } catch {
+      setSetupError('선택한 구간을 운행할 수 없습니다. 출발역과 도착역을 다시 확인해 주세요.')
+    }
+  }
   if (playing && line) {
     const dateKey=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul'}).format(new Date())
-    const route=mode==='random' ? dailyStations(line.id,dateKey) : routeOverride??getRoute(line.id,from,to,line.loop?direction:'forward').stationIds
+    const route=mode==='random' ? dailyStations(line.id,dateKey,serviceId) : routeOverride??getRoute(line.id,from,to,line.loop?direction:'forward',serviceId).stationIds
     return <main className="shell"><Game lineId={line.id} stations={route} color={line.color} sound={sound} durationSeconds={mode==='random'?60:undefined} showAllStations={mode==='route'} onExit={()=>{setPlaying(false);setRouteOverride(null)}} /></main>
   }
   return (
@@ -43,9 +57,11 @@ export default function App() {
         <button className="back" onClick={()=>{setLineId(null);setRouteOverride(null)}}>← 노선 선택</button>
         <h1 className="setup-line-title" style={{color:line.color}}>{line.name}</h1>
         <div className="setup-mode"><button className={mode==='route'?'active':''} onClick={()=>{setMode('route');setRouteOverride(null)}}>노선 운행</button><button className={mode==='random'?'active':''} onClick={()=>{setMode('random');setRouteOverride(null)}}>랜덤 역명</button></div>
+        {line.services&&serviceId&&<ServiceSelect value={serviceId} services={line.services} onChange={value=>{setServiceId(value);setFrom('');setTo('');setRouteOverride(null);setSetupError('')}}/>}
         <h2 className="setup-question">어디에서<br />출발할까요?</h2>
-        {mode==='route'&&<><QuickRoutes pairs={getQuickRoutePairs(line.id)} color={line.color} onStart={startRoute}/><div className="trip-form"><StationSelect label="출발역" value={from} options={stations} onChange={value=>{setFrom(value);setRouteOverride(null)}}/><StationSelect label="도착역" value={to} options={stations} onChange={value=>{setTo(value);setRouteOverride(null)}}/></div>{line.loop&&<div className="direction"><button className={direction==='clockwise'?'active':''} onClick={()=>{setDirection('clockwise');setRouteOverride(null)}}>{line.id==='yamanote'?'외선순환':'시계 방향'}</button><button className={direction==='counterclockwise'?'active':''} onClick={()=>{setDirection('counterclockwise');setRouteOverride(null)}}>{line.id==='yamanote'?'내선순환':'반시계 방향'}</button></div>}</>}
-        <button className="primary" style={{background:line.color}} disabled={mode==='route'&&(!from||!to||from===to)} onClick={()=>{if(mode==='random'){setRouteOverride(null);setPlaying(true)}else startRoute()}}>운행 시작 →</button>
+        {mode==='route'&&<><QuickRoutes pairs={getQuickRoutePairs(line.id,serviceId)} color={line.color} onStart={startRoute}/><div className="trip-form"><StationSelect label="출발역" value={from} options={stations} onChange={value=>{setFrom(value);setRouteOverride(null)}}/><StationSelect label="도착역" value={to} options={stations} onChange={value=>{setTo(value);setRouteOverride(null)}}/></div>{line.loop&&<div className="direction"><button className={direction==='clockwise'?'active':''} onClick={()=>{setDirection('clockwise');setRouteOverride(null)}}>{line.id==='yamanote'?'외선순환':'시계 방향'}</button><button className={direction==='counterclockwise'?'active':''} onClick={()=>{setDirection('counterclockwise');setRouteOverride(null)}}>{line.id==='yamanote'?'내선순환':'반시계 방향'}</button></div>}</>}
+        {setupError&&<p className="setup-error" role="alert">{setupError}</p>}
+        <button className="primary" style={{background:line.color}} disabled={mode==='route'&&(!from||!to||from===to)} onClick={()=>{if(mode==='random'){setRouteOverride(null);setPlaying(true)}else tryStartRoute()}}>운행 시작 →</button>
       </section> : <MapExplorer onSelect={selectLine} />}
       <footer><span>SEOUL · INCHEON · TOKYO</span><span>9 LINES</span></footer>
       {profileOpen&&<ProfilePanel onSave={setNickname} onClose={()=>setProfileOpen(false)}/>} 
