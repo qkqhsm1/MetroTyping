@@ -160,3 +160,37 @@ test.each(directionCases)('$name resolves geometry direction from official stati
   const train:Point=[Number(x),Number(y)]
   expect(Math.min(...points.slice(1).map((end,index)=>distanceToSegment(train,points[index]!,end)))).toBeLessThan(0.01)
 })
+
+const hanamToMacheon=getRoute('seoul-5','하남검단산','마천').stationIds
+const macheonToHanam=getRoute('seoul-5','마천','하남검단산').stationIds
+const crossBranchCases = [
+  {name:'Hanam to Macheon first',stations:hanamToMacheon,start:0,key:'seoul-5-hanam-macheon',globalStart:'555,65',globalEnd:'374.698451,96.600885'},
+  {name:'Hanam-side later window',stations:hanamToMacheon,start:3,key:'seoul-5-hanam-macheon',globalStart:'474.131306,65',globalEnd:'397.928991,156.475059'},
+  {name:'Macheon-side later window',stations:hanamToMacheon,start:11,key:'seoul-5-hanam-macheon',globalStart:'413.919401,178.17633',globalEnd:'555,250'},
+  {name:'Macheon to Hanam first',stations:macheonToHanam,start:0,key:'seoul-5-macheon-hanam',globalStart:'555,250',globalEnd:'397.928991,156.475059'},
+  {name:'reverse Hanam-side later window',stations:macheonToHanam,start:10,key:'seoul-5-macheon-hanam',globalStart:'374.698451,96.600885',globalEnd:'555,65'},
+] as const
+
+test.each(crossBranchCases)('$name keeps both Line 5 legs in focused geometry', ({stations,start,key,globalStart,globalEnd}) => {
+  const visible=stations.slice(start,start+8)
+  const {container}=render(<RouteMap lineId="seoul-5" stations={visible} geometryStations={[...stations]} routeStationCount={stations.length} segmentStart={start} color="#996CAC" progress={0.5} />)
+  const route=container.querySelector<SVGPolylineElement>('polyline[data-route]')!
+  expect(route).toHaveAttribute('data-geometry',key)
+  expect(route).toHaveAttribute('data-global-start',globalStart)
+  expect(route).toHaveAttribute('data-global-end',globalEnd)
+  expect(container.querySelectorAll('.route-map text')).toHaveLength(Math.min(8,stations.length-start))
+  const points=parsePoints(route.getAttribute('points')!)
+  const transform=container.querySelector('.train')!.getAttribute('style')!
+  const [,x,y]=transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/)!
+  const train:Point=[Number(x),Number(y)]
+  expect(Math.min(...points.slice(1).map((end,index)=>distanceToSegment(train,points[index]!,end)))).toBeLessThan(0.01)
+})
+
+test.each([
+  {stations:['방화','길동','하남검단산'],key:'seoul-5-hanam'},
+  {stations:['방화','둔촌동','마천'],key:'seoul-5-macheon'},
+  {stations:['방화','강동'],key:'seoul-5-trunk'},
+])('keeps the existing $key identity for a non-cross-branch trip', ({stations,key}) => {
+  const {container}=render(<RouteMap lineId="seoul-5" stations={stations} color="#996CAC" progress={0} />)
+  expect(container.querySelector('polyline[data-route]')).toHaveAttribute('data-geometry',key)
+})

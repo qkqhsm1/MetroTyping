@@ -24,6 +24,8 @@ const topologyRoutes:Record<string,Omit<RouteGeometry,'key'>>={
   'seoul-5-trunk':{path:[[45,145],[145,145],[230,105],[360,105],[455,145],[555,145]]}, // 방화 → 강동
   'seoul-5-hanam':{path:[[45,145],[145,145],[230,105],[360,105],[430,65],[555,65]],context:[[360,105],[430,200],[555,250]]}, // 강동 → 길동 → 하남검단산; sibling 마천 branch
   'seoul-5-macheon':{path:[[45,145],[145,145],[230,105],[360,105],[430,200],[555,250]],context:[[360,105],[430,65],[555,65]]}, // 강동 → 둔촌동 → 마천; sibling 하남 branch
+  'seoul-5-hanam-macheon':{path:[[555,250],[430,200],[360,105],[430,65],[555,65]]}, // reversed before display: 하남검단산 → 강동 → 마천
+  'seoul-5-macheon-hanam':{path:[[555,65],[430,65],[360,105],[430,200],[555,250]]}, // reversed before display: 마천 → 강동 → 하남검단산
   'seoul-6-trunk':{path:[[45,235],[110,190],[185,190],[250,125],[390,125],[470,55],[555,55]]}, // 응암 → 신내
   'seoul-6-loop':{path:[[300,250],[170,235],[90,145],[135,50],[270,30],[390,100],[365,210]],context:[[365,210],[300,250]],directedClosure:true}, // 응암 → 역촌 → ... → 구산 → 응암
   'seoul-7':{path:[[65,35],[135,80],[210,80],[285,145],[380,145],[455,205],[535,250]]}, // 장암 → 석남
@@ -33,7 +35,12 @@ const topologyRoutes:Record<string,Omit<RouteGeometry,'key'>>={
 
 export function getRouteGeometry(lineId:string,stations:string[]):RouteGeometry{
   let key=lineId
-  if(lineId==='seoul-5')key=stations.includes('길동')?'seoul-5-hanam':stations.includes('둔촌동')?'seoul-5-macheon':'seoul-5-trunk'
+  if(lineId==='seoul-5'){
+    const hanamIndex=stations.indexOf('길동'),macheonIndex=stations.indexOf('둔촌동')
+    key=hanamIndex>=0&&macheonIndex>=0
+      ?hanamIndex<macheonIndex?'seoul-5-hanam-macheon':'seoul-5-macheon-hanam'
+      :hanamIndex>=0?'seoul-5-hanam':macheonIndex>=0?'seoul-5-macheon':'seoul-5-trunk'
+  }
   if(lineId==='seoul-6')key=stations.some(station=>['역촌','불광','독바위','연신내','구산'].includes(station))?'seoul-6-loop':'seoul-6-trunk'
   const topology=topologyRoutes[key]
   const path=topology?.path??baseRoutes[lineId]
