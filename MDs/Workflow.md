@@ -67,11 +67,11 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### In progress
 
-- The approved Seoul Lines 1–9 design is awaiting final written-spec review before implementation planning.
+- The approved Seoul Lines 1–9 design and seven-task TDD implementation plan are complete; execution approach is awaiting confirmation.
 
 ### Next
 
-- Write the TDD implementation plan, then implement route data, setup/service selection, overview geometry, responsive verification, the full quality gate, push, and Pages verification.
+- Execute the approved TDD plan: route data, setup/service selection, overview geometry, responsive verification, the full quality gate, push, and Pages verification.
 - Connect the leaderboard read model to the UI after a Firebase project/config is supplied.
 - Re-run official station-order verification before freezing production data.
 
