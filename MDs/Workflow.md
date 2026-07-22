@@ -29,6 +29,8 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### Done
 
+- Deployed canonical `main` commit `d73dd358c7f2d3c69e3c36e322769c6163600442`; GitHub Pages run `29918681323` completed successfully on 2026-07-22.
+
 - Approved and documented the Seoul Lines 1–9 expansion, including Line 5 branches, the Line 6 directed Eungam loop, Lines 7/8 current endpoints, and Line 9-only local/express play.
 - Approved replacing the internally scrolling Seoul overview with the full-width original-map layout.
 
@@ -67,15 +69,16 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### In progress
 
-- Task 6 release verification is complete locally; the verified branch is ready for integration review.
+- No release work is in progress.
 
 ### Next
 
-- Integrate the verified Seoul Lines 1–9 branch and perform Pages MIME/DOM verification after an authorized push.
 - Connect the leaderboard read model to the UI after a Firebase project/config is supplied.
 - Re-run official station-order verification before freezing production data.
 
 ## Verification
+
+- Production release verification on 2026-07-22: Pages run `29918681323` succeeded for `d73dd358c7f2d3c69e3c36e322769c6163600442`. `/MetroTyping/` returned HTTP 200 HTML and referenced `index-D_ZVS76d.js` (HTTP 200, `application/javascript`, 349,503 bytes) and `index-BRLDS_gI.css` (HTTP 200, `text/css`, 17,503 bytes). The deployed JPG (6,617,130 bytes), 10205px WebP (3,733,012 bytes), and supported-lines SVG (166,493 bytes) returned the correct image MIME types and valid JPEG/RIFF-WEBP/SVG content signatures. A fresh Edge rendered-DOM smoke at 1440 CSS pixels confirmed `/MetroTyping/`, all Seoul 1–9 dock and SVG controls, `14 LINES`, no page overflow, no desktop-internal map scrollbar, Line 9 `일반`/`급행` switching, and a complete 16-station express typing run with zero errors.
 
 - Final Line 5 cross-branch TDD on 2026-07-22 reproduced five failures because trips containing both `길동` and `둔촌동` collapsed to the Hanam geometry and lost the Macheon leg when focused rendering removed context. Two stable source-guided cross-branch paths now join the Hanam and Macheon legs at Gangdong and retain the existing official-adjacency reversal step before global slicing. The focused Game/RouteMap/geometry suite passes 54 tests covering 하남검단산→마천 and reverse, later windows on both sides of Gangdong, exact global subpath anchors, the eight-label cap, train/path alignment below 0.01 SVG unit, and unchanged trunk/single-branch keys. New browser captures were not added because cross-branch trips have no quick-route preset and the exact responsive SVG invariants are already exercised through the shared RouteMap DOM tests; existing 360/768/1440 gameplay captures cover the same responsive component.
 - The final cross-branch gate passed ESLint, 103 client tests in 11 files, 2 server tests, strict TypeScript, and the 42-module Vite production build.
