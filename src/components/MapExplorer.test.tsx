@@ -63,6 +63,7 @@ test('links dock hover to the matching map highlight', () => {
   act(() => vi.advanceTimersByTime(150))
 
   expect(screen.getByTestId('seoul-map')).toHaveAttribute('data-active-line', 'seoul-2')
+  expect(screen.getByTestId('seoul-map').querySelector('.map-dimmer')).toBeInTheDocument()
   const mapLine = screen.getByRole('button', { name: '지도에서 서울 2호선 선택' })
   expect(mapLine).toHaveAttribute('data-active', 'true')
   expect(mapLine.querySelector('.line-highlight')).toBeInTheDocument()

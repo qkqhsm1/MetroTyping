@@ -50,4 +50,5 @@ footer { padding-top:24px; border-top:1px solid #cbc8bf; color:#74756e; font-siz
 .explorer-copy{max-width:calc(100vw - 36px)}
 .explorer .map-stage{transform-origin:center;transition:transform .22s cubic-bezier(.2,.8,.2,1)}.map-frame[data-active-line] .map-stage{transform:scale(1.02)}
 @media (prefers-reduced-motion:reduce){.explorer .map-stage{transition:none}.map-frame[data-active-line] .map-stage{transform:none}}
+.explorer .map-stage{transform:none!important;transition:none}.explorer .map-stage img{filter:none!important;transition:none}.map-dimmer{position:absolute;z-index:1;inset:0;pointer-events:none;background:#10120f;opacity:0;transition:opacity .15s}.map-frame[data-active-line] .map-dimmer{opacity:.16}.map-hitareas{z-index:2}
 @media (prefers-reduced-motion:reduce) { * { scroll-behavior:auto!important; transition:none!important; animation:none!important; } .train-entering .train-entrance-shell,.train-entering .train-light{transform:none;animation:none} }

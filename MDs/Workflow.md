@@ -27,6 +27,7 @@ Build a polished Korean subway typing game for ten lines with route and random m
 
 ### Done
 
+- Removed hover-time filtering and scaling from the 10205px overview image; line focus now composites a lightweight dimmer layer above the fixed raster and the SVG highlight above that layer.
 - Added Seoul Line 4 `진접↔오이도` and Seoul Line 6 `응암순환+신내`, including directed Eungam-loop routing, custom station selection, and the approved compact quick trips.
 - Added official-PDF-derived Line 4/6 hit geometry and a 10205×10205 responsive WebP map source while keeping SVG limited to interaction highlights.
 - Replaced the Seoul/Tokyo explorer copy, updated the footer to `10 LINES`, and retained readable responsive typography at actual 360 CSS pixels.
@@ -69,6 +70,8 @@ Build a polished Korean subway typing game for ten lines with route and random m
 
 ## Verification
 
+- On 2026-07-22, the map-hover regression failed without `.map-dimmer`, then passed after removing raster `filter`/`scale` work from the active state; the focused MapExplorer suite passed 9 tests and strict TypeScript passed.
+- The suspended-audio regression failed until the shared `AudioContext` explicitly resumed, then the audio/App suites passed 9 tests with the first-selection cue, mute, limiter, and `0.135` gain intact.
 - GitHub Pages run `29906857744` completed successfully for commit `fdd31ae`. The production page, JavaScript, CSS, 10205px WebP, and supported-lines SVG returned HTTP 200 with `application/javascript`, `text/css`, `image/webp`, and `image/svg+xml`; the deployed bundle contains the new Seoul copy, `seoul-4`, `seoul-6`, and `10 LINES`.
 - On 2026-07-22, `npm run check` passed ESLint, 56 client tests, 2 server tests, strict TypeScript, and the Vite production build. Focused RED/GREEN cycles covered Line 4 end-to-end travel, Line 6 directed-loop routing, quick-trip counts/directions, custom loop-station selection, new explorer copy/controls, 10205px responsive map selection, the once-only chime, mute, `0.135` gain, and shared output limiting.
 - The generated official-map overlay contains 32 Line 4 paths and 28 Line 6 paths. The PDF-rendered WebP is 10205×10205 at 3,733,012 bytes; visual inspection confirmed Korean labels remained present and sharp.
@@ -101,6 +104,8 @@ Build a polished Korean subway typing game for ten lines with route and random m
 
 ## Mistakes
 
+- 2026-07-22 | Moving across line controls caused visible hover lag | The active state filtered and scaled the entire 10205px raster, forcing expensive GPU work on every hover transition | Kept the raster fixed and moved dimming to a small composited overlay below the SVG highlight | Never animate filters or transforms on full-resolution map rasters; animate overlay opacity and vector strokes only.
+- 2026-07-22 | The first-selection subway chime could be silent in a browser | The shared `AudioContext` was not explicitly resumed when the browser left it suspended | Resume the context inside the user-triggered sound path and ignore resume failure without blocking navigation | Every user-triggered Web Audio path must handle `suspended` before scheduling tones.
 - 2026-07-22 | A nominal 360px screenshot appeared to clip the new heading | Windows Edge enforced a wider minimum CSS viewport and cropped the raster output, repeating a previously recorded capture pitfall | Re-ran with a 1.3889 device scale so a 500px host window represented 360 CSS pixels | Record and validate CSS viewport dimensions; never infer them from screenshot width alone.
 - 2026-07-22 | The first new visual capture showed old copy and an incompletely decoded map | Port 4173 was still served by a stale preview and the 10205px image had not finished decoding | Used a fresh preview port and a 5-second virtual-time budget | Use a unique preview port per build and wait for large responsive images before capture.
 - 2026-07-21 | Production preview loaded a blank page although the HTML returned HTTP 200 | Vite preview used `/` while the built HTML referenced `/MetroTyping/assets/`, so asset requests returned the HTML fallback | Applied the Pages base to build and preview and verified asset MIME types plus browser rendering | Verify response MIME/content and rendered DOM, not status code alone, for base-path checks.

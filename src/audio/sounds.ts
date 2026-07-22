@@ -5,6 +5,7 @@ let output:DynamicsCompressorNode|undefined
 
 function audioOutput() {
   context ??= new AudioContext()
+  if (context.state==='suspended') void context.resume().catch(()=>undefined)
   if (!output) {
     output=context.createDynamicsCompressor()
     output.connect(context.destination)
