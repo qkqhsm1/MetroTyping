@@ -77,6 +77,8 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ## Verification
 
+- Final direction-review TDD on 2026-07-22 reproduced five focused failures: mid-line reverse trips used forward geometry and both Line 2 loop directions shared the same later global anchor. Geometry direction now comes from the first resolvable adjacent station pair in the immutable trip against the line's official bidirectional, branch, loop-wrap, and one-way sequences; reversal occurs before global slicing. The focused Game/RouteMap/geometry suite passes 46 tests covering Line 9 선정릉→여의도, Line 5 미사→강동, reverse AREX, both Line 2 directions, the forward-only Line 6 loop, later windows, independent global anchors, the eight-label cap, and train/path alignment.
+- The final direction-review gate passed ESLint, 95 client tests in 11 files, 2 server tests, strict TypeScript, and the 42-module Vite production build.
 - Final broad-review RED failed four first/later/forward/reverse focused-window cases because later segments reused the full route and failed the map-source test on `10204w`. GREEN passes 50 focused RouteMap/Game/MapExplorer/geometry tests: Game supplies global segment start/count, the geometry layer slices the correctly oriented full polyline, normalizes only that interval, exposes independent global endpoints, retains at most eight labels, and keeps the train within 0.01 SVG unit of the focused path. The verified 10205×10205 WebP descriptor is now `10205w`.
 - Final broad-review gate passed ESLint, 89 client tests in 11 files, 2 server tests, strict TypeScript, the 42-module Vite build, and working-tree `git diff --check`. The ignored `.superpowers/sdd/task-6-report.md` scratch report was removed from Git tracking while retained locally for handoff.
 
@@ -130,6 +132,8 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 - Automated gameplay coverage confirms the train remains at Sindorim while Mullae is the next target, then advances to Mullae only after the correct submission.
 
 ## Mistakes
+
+- 2026-07-22 | Reverse mid-line trips restarted on forward geometry | Focused geometry inferred reversal from a small hard-coded terminal-origin table instead of the immutable route order | Resolve direction from the first official adjacent station pair, including branch and loop-wrap adjacency, before slicing | Never infer route direction from terminal identity when the complete ordered trip is already available.
 
 - 2026-07-22 | Later focused gameplay windows restarted visually at the route origin | Stable branch identity was fixed, but every visible slice still sampled local 0..1 over the full geometry | Passed global segment metadata, sliced the oriented full polyline by station-index progress, then normalized only the subpath | Test first/later and forward/reverse global endpoints independently whenever viewport segmentation is introduced.
 - 2026-07-22 | The 10205×10205 overview WebP was advertised as `10204w` | The descriptor was typed from an earlier assumption instead of the verified asset dimension | Corrected to `10205w` and asserted the exact descriptor | Image candidate descriptors must match inspected pixel dimensions exactly.

@@ -1,4 +1,5 @@
 import { pointAt, type Point } from './geometry'
+import { getLine } from '../data/lines'
 
 export type RouteGeometry={key:string;path:Point[];context?:Point[];directedClosure?:boolean;globalStart?:Point;globalEnd?:Point}
 
@@ -40,9 +41,21 @@ export function getRouteGeometry(lineId:string,stations:string[]):RouteGeometry{
   return topology?{key,...topology}:{key,path}
 }
 
-const reverseOrigins:Record<string,string>={
-  'seoul-4':'오이도','seoul-5-hanam':'하남검단산','seoul-5-macheon':'마천','seoul-6-trunk':'신내',
-  'seoul-7':'석남','seoul-8':'모란','seoul-9':'중앙보훈병원',
+const isReverseRoute=(lineId:string,stations:string[])=>{
+  const line=getLine(lineId)
+  for(let index=0;index<stations.length-1;index++){
+    const from=stations[index]!,to=stations[index+1]!
+    for(const sequence of line.oneWaySequences??[]){
+      if(sequence.some((station,sequenceIndex)=>station===from&&sequence[sequenceIndex+1]===to))return false
+    }
+    for(const sequence of line.sequences){
+      const fromIndex=sequence.indexOf(from),toIndex=sequence.indexOf(to)
+      if(fromIndex<0||toIndex<0)continue
+      if(toIndex===fromIndex+1||(line.loop&&fromIndex===sequence.length-1&&toIndex===0))return false
+      if(fromIndex===toIndex+1||(line.loop&&fromIndex===0&&toIndex===sequence.length-1))return true
+    }
+  }
+  return false
 }
 const rounded=(value:number)=>Math.round(value*1e6)/1e6
 const pathMetrics=(path:Point[])=>{
@@ -64,7 +77,7 @@ const normalizePath=(path:Point[])=>{
 
 export function getFocusedRouteGeometry(lineId:string,stations:string[],routeStationCount:number,segmentStart:number,segmentLength:number){
   const geometry=getRouteGeometry(lineId,stations)
-  const reversed=reverseOrigins[geometry.key]===stations[0]
+  const reversed=isReverseRoute(lineId,stations)
   const fullPath=reversed?[...geometry.path].reverse():geometry.path
   const denominator=Math.max(1,routeStationCount-1)
   const startProgress=Math.min(1,segmentStart/denominator)

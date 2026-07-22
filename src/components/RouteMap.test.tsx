@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react'
 import { expect, test } from 'vitest'
 import type { Point } from '../game/geometry'
+import { getFullLoopRoute, getRoute } from '../game/routes'
 import RouteMap from './RouteMap'
 
 const parsePoints = (value: string): Point[] => value.split(' ').map(pair => {
@@ -113,8 +114,8 @@ test.each([
 test.each([
   {name:'first forward',full:['방화','길동','하남검단산'],start:0,expectedStart:'45,145',expectedEnd:'122.22809,145'},
   {name:'later forward',full:['방화','길동','하남검단산'],start:35,expectedStart:'414.003839,74.140664',expectedEnd:'488.804494,65'},
-  {name:'first reverse',full:['하남검단산','길동','방화'],start:0,expectedStart:'555,65',expectedEnd:'477.77191,65'},
-  {name:'later reverse',full:['하남검단산','길동','방화'],start:35,expectedStart:'184.290482,126.510361',expectedEnd:'111.195506,145'},
+  {name:'first reverse',full:['하남검단산','하남시청','길동','방화'],start:0,expectedStart:'555,65',expectedEnd:'477.77191,65'},
+  {name:'later reverse',full:['하남검단산','하남시청','길동','방화'],start:35,expectedStart:'184.290482,126.510361',expectedEnd:'111.195506,145'},
 ])('derives the $name focused window from independent full-route anchors', ({full,start,expectedStart,expectedEnd}) => {
   const visible=Array.from({length:8},(_,index)=>`S${start+index}`)
   const {container}=render(<RouteMap lineId="seoul-5" stations={visible} geometryStations={full} routeStationCount={49} segmentStart={start} color="#996CAC" progress={0.5} />)
@@ -135,4 +136,27 @@ test('Line 6 loop has a directed closure distinct from the open trunk', () => {
   expect(container.querySelector('polyline[data-context]')).toHaveAttribute('data-directed-closure','true')
   rerender(<RouteMap lineId="seoul-6" stations={['응암','새절','신내']} color="#A9431E" progress={0} />)
   expect(container.querySelector('polyline[data-context]')).not.toBeInTheDocument()
+})
+
+const directionCases = [
+  { name:'Line 9 reverse mid-line', lineId:'seoul-9', stations:getRoute('seoul-9','선정릉','여의도').stationIds, expectedStart:'213.657031,165' },
+  { name:'Line 5 Hanam reverse mid-line', lineId:'seoul-5', stations:getRoute('seoul-5','미사','강동').stationIds, expectedStart:'555,65' },
+  { name:'AREX reverse mid-line', lineId:'arex', stations:getRoute('arex','인천공항2터미널','공덕').stationIds, expectedStart:'216.666667,175' },
+  { name:'Line 2 clockwise loop', lineId:'seoul-2', stations:getFullLoopRoute('seoul-2','신도림','clockwise').stationIds, expectedStart:'70,127.716442' },
+  { name:'Line 2 counterclockwise loop', lineId:'seoul-2', stations:getFullLoopRoute('seoul-2','신도림','counterclockwise').stationIds, expectedStart:'530,119.145228' },
+  { name:'Line 6 one-way loop', lineId:'seoul-6', stations:['응암','역촌','불광','독바위','연신내','구산'], expectedStart:'300,250' },
+] as const
+
+test.each(directionCases)('$name resolves geometry direction from official station adjacency', ({lineId,stations,expectedStart}) => {
+  const segmentStart=stations.length>8?8:0
+  const visible=stations.slice(segmentStart,segmentStart+8)
+  const {container}=render(<RouteMap lineId={lineId} stations={visible} geometryStations={[...stations]} routeStationCount={stations.length} segmentStart={segmentStart} color="#333" progress={0.5} />)
+  const route=container.querySelector<SVGPolylineElement>('polyline[data-route]')!
+  expect(route).toHaveAttribute('data-global-start',expectedStart)
+  expect(container.querySelectorAll('.route-map text')).toHaveLength(Math.min(8,stations.length-segmentStart))
+  const points=parsePoints(route.getAttribute('points')!)
+  const transform=container.querySelector('.train')!.getAttribute('style')!
+  const [,x,y]=transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/)!
+  const train:Point=[Number(x),Number(y)]
+  expect(Math.min(...points.slice(1).map((end,index)=>distanceToSegment(train,points[index]!,end)))).toBeLessThan(0.01)
 })
