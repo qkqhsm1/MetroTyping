@@ -1,9 +1,10 @@
 import { expect, test, vi } from 'vitest'
 import { playSound, type SoundKind } from './sounds'
 
-test('plays distinct key, correct, error, and complete tones and honors mute', () => {
+test('plays distinct cues through a shared limiter at the approved gain and honors mute', () => {
   const tones:{frequency:number;type:string}[]=[]
   const setGain=vi.fn(), rampGain=vi.fn(), stop=vi.fn()
+  const compressorConnect=vi.fn()
   class AudioContextMock {
     currentTime=0
     destination={}
@@ -13,11 +14,13 @@ test('plays distinct key, correct, error, and complete tones and honors mute', (
       return oscillator
     }
     createGain(){return {gain:{setValueAtTime:setGain,exponentialRampToValueAtTime:rampGain}}}
+    createDynamicsCompressor(){return {connect:compressorConnect}}
     close=vi.fn()
   }
   vi.stubGlobal('AudioContext',AudioContextMock)
 
   ;(['key','correct','error','complete'] as SoundKind[]).forEach(kind=>playSound(kind))
+  playSound('select')
   playSound('key',false)
 
   expect(tones).toEqual([
@@ -25,9 +28,12 @@ test('plays distinct key, correct, error, and complete tones and honors mute', (
     {frequency:660,type:'sine'},
     {frequency:125,type:'sawtooth'},
     {frequency:880,type:'sine'},
+    {frequency:523,type:'sine'},
+    {frequency:784,type:'sine'},
   ])
-  expect(setGain).toHaveBeenCalledTimes(4)
-  expect(setGain).toHaveBeenCalledWith(0.09,0)
+  expect(setGain).toHaveBeenCalledTimes(6)
+  expect(setGain).toHaveBeenCalledWith(0.135,0)
+  expect(compressorConnect).toHaveBeenCalledTimes(1)
   expect(rampGain).toHaveBeenCalledWith(0.0001,0.08)
   expect(stop).toHaveBeenCalledWith(0.08)
   vi.unstubAllGlobals()

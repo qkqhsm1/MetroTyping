@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { LINES } from './data/lines'
 import { dailyStations, getQuickRoutePairs, getRoute, type QuickRoute } from './game/routes'
 import Game from './components/Game'
@@ -6,6 +6,7 @@ import MapExplorer from './components/MapExplorer'
 import ProfilePanel from './components/ProfilePanel'
 import QuickRoutes from './components/QuickRoutes'
 import StationSelect from './components/StationSelect'
+import { playSound } from './audio/sounds'
 
 export default function App() {
   const [mode,setMode]=useState<'route'|'random'|null>(null)
@@ -16,9 +17,14 @@ export default function App() {
   const [profileOpen,setProfileOpen]=useState(false)
   const [routeOverride,setRouteOverride]=useState<string[]|null>(null)
   const [nickname,setNickname]=useState(()=>localStorage.getItem('metrotyping:nickname')??'')
+  const selectedOnce=useRef(false)
   const line=LINES.find(item=>item.id===lineId)
   const stations=line ? [...new Set([...line.sequences.flat(), ...(line.oneWaySequences?.flat() ?? [])])] : []
   const [from,setFrom]=useState(''), [to,setTo]=useState('')
+  const selectLine=(id:string)=>{
+    if(!selectedOnce.current){selectedOnce.current=true;playSound('select',sound)}
+    setLineId(id);setMode('route');setFrom('');setTo('');setRouteOverride(null)
+  }
   const startRoute=(selection?:QuickRoute)=>{
     if(selection){setFrom(selection.from);setTo(selection.to);setDirection(selection.direction);setRouteOverride(selection.stationIds)}
     else setRouteOverride(null)
@@ -40,7 +46,7 @@ export default function App() {
         <h2 className="setup-question">어디에서<br />출발할까요?</h2>
         {mode==='route'&&<><QuickRoutes pairs={getQuickRoutePairs(line.id)} color={line.color} onStart={startRoute}/><div className="trip-form"><StationSelect label="출발역" value={from} options={stations} onChange={value=>{setFrom(value);setRouteOverride(null)}}/><StationSelect label="도착역" value={to} options={stations} onChange={value=>{setTo(value);setRouteOverride(null)}}/></div>{line.loop&&<div className="direction"><button className={direction==='clockwise'?'active':''} onClick={()=>{setDirection('clockwise');setRouteOverride(null)}}>{line.id==='yamanote'?'외선순환':'시계 방향'}</button><button className={direction==='counterclockwise'?'active':''} onClick={()=>{setDirection('counterclockwise');setRouteOverride(null)}}>{line.id==='yamanote'?'내선순환':'반시계 방향'}</button></div>}</>}
         <button className="primary" style={{background:line.color}} disabled={mode==='route'&&(!from||!to||from===to)} onClick={()=>{if(mode==='random'){setRouteOverride(null);setPlaying(true)}else startRoute()}}>운행 시작 →</button>
-      </section> : <MapExplorer onSelect={id=>{setLineId(id);setMode('route');setFrom('');setTo('');setRouteOverride(null)}} />}
+      </section> : <MapExplorer onSelect={selectLine} />}
       <footer><span>SEOUL · INCHEON · TOKYO</span><span>10 LINES</span></footer>
       {profileOpen&&<ProfilePanel onSave={setNickname} onClose={()=>setProfileOpen(false)}/>} 
     </main>

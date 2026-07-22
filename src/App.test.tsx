@@ -30,6 +30,14 @@ test('offers every Eungam loop station in custom Line 6 selection', () => {
   expect(screen.getByRole('option', { name: '역촌' })).toBeInTheDocument()
 })
 
+test('plays the line-selection chime only on the first selection', () => {
+  render(<App />)
+  fireEvent.click(screen.getByRole('button', { name: '서울 1호선 선택' }))
+  fireEvent.click(screen.getByRole('button', { name: '← 노선 선택' }))
+  fireEvent.click(screen.getByRole('button', { name: '서울 2호선 선택' }))
+  expect(vi.mocked(playSound).mock.calls.filter(([kind]) => kind === 'select')).toEqual([['select', true]])
+})
+
 test('starts a quick route by asking for its departure station first', () => {
   render(<App />)
   fireEvent.click(screen.getByRole('button', { name: '서울 1호선 선택' }))
