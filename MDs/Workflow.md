@@ -60,7 +60,7 @@ Build a polished Korean subway typing game for ten lines with route and random m
 
 ### In progress
 
-- Final deployment verification for the ten-line release.
+- None. The ten-line release is merged to `main`, pushed, and deployed to GitHub Pages.
 
 ### Next
 
@@ -69,6 +69,7 @@ Build a polished Korean subway typing game for ten lines with route and random m
 
 ## Verification
 
+- GitHub Pages run `29906857744` completed successfully for commit `fdd31ae`. The production page, JavaScript, CSS, 10205px WebP, and supported-lines SVG returned HTTP 200 with `application/javascript`, `text/css`, `image/webp`, and `image/svg+xml`; the deployed bundle contains the new Seoul copy, `seoul-4`, `seoul-6`, and `10 LINES`.
 - On 2026-07-22, `npm run check` passed ESLint, 56 client tests, 2 server tests, strict TypeScript, and the Vite production build. Focused RED/GREEN cycles covered Line 4 end-to-end travel, Line 6 directed-loop routing, quick-trip counts/directions, custom loop-station selection, new explorer copy/controls, 10205px responsive map selection, the once-only chime, mute, `0.135` gain, and shared output limiting.
 - The generated official-map overlay contains 32 Line 4 paths and 28 Line 6 paths. The PDF-rendered WebP is 10205×10205 at 3,733,012 bytes; visual inspection confirmed Korean labels remained present and sharp.
 - Fresh overview captures at 768 and 1440 CSS pixels and a Windows-Edge-scaled capture representing 360 CSS pixels showed readable copy, map labels, Line 4/6 dock controls, attribution, and `10 LINES` without page overflow. Gameplay remains on the existing tested eight-station `RouteMap` component.
