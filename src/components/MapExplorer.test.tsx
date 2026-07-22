@@ -1,9 +1,20 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
+// @ts-expect-error Node types are intentionally excluded from the browser build.
+import { readFileSync } from 'node:fs'
 import MapExplorer from './MapExplorer'
 import { getLine } from '../data/lines'
 
 afterEach(() => vi.useRealTimers())
+
+test('uses page scrolling on desktop and touch panning on mobile', () => {
+  const styles = readFileSync('src/styles.css', 'utf8')
+
+  expect(styles).toMatch(/\.map-frame\{[^}]*height:auto[^}]*overflow:visible/s)
+  expect(styles).toMatch(/\.map-stage\{[^}]*min-width:0/s)
+  expect(styles).toMatch(/@media \(max-width:640px\)[\s\S]*\.map-frame\{[^}]*overflow:auto/s)
+  expect(styles).toMatch(/\.explorer \.map-stage img\{[^}]*filter:none!important/s)
+})
 
 test('switches between the official Seoul map and original Tokyo map', () => {
   render(<MapExplorer onSelect={vi.fn()} />)
