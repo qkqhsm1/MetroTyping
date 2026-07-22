@@ -10,7 +10,7 @@ Build a polished Korean subway typing game for eight lines with route and random
 - Client language: TypeScript with custom CSS/SVG; no shadcn/ui, Tailwind, or Express.
 - Quality gate: `npm run check` runs ESLint, Vitest, strict TypeScript checking, and the production build.
 - Selection UX: official high-resolution Seoul overview plus aligned SVG hit areas; dedicated SVG replaces the raster for setup/gameplay. Tokyo uses a dedicated Yamanote loop.
-- Lines: Seoul 1/2, Incheon 1/2, AREX, and JR Yamanote.
+- Lines: Seoul 1/2/3, Incheon 1/2, AREX, Suin–Bundang, and JR Yamanote.
 - Visual design: white base, official line color accents, full-route fixed overview.
 - Route mode selects origin and destination; Yamanote also selects inner/outer direction.
 - Seoul Line 1 includes the Incheon, Uijeongbu/Soyosan, and Cheonan/Sinchang directions and the Guro branch.
@@ -51,16 +51,16 @@ Build a polished Korean subway typing game for eight lines with route and random
 
 ### In progress
 
-- None. Route-expansion implementation and local verification are complete; external publication remains intentionally unperformed.
+- None. Route expansion is merged to `main`, pushed, and deployed to GitHub Pages.
 
 ### Next
 
-- Obtain explicit user authorization before any push or GitHub Pages deployment.
 - Connect the leaderboard read model to the UI after a Firebase project/config is supplied.
 - Re-run official station-order verification before freezing production data.
 
 ## Verification
 
+- GitHub Pages deployment run `29890876444` completed successfully on 2026-07-22 for commit `3acb36c`. `https://qkqhsm1.github.io/MetroTyping/` returned HTTP 200 and served the new `index-CBzr9U5R.js` and `index-B3Zh_kEc.css` bundles with JavaScript/CSS MIME types; the deployed bundle contains `8 LINES`. Local `main` and `origin/main` were synchronized after deployment.
 - Task 7 final gate on 2026-07-21: `npm run check` passed ESLint, 47 client tests in 10 files, 2 server tests, strict `tsc -p tsconfig.json`, and the Vite production build. The focused command `npm test -- --run src/components/Game.test.tsx src/App.test.tsx src/audio/sounds.test.ts` passed 17 tests in 3 files.
 - Route coverage exercises every declared service-terminus quick-route in both directions, Seoul 1 branches, exact Seoul 2 and Yamanote one-lap presets without repeated origins, Seoul 3 and Suin·Bundang frozen orders/custom routing, and Incheon 1/2 plus AREX endpoint pairs. Sources remain the bundled official Seoul map, Seoul Open Data datasets `OA-101` and `OA-22535`, and Korail operating notice `nttNo=23761`; production data must still be rechecked immediately before freezing.
 - Edge 150 production-preview captures at actual CSS viewports 360, 768, and 1440 covered Seoul 3/Suin·Bundang overview focus, Seoul 1 and Seoul 2 quick routes, Seoul 3 gameplay before/after departure, Suin·Bundang at a segment boundary, and Yamanote inner/outer presets. Browser measurements found no page overflow after fixes, no off-viewport gameplay controls, 8 or fewer rendered gameplay labels (7 at the Suin boundary), and train hidden before/visible after departure. The permitted 360 px overview/quick-route horizontal scrollers remained internally scrollable.
