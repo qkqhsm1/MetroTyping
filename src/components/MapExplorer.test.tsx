@@ -33,6 +33,8 @@ test('selects supported lines and explains unsupported lines', () => {
 
 test.each([
   ['서울 3호선', 'seoul-3'],
+  ['서울 4호선', 'seoul-4'],
+  ['서울 6호선', 'seoul-6'],
   ['수인·분당선', 'suin-bundang'],
 ])('selects %s from its official map geometry', (name, id) => {
   const onSelect = vi.fn()
@@ -43,6 +45,13 @@ test.each([
   fireEvent.click(mapLine)
 
   expect(onSelect).toHaveBeenCalledWith(id)
+})
+
+test('offers the PDF-rendered high-resolution Seoul map when needed', () => {
+  render(<MapExplorer onSelect={vi.fn()} />)
+  expect(screen.getByRole('img', { name: '서울 수도권 지하철 노선도' })).toHaveAttribute(
+    'srcSet', expect.stringContaining('seoul-metro-map-20250929@2x.webp'),
+  )
 })
 
 test('links dock hover to the matching map highlight', () => {
