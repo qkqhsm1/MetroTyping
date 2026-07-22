@@ -40,6 +40,14 @@ test('clips a Line 2 window to its first and last visible stations', () => {
   expect([...container.querySelectorAll('text')].map(node=>node.textContent)).toEqual(visible)
 })
 
+test('places the first visible Incheon-origin station to the left of the next stations', () => {
+  const full=getRoute('seoul-1','인천','연천').stationIds
+  const visible=full.slice(0,8)
+  const {container}=render(<RouteMap lineId="seoul-1" stations={visible} geometryStations={full} routeStationCount={full.length} segmentStart={0} color="#0052A4" progress={0} />)
+  const stations=[...container.querySelectorAll('circle:not(.target-ring)')]
+  expect(Number(stations[0]!.getAttribute('cx'))).toBeLessThan(Number(stations.at(-1)!.getAttribute('cx')))
+})
+
 test('anchors the front of the train at the current station', () => {
   const { container } = render(<RouteMap lineId="seoul-2" stations={['신도림','문래']} color="#00A84D" progress={0} />)
   expect(container.querySelector('.train-body')).toHaveAttribute('transform', 'translate(-22 0)')

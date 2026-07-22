@@ -29,7 +29,7 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### Done
 
-- Restored focused maximum-eight-station gameplay geometry and made Line 2 gameplay segments consistently read left-to-right, so station order cannot be confused by loop bends; retained the white halo and brighter lightweight overview highlight without animating the full-resolution raster.
+- Restored focused maximum-eight-station gameplay geometry and made gameplay segments start on the left whenever their source geometry ran right-to-left; Line 2 additionally uses a stable straight path so station order cannot be confused by loop bends.
 
 - Deployed canonical `main` commit `d73dd358c7f2d3c69e3c36e322769c6163600442`; GitHub Pages run `29918681323` completed successfully on 2026-07-22.
 
@@ -141,6 +141,8 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 - Automated gameplay coverage confirms the train remains at Sindorim while Mullae is the next target, then advances to Mullae only after the correct submission.
 
 ## Mistakes
+
+- 2026-07-22 | An Incheon-origin Line 1 trip placed the departure station at the far right | Geographic/source path direction was allowed to determine gameplay reading direction | Mirror only the focused display path when its first endpoint is right of its last endpoint | Ordered gameplay must read from the first station on the left toward later stations on the right, independent of geographic travel direction.
 
 - 2026-07-22 | The first correction still made Hapjeong appear after Hongik Univ. | Testing only that visible route endpoints matched their station circles did not verify human-readable direction; normalized loop geometry still ran right-to-left and bent vertically | Fixed Line 2 gameplay to a stable left-to-right path and asserted monotonically increasing station x-coordinates | Gameplay route tests must verify readable station ordering, not only geometric attachment and path distance.
 

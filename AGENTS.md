@@ -20,6 +20,7 @@
 
 ## Verification invariants
 
+- After each completed user-requested code change, run the relevant verification, commit the scoped changes, and push `main` so GitHub Pages can update; do not leave an approved fix only in the local working tree.
 - Test station order and route calculation for every terminus, branch, and circular direction.
 - Keep Seoul Line 3 and Suin·Bundang service termini synchronized with current Seoul Metro and Korail timetable material.
 - Assert that station points and train motion remain on the declared SVG path.
