@@ -2,7 +2,7 @@
 
 ## Goal
 
-Build a polished Korean subway typing game for nine playable lines with route and random modes, animated SVG trains, sound, anonymous nickname accounts, and online rankings.
+Build a polished Korean subway typing game with Seoul Lines 1–9 plus the existing Incheon, AREX, Suin–Bundang, and Yamanote networks, including correct branches, Line 9 local/express play, a full-width overview, animated SVG trains, sound, anonymous nickname accounts, and online rankings.
 
 ## Decisions
 
@@ -10,7 +10,9 @@ Build a polished Korean subway typing game for nine playable lines with route an
 - Client language: TypeScript with custom CSS/SVG; no shadcn/ui, Tailwind, or Express.
 - Quality gate: `npm run check` runs ESLint, Vitest, strict TypeScript checking, and the production build.
 - Selection UX: official high-resolution Seoul overview plus aligned SVG hit areas; dedicated SVG replaces the raster for setup/gameplay. Tokyo uses a dedicated Yamanote loop.
-- Playable lines: Seoul 1/2/3/4, Incheon 1/2, AREX, Suin–Bundang, and JR Yamanote. Seoul Line 6 data remains internal but its entry points stay under construction until corrected and re-approved.
+- Target playable lines: Seoul 1–9, Incheon 1/2, AREX, Suin–Bundang, and JR Yamanote. Seoul Line 6 remains under construction until its directed loop passes the approved verification gate.
+- Seoul Line 9 alone offers `일반 / 급행`: local uses `개화↔중앙보훈병원`, while express uses only its actual stops from `김포공항↔중앙보훈병원` in route and random modes.
+- The Seoul overview uses the approved B layout: the entire original map fills the page width without desktop-internal scrollbars; mobile retains touch zoom and pan.
 - Seoul Line 4 covers `진접↔오이도`; Seoul Line 6 covers the bidirectional `응암↔신내` trunk and the real one-way Eungam loop.
 - The overview uses PDF-rendered high-resolution raster tiles for text clarity and SVG only for aligned interaction highlights.
 - The first line selection plays one original Web Audio chime; existing effect gain rises from `0.09` to `0.135` with an output ceiling.
@@ -26,6 +28,9 @@ Build a polished Korean subway typing game for nine playable lines with route an
 ## Progress
 
 ### Done
+
+- Approved and documented the Seoul Lines 1–9 expansion, including Line 5 branches, the Line 6 directed Eungam loop, Lines 7/8 current endpoints, and Line 9-only local/express play.
+- Approved replacing the internally scrolling Seoul overview with the full-width original-map layout.
 
 - Closed every Seoul Line 6 entry point and restored its dock control to the construction notice without deleting the internal route data needed for correction.
 - Removed hover-time filtering and scaling from the 10205px overview image; line focus now composites a lightweight dimmer layer above the fixed raster and the SVG highlight above that layer.
@@ -62,10 +67,11 @@ Build a polished Korean subway typing game for nine playable lines with route an
 
 ### In progress
 
-- None. The ten-line release is merged to `main`, pushed, and deployed to GitHub Pages.
+- The approved Seoul Lines 1–9 design is awaiting final written-spec review before implementation planning.
 
 ### Next
 
+- Write the TDD implementation plan, then implement route data, setup/service selection, overview geometry, responsive verification, the full quality gate, push, and Pages verification.
 - Connect the leaderboard read model to the UI after a Firebase project/config is supplied.
 - Re-run official station-order verification before freezing production data.
 
