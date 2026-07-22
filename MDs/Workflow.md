@@ -29,6 +29,7 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### Done
 
+- Completed the approved randomized gameplay-route plan: each Game instance derives a stable seed, each seven-step/eight-station window gets a different non-self-intersecting path, labels select non-overlapping in-bounds positions in a 600×360 viewBox, and Line 1 composes explicit Yeoncheon, Incheon, and Sinchang legs at Guro.
 - Added stable per-eight-station route shape seeds: typing within a segment preserves its SVG path, while moving to the next segment generates a new deterministic non-self-intersecting path.
 - Expanded gameplay route SVGs to a 600×360 safe area and pushes labels away from top/bottom route points, keeping every label inside the viewBox with at least 30 SVG units of route clearance.
 
@@ -74,7 +75,7 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### In progress
 
-- Implementing the approved eight-station random gameplay-route plan: stable per-segment randomness, official relative direction, larger SVG safe area, and non-overlapping labels.
+- No release work is in progress.
 
 ### Next
 
@@ -82,6 +83,9 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 - Re-run official station-order verification before freezing production data.
 
 ## Verification
+
+- Random-route final gate on 2026-07-22 passed ESLint, 109 client tests, 2 server tests, strict TypeScript, and the Vite production build. Focused RED/GREEN coverage includes stable/different seeds, segment transitions, 600×360 safe bounds, deterministic label positions, Line 1 branch direction in first and later windows, train/path alignment, and non-self-intersection.
+- Fresh Edge captures under `.artifacts/random-routes-20260722/` cover Line 1 Incheon, Line 1 Sinchang, Line 2, and Incheon Line 2 at exact 360/768/1440 CSS-pixel widths. All 12 measured eight labels, `0 0 600 360`, no page overflow, and a visible train after departure; direct inspection confirmed readable labels, aligned trains, and branch-correct relative direction. Browser input advanced Line 1 to the next segment and changed the SVG points while the component test proves ordinary input rerenders preserve them.
 
 - Continuation gate on 2026-07-22 passed ESLint, 102 client tests, 2 server tests, strict TypeScript, the 42-module Vite production build, and `git diff --check`. RED regressions proved Line 2's visible path extended beyond its displayed stations and then ran right-to-left; GREEN clips each segment and renders Line 2 gameplay as one stable left-to-right path. Fresh Edge overview captures at 360, 768, and 1440 CSS-pixel widths remain under `.artifacts/continue-20260722/`.
 
@@ -144,6 +148,9 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 - Automated gameplay coverage confirms the train remains at Sindorim while Mullae is the next target, then advances to Mullae only after the correct submission.
 
 ## Mistakes
+
+- 2026-07-22 | Work appeared to stop after the user asked to keep it running | Interpreted continuation as keeping the Vite server alive instead of resuming the four-step implementation plan | Recovered the pushed commit, dirty RED tests, and written plan, then resumed all remaining tasks | When a continuation request follows an active plan, inspect Workflow, git state, and the plan before treating it as process uptime.
+- 2026-07-22 | Full gate rejected the first per-run shape seed | `Math.random()` initialized a ref during render and the ref was read to render SVG geometry, violating React purity rules | Derived the stable instance seed from React `useId()` instead | Generate render-affecting identity through React-managed stable values, not impure render-time calls or refs.
 
 - 2026-07-22 | An Incheon-origin Line 1 trip placed the departure station at the far right | Geographic/source path direction was allowed to determine gameplay reading direction | Mirror only the focused display path when its first endpoint is right of its last endpoint | Ordered gameplay must read from the first station on the left toward later stations on the right, independent of geographic travel direction.
 

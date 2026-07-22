@@ -4,7 +4,6 @@ import { getLine } from '../data/lines'
 export type RouteGeometry={key:string;path:Point[];context?:Point[];directedClosure?:boolean;globalStart?:Point;globalEnd?:Point}
 
 const baseRoutes:Record<string,Point[]>={
-  'seoul-1':[[35,250],[135,250],[210,190],[280,190],[340,115],[430,115],[520,35],[565,35]],
   'seoul-2':[[150,255],[70,210],[70,80],[150,35],[450,35],[530,90],[530,210],[460,255]],
   'seoul-3':[[45,45],[180,45],[230,95],[230,205],[285,255],[455,255],[555,155]],
   'suin-bundang':[[45,245],[165,245],[215,195],[335,195],[385,145],[385,65],[555,65]],
@@ -12,6 +11,25 @@ const baseRoutes:Record<string,Point[]>={
   'incheon-2':[[60,45],[130,45],[175,90],[245,90],[290,140],[360,140],[405,195],[475,195],[535,245]],
   arex:[[45,225],[135,225],[190,175],[280,175],[335,125],[425,125],[480,75],[560,75]],
   yamanote:[[150,255],[70,210],[70,80],[150,35],[450,35],[530,90],[530,210],[460,255]],
+}
+
+const line1Legs:Point[][]=[
+  [[300,35],[300,90],[360,140],[300,180]], // Yeoncheon -> Guro
+  [[300,180],[210,180],[125,220],[35,220]], // Guro -> Incheon
+  [[300,180],[350,235],[390,325]], // Guro -> Sinchang
+]
+const line1Geometry=(stations:string[]):RouteGeometry=>{
+  const sequences=getLine('seoul-1').sequences
+  const branch=(ordered:string[])=>ordered.filter(station=>station!=='구로').map(station=>sequences.findIndex(sequence=>sequence.includes(station))).find(index=>index>=0)??0
+  const startBranch=branch(stations),endBranch=branch([...stations].reverse())
+  if(startBranch===endBranch){
+    const path=line1Legs[startBranch]!
+    const sequence=sequences[startBranch]!
+    return {key:`seoul-1-${startBranch}`,path:sequence.indexOf(stations[0]!)<=sequence.indexOf(stations.at(-1)!)?path:[...path].reverse()}
+  }
+  const fromJunction=startBranch===0?line1Legs[0]!: [...line1Legs[startBranch]!].reverse()
+  const toDestination=endBranch===0?[...line1Legs[0]!].reverse():line1Legs[endBranch]!
+  return {key:`seoul-1-${startBranch}-${endBranch}`,path:[...fromJunction,...toDestination.slice(1)]}
 }
 
 // Source-guided normalized gameplay anchors, manually digitized into the
@@ -34,6 +52,7 @@ const topologyRoutes:Record<string,Omit<RouteGeometry,'key'>>={
 }
 
 export function getRouteGeometry(lineId:string,stations:string[]):RouteGeometry{
+  if(lineId==='seoul-1')return line1Geometry(stations)
   let key=lineId
   if(lineId==='seoul-5'){
     const hanamIndex=stations.indexOf('길동'),macheonIndex=stations.indexOf('둔촌동')
@@ -84,7 +103,7 @@ const normalizePath=(path:Point[])=>{
 
 export function getFocusedRouteGeometry(lineId:string,stations:string[],routeStationCount:number,segmentStart:number,segmentLength:number){
   const geometry=getRouteGeometry(lineId,stations)
-  const reversed=isReverseRoute(lineId,stations)
+  const reversed=lineId!=='seoul-1'&&isReverseRoute(lineId,stations)
   const fullPath=reversed?[...geometry.path].reverse():geometry.path
   const denominator=Math.max(1,routeStationCount-1)
   const startProgress=Math.min(1,segmentStart/denominator)

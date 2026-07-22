@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 import RouteMap from './RouteMap'
 import { YAMANOTE_LABELS } from '../data/lines'
 import { playSound } from '../audio/sounds'
@@ -19,6 +19,7 @@ export default function Game({ lineId,stations,color,sound=true,durationSeconds,
   const [trainVisible,setTrainVisible]=useState(false), [trainEntering,setTrainEntering]=useState(false)
   const timed=durationSeconds!==undefined
   const input=useRef<HTMLInputElement>(null), entranceTimer=useRef<number|undefined>(undefined), finished=remaining===0||(!timed&&index>=stations.length)
+  const runSeed=[...useId()].reduce((seed,character)=>Math.imul(seed,31)+character.charCodeAt(0)|0,0)
   useEffect(()=>()=>window.clearTimeout(entranceTimer.current),[])
   useEffect(()=>input.current?.focus(),[index])
   useEffect(()=>{
@@ -42,6 +43,7 @@ export default function Game({ lineId,stations,color,sound=true,durationSeconds,
   const completedIndex=Math.max(0,index-1)
   const currentStation=stations[completedIndex%stations.length]!
   const segmentStart=Math.floor(completedIndex/7)*7
+  const shapeSeed=(runSeed+segmentStart*2654435761)>>>0
   const visibleStations=stations.slice(segmentStart,segmentStart+8)
   const japanese=lineId==='yamanote' ? YAMANOTE_LABELS[target] : undefined
   const normalizedValue=value.normalize('NFC')
@@ -49,7 +51,7 @@ export default function Game({ lineId,stations,color,sound=true,durationSeconds,
   const matched=correctPrefix===-1?Math.min(normalizedValue.length,target.length):correctPrefix
   return <section className="game" style={{'--line':color} as React.CSSProperties}>
     <div className="game-top"><button className="back" onClick={onExit}>← 운행 종료</button><div className="game-metrics"><div className="speed-meter" role="status" aria-label={`실시간 타수 ${speed} 타/분`}><span>실시간 타수</span><b>{speed}</b><small>타/분</small></div><div className="route-progress">{timed?<><b>{remaining}초</b> · {index}개</>:<><b>{index+1}</b> / {stations.length}</>}</div></div></div>
-    {timed?<div className="random-stage"><span>RANDOM STATION · 60 SEC</span><b>노선 전체에서 무작위 출제</b><small>종착역 없이 제한 시간 동안 계속됩니다.</small></div>:<div className="map-stage route-segment" key={segmentStart}><RouteMap lineId={lineId ?? 'seoul-2'} stations={visibleStations} geometryStations={stations} routeStationCount={stations.length} segmentStart={segmentStart} shapeSeed={segmentStart} color={color} progress={(completedIndex-segmentStart)/Math.max(1,visibleStations.length-1)} targetIndex={index-segmentStart} showAllLabels={showAllStations} trainVisible={trainVisible} trainEntering={trainEntering} /><div className="current-station" role="status">{index===0?`출발 준비 · ${target}`:`현재 ${currentStation}`}</div></div>}
+    {timed?<div className="random-stage"><span>RANDOM STATION · 60 SEC</span><b>노선 전체에서 무작위 출제</b><small>종착역 없이 제한 시간 동안 계속됩니다.</small></div>:<div className="map-stage route-segment" key={segmentStart}><RouteMap lineId={lineId ?? 'seoul-2'} stations={visibleStations} geometryStations={stations} routeStationCount={stations.length} segmentStart={segmentStart} shapeSeed={shapeSeed} color={color} progress={(completedIndex-segmentStart)/Math.max(1,visibleStations.length-1)} targetIndex={index-segmentStart} showAllLabels={showAllStations} trainVisible={trainVisible} trainEntering={trainEntering} /><div className="current-station" role="status">{index===0?`출발 준비 · ${target}`:`현재 ${currentStation}`}</div></div>}
     <div className="target"><p className="eyebrow">TYPE STATION · 역명 입력</p>{japanese&&<p className="japanese"><b>{japanese.kanji}</b><span>{japanese.kana}</span></p>}<h1 data-long={target.length>6} aria-label={target}>{Array.from(target).map((character,position)=><span className={position<matched?'matched':normalizedValue[position]&&normalizedValue[position]!==character?'miss':''} key={`${index}-${position}`}>{character}</span>)}</h1></div>
     <input ref={input} value={value} onChange={event=>{const next=event.target.value;const added=Math.max(0,countJaso(next)-countJaso(value));if(added){const timestamp=Date.now();playSound('key',sound);setStartedAt(start=>start??timestamp);setTypedJaso(count=>count+added);setNow(timestamp)}setValue(next)}} onKeyDown={submit} placeholder="역명을 입력하고 Enter" aria-label="역명 입력" autoComplete="off" />
   </section>

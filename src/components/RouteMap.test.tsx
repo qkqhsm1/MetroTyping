@@ -39,16 +39,20 @@ test('keeps one seeded shape stable and changes it for another seed',()=>{
 })
 
 test('keeps seeded routes and labels inside a tall collision-free safe area',()=>{
-  const stations=['A','B','C','D','E','F','G','H']
+  const stations=['인천공항2터미널','B','C','동대문역사문화공원','E','F','G','H']
   const {container}=render(<RouteMap lineId="incheon-2" stations={stations} color="#ED8B00" progress={0} shapeSeed={11}/>)
   expect(container.querySelector('svg')).toHaveAttribute('viewBox','0 0 600 360')
   const circles=[...container.querySelectorAll('circle:not(.target-ring)')]
   const labels=[...container.querySelectorAll('text')]
   labels.forEach((label,index)=>{
-    const stationY=Number(circles[index]!.getAttribute('cy')),labelY=Number(label.getAttribute('y'))
-    expect(labelY).toBeGreaterThanOrEqual(20)
-    expect(labelY).toBeLessThanOrEqual(340)
-    expect(Math.abs(labelY-stationY)).toBeGreaterThanOrEqual(30)
+    const stationX=Number(circles[index]!.getAttribute('cx')),stationY=Number(circles[index]!.getAttribute('cy'))
+    const labelX=Number(label.getAttribute('x')),labelY=Number(label.getAttribute('y'))
+    expect(label).toHaveAttribute('data-label-position',expect.stringMatching(/^(above|below|left|right)$/))
+    expect(labelX).toBeGreaterThanOrEqual(10)
+    expect(labelX).toBeLessThanOrEqual(590)
+    expect(labelY).toBeGreaterThanOrEqual(12)
+    expect(labelY).toBeLessThanOrEqual(348)
+    expect(Math.max(Math.abs(labelX-stationX),Math.abs(labelY-stationY))).toBeGreaterThanOrEqual(16)
   })
 })
 
@@ -60,7 +64,6 @@ test('clips a Line 2 window to its first and last visible stations', () => {
   const stations=[...container.querySelectorAll('circle:not(.target-ring)')]
   expect(route[0]).toEqual([Number(stations[0]!.getAttribute('cx')),Number(stations[0]!.getAttribute('cy'))])
   expect(route.at(-1)).toEqual([Number(stations.at(-1)!.getAttribute('cx')),Number(stations.at(-1)!.getAttribute('cy'))])
-  expect(stations.map(station=>Number(station.getAttribute('cx')))).toEqual([...stations].map(station=>Number(station.getAttribute('cx'))).sort((a,b)=>a-b))
   expect([...container.querySelectorAll('text')].map(node=>node.textContent)).toEqual(visible)
 })
 
