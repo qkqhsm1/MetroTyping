@@ -30,6 +30,7 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 ### Done
 
 - Added stable per-eight-station route shape seeds: typing within a segment preserves its SVG path, while moving to the next segment generates a new deterministic non-self-intersecting path.
+- Expanded gameplay route SVGs to a 600×360 safe area and pushes labels away from top/bottom route points, keeping every label inside the viewBox with at least 30 SVG units of route clearance.
 
 - Restored focused maximum-eight-station gameplay geometry and made gameplay segments start on the left whenever their source geometry ran right-to-left; Line 2 additionally uses a stable straight path so station order cannot be confused by loop bends.
 

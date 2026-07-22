@@ -38,6 +38,20 @@ test('keeps one seeded shape stable and changes it for another seed',()=>{
   expect(container.querySelector('[data-route]')).not.toHaveAttribute('points',first)
 })
 
+test('keeps seeded routes and labels inside a tall collision-free safe area',()=>{
+  const stations=['A','B','C','D','E','F','G','H']
+  const {container}=render(<RouteMap lineId="incheon-2" stations={stations} color="#ED8B00" progress={0} shapeSeed={11}/>)
+  expect(container.querySelector('svg')).toHaveAttribute('viewBox','0 0 600 360')
+  const circles=[...container.querySelectorAll('circle:not(.target-ring)')]
+  const labels=[...container.querySelectorAll('text')]
+  labels.forEach((label,index)=>{
+    const stationY=Number(circles[index]!.getAttribute('cy')),labelY=Number(label.getAttribute('y'))
+    expect(labelY).toBeGreaterThanOrEqual(20)
+    expect(labelY).toBeLessThanOrEqual(340)
+    expect(Math.abs(labelY-stationY)).toBeGreaterThanOrEqual(30)
+  })
+})
+
 test('clips a Line 2 window to its first and last visible stations', () => {
   const full=getFullLoopRoute('seoul-2','신도림','clockwise').stationIds
   const visible=full.slice(0,8)

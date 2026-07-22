@@ -12,13 +12,13 @@ export default function RouteMap({ lineId,progress,color,stations,geometryStatio
   if (!route) throw new Error(`Missing route geometry: ${lineId}`)
   const train = pointAt(route, progress)
   const points = route.map(point => point.join(',')).join(' ')
-  return <svg className="route-map" viewBox="0 0 600 290" role="img" aria-label="전체 노선도">
+  return <svg className="route-map" viewBox="0 0 600 360" role="img" aria-label="전체 노선도">
     <polyline data-route="" data-geometry={geometry.key} data-global-start={geometry.globalStart?.join(',')} data-global-end={geometry.globalEnd?.join(',')} points={points} fill="none" stroke="#deddd7" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round" />
     {geometry.context&&<polyline data-context="" data-directed-closure={geometry.directedClosure||undefined} points={geometry.context.map(point=>point.join(',')).join(' ')} fill="none" stroke="#deddd7" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round" />}
     <polyline points={points} fill="none" stroke={color} strokeWidth="16" strokeLinecap="round" strokeLinejoin="round" pathLength="1" strokeDasharray={`${progress} 1`} />
     {stations.map((station,index) => {
       const point=pointAt(route,index/Math.max(1,stations.length-1))
-      const labelY=point.y+(index%2===0?-31:40)
+      const labelY=point.y+(point.y<80?40:point.y>280?-31:index%2===0?-31:40)
       const showLabel=showAllLabels||index===0||index===stations.length-1||index===Math.round(progress*(stations.length-1))
       const split=station.length>6?Math.ceil(station.length/2):station.length
       const isTarget=index===targetIndex
