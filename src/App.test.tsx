@@ -31,11 +31,10 @@ test('shows the product and city map entry', () => {
   expect(screen.getByText('9 LINES')).toBeInTheDocument()
 })
 
-test('keeps unfinished Line 6 out of gameplay', () => {
+test('opens setup for Line 6', () => {
   render(<App />)
-  fireEvent.click(screen.getByRole('button', { name: '서울 6호선' }))
-  expect(screen.getByText('현재 공사 중인 노선입니다.')).toBeInTheDocument()
-  expect(screen.queryByRole('heading', { name: '서울 6호선' })).not.toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: '서울 6호선 선택' }))
+  expect(screen.getByRole('heading', { name: '서울 6호선' })).toBeInTheDocument()
 })
 
 test('plays the line-selection chime only on the first selection', () => {

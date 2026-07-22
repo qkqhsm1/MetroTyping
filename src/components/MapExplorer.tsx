@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { LINES } from '../data/lines'
 
-const seoulLines = LINES.filter(line => line.id !== 'yamanote' && line.id !== 'seoul-6')
-const unsupported = ['서울 5호선', '서울 6호선', '서울 7호선', '서울 8호선', '서울 9호선']
+const seoulLines = LINES.filter(line => line.id !== 'yamanote')
 const yamanote = LINES.find(line => line.id === 'yamanote')!
 const asset=(path:string)=>`${import.meta.env.BASE_URL}assets/${path}`
 const hitPaths = [
@@ -10,6 +9,11 @@ const hitPaths = [
   { id:'seoul-2', name:'서울 2호선', color:'#00A84D' },
   { id:'seoul-3', name:'서울 3호선', color:'#EF7C1C' },
   { id:'seoul-4', name:'서울 4호선', color:'#00A5DE' },
+  { id:'seoul-5', name:'서울 5호선', color:'#996CAC' },
+  { id:'seoul-6', name:'서울 6호선', color:'#A9431E' },
+  { id:'seoul-7', name:'서울 7호선', color:'#747F00' },
+  { id:'seoul-8', name:'서울 8호선', color:'#E6186C' },
+  { id:'seoul-9', name:'서울 9호선', color:'#BDB092' },
   { id:'suin-bundang', name:'수인·분당선', color:'#F5A200' },
   { id:'incheon-1', name:'인천 1호선', color:'#7CA8D5' },
   { id:'incheon-2', name:'인천 2호선', color:'#ED8B00' },
@@ -23,7 +27,6 @@ const yamanoteLoop=Array.from({length:160},(_,index)=>loopPoint(index/160*Math.P
 
 export default function MapExplorer({ onSelect }:{ onSelect:(lineId:string)=>void }) {
   const [city,setCity]=useState<'seoul'|'tokyo'>('seoul')
-  const [notice,setNotice]=useState(false)
   const [activeLine,setActiveLine]=useState<string|null>(null)
   const hoverTimer=useRef<number|null>(null)
   const cancelHover=()=>{if(hoverTimer.current!==null){window.clearTimeout(hoverTimer.current);hoverTimer.current=null}}
@@ -47,7 +50,7 @@ export default function MapExplorer({ onSelect }:{ onSelect:(lineId:string)=>voi
           </svg>
         </div>
       </div>
-      <div className="line-dock">{seoulLines.map(line=><button key={line.id} aria-label={`${line.name} 선택`} onMouseEnter={()=>beginHover(line.id)} onMouseLeave={endHover} onFocus={()=>focusLine(line.id)} onBlur={endHover} onClick={()=>onSelect(line.id)} style={{'--line':line.color} as React.CSSProperties}><i />{line.name}</button>)}{unsupported.map(name=><button key={name} onClick={()=>setNotice(true)} className="disabled-line">{name}</button>)}</div>
+      <div className="line-dock">{seoulLines.map(line=><button key={line.id} aria-label={`${line.name} 선택`} onMouseEnter={()=>beginHover(line.id)} onMouseLeave={endHover} onFocus={()=>focusLine(line.id)} onBlur={endHover} onClick={()=>onSelect(line.id)} style={{'--line':line.color} as React.CSSProperties}><i />{line.name}</button>)}</div>
       <p className="attribution">출처: 서울교통공사 · 서울특별시, 공공누리 제1유형</p>
     </> : <div className="tokyo-map">
       <svg viewBox="0 0 1200 700" role="img" aria-label="JR 야마노테선 노선도">
@@ -58,6 +61,5 @@ export default function MapExplorer({ onSelect }:{ onSelect:(lineId:string)=>voi
       </svg>
       <button className="primary tokyo-start" onClick={()=>onSelect('yamanote')}>야마노테선 선택 →</button>
     </div>}
-    {notice&&<div className="notice" role="status"><b>현재 공사 중인 노선입니다.</b><span>지원 노선을 먼저 완성하고 있어요.</span><button onClick={()=>setNotice(false)}>확인</button></div>}
   </section>
 }

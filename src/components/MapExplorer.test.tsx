@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
 import MapExplorer from './MapExplorer'
+import { getLine } from '../data/lines'
 
 afterEach(() => vi.useRealTimers())
 
@@ -16,7 +17,7 @@ test('switches between the official Seoul map and original Tokyo map', () => {
   expect(document.querySelectorAll('[data-station-label]')).toHaveLength(30)
 })
 
-test('selects supported lines and explains unsupported lines', () => {
+test('selects supported lines', () => {
   const onSelect = vi.fn()
   render(<MapExplorer onSelect={onSelect} />)
   fireEvent.click(screen.getByRole('button', { name: '서울 2호선 선택' }))
@@ -25,11 +26,21 @@ test('selects supported lines and explains unsupported lines', () => {
   expect(onSelect).toHaveBeenCalledWith('seoul-1')
   fireEvent.click(screen.getByRole('button', { name: '서울 4호선 선택' }))
   expect(onSelect).toHaveBeenCalledWith('seoul-4')
-  fireEvent.click(screen.getByRole('button', { name: '서울 6호선' }))
-  expect(onSelect).not.toHaveBeenCalledWith('seoul-6')
-  expect(screen.getByText('현재 공사 중인 노선입니다.')).toBeInTheDocument()
-  fireEvent.click(screen.getByRole('button', { name: '서울 5호선' }))
-  expect(screen.getByText('현재 공사 중인 노선입니다.')).toBeInTheDocument()
+})
+
+test('selects Seoul lines 5 through 9 from dock and exact map symbols', () => {
+  const onSelect = vi.fn()
+  render(<MapExplorer onSelect={onSelect} />)
+
+  for (const id of ['seoul-5', 'seoul-6', 'seoul-7', 'seoul-8', 'seoul-9']) {
+    const line = getLine(id)
+    const mapLine = screen.getByRole('button', { name: `지도에서 ${line.name} 선택` })
+    expect(mapLine.querySelector('.line-highlight')).toHaveAttribute('href', expect.stringContaining(`#${id}`))
+    fireEvent.click(screen.getByRole('button', { name: `${line.name} 선택` }))
+    expect(onSelect).toHaveBeenLastCalledWith(id)
+  }
+
+  expect(screen.queryByRole('status')).not.toBeInTheDocument()
 })
 
 test.each([

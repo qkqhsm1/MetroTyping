@@ -2,12 +2,22 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 
 const sourcePath = existsSync('.artifacts/seoul-map.svg') ? '.artifacts/seoul-map.svg' : '../../.artifacts/seoul-map.svg'
 const source = readFileSync(sourcePath, 'utf8')
+const isLegendSwatch = (path) => {
+  const d = path.match(/\sd="([^"]+)"/)?.[1]
+  const transform = path.match(/\stransform="([^"]+)"/)?.[1]
+  const y = Number(transform?.match(/, ([\d.]+)\)$/)?.[1])
+  return /^M .* L 45\./.test(d ?? '') && y < 200
+}
 const lines = {
   'seoul-1': '13.975525%, 32.061768%, 55.384827%',
   'seoul-2': '13.000488%, 68.972778%, 27.290344%',
   'seoul-3': '94.703674%, 31.959534%, 10.5896%',
   'seoul-4': '22.377014%, 63.475037%, 81.7276%',
+  'seoul-5': '44.682312%, 25.544739%, 64.308167%',
   'seoul-6': '39.141846%, 20.777893%, 12.677002%',
+  'seoul-7': '37.008667%, 42.33551%, 17.936707%',
+  'seoul-8': '92.64679%, 2.74353%, 44.703674%',
+  'seoul-9': '59.432983%, 58.242798%, 50.627136%',
   'suin-bundang': '91.685486%, 58.009338%, 9.550476%',
   'incheon-1': '51.05896%, 69.056702%, 88.70697%',
   'incheon-2': '96.755981%, 56.323242%, 34.22699%',
@@ -18,6 +28,7 @@ const groups = Object.entries(lines).map(([id, color]) => {
   const paths = [...source.matchAll(/<path\b[^>]*\/>/g)]
     .map(match => match[0])
     .filter(path => path.includes(`stroke="rgb(${color})"`))
+    .filter(path => !isLegendSwatch(path))
     .map(path => {
       const d = path.match(/\sd="([^"]+)"/)?.[1]
       const transform = path.match(/\stransform="([^"]+)"/)?.[1]
