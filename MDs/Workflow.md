@@ -2,7 +2,7 @@
 
 ## Goal
 
-Build a polished Korean subway typing game for eight lines with route and random modes, animated SVG trains, sound, anonymous nickname accounts, and online rankings.
+Build a polished Korean subway typing game for ten lines with route and random modes, animated SVG trains, sound, anonymous nickname accounts, and online rankings.
 
 ## Decisions
 
@@ -10,7 +10,10 @@ Build a polished Korean subway typing game for eight lines with route and random
 - Client language: TypeScript with custom CSS/SVG; no shadcn/ui, Tailwind, or Express.
 - Quality gate: `npm run check` runs ESLint, Vitest, strict TypeScript checking, and the production build.
 - Selection UX: official high-resolution Seoul overview plus aligned SVG hit areas; dedicated SVG replaces the raster for setup/gameplay. Tokyo uses a dedicated Yamanote loop.
-- Lines: Seoul 1/2/3, Incheon 1/2, AREX, Suin–Bundang, and JR Yamanote.
+- Lines: Seoul 1/2/3/4/6, Incheon 1/2, AREX, Suin–Bundang, and JR Yamanote.
+- Seoul Line 4 covers `진접↔오이도`; Seoul Line 6 covers the bidirectional `응암↔신내` trunk and the real one-way Eungam loop.
+- The overview uses PDF-rendered high-resolution raster tiles for text clarity and SVG only for aligned interaction highlights.
+- The first line selection plays one original Web Audio chime; existing effect gain rises from `0.09` to `0.135` with an output ceiling.
 - Visual design: white base, official line color accents, full-route fixed overview.
 - Route mode selects origin and destination; Yamanote also selects inner/outer direction.
 - Seoul Line 1 includes the Incheon, Uijeongbu/Soyosan, and Cheonan/Sinchang directions and the Guro branch.
@@ -53,10 +56,11 @@ Build a polished Korean subway typing game for eight lines with route and random
 
 ### In progress
 
-- None. Route expansion is merged to `main`, pushed, and deployed to GitHub Pages.
+- The Seoul Lines 4/6, high-resolution tiled overview, revised Seoul/Tokyo copy, and audio polish design is written and awaiting final design-document review before implementation planning.
 
 ### Next
 
+- Convert the approved design into a TDD implementation plan, then implement and visually verify it at 360, 768, and 1440 CSS pixels.
 - Connect the leaderboard read model to the UI after a Firebase project/config is supplied.
 - Re-run official station-order verification before freezing production data.
 
