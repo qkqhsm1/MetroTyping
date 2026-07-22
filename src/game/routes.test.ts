@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { getLine, LINES } from '../data/lines'
-import { dailyStations, getFullLoopRoute, getQuickRoutePairs, getRoute } from './routes'
+import { dailyStations, getFullLoopRoute, getQuickRoutePairs, getRoute, getStations } from './routes'
 
 describe('route data', () => {
   test('contains the fourteen approved lines', () => {
@@ -24,6 +24,25 @@ describe('route data', () => {
     expect(getRoute('seoul-7', '장암', '석남').stationIds.at(-1)).toBe('석남')
     expect(getRoute('seoul-8', '별내', '모란').stationIds).toContain('암사역사공원')
     expect(getLine('seoul-9').services?.map(service => service.id)).toEqual(['local', 'express'])
+  })
+
+  test('applies the selected Line 9 service to every route mode', () => {
+    expect(getStations('seoul-9', 'express')[0]).toBe('김포공항')
+    expect(getStations('seoul-9', 'express')).not.toContain('개화')
+    expect(getRoute('seoul-9', '김포공항', '중앙보훈병원', 'forward', 'express').stationIds)
+      .toEqual(getStations('seoul-9', 'express'))
+    expect(() => getRoute('seoul-9', '개화', '중앙보훈병원', 'forward', 'express'))
+      .toThrow('Invalid station')
+    expect(getQuickRoutePairs('seoul-9', 'express')[0]?.title)
+      .toBe('김포공항 ↔ 중앙보훈병원')
+    expect(dailyStations('seoul-9', '2026-07-22', 'express').sort())
+      .toEqual([...getStations('seoul-9', 'express')].sort())
+  })
+
+  test('rejects invalid services and preserves existing station validation', () => {
+    expect(() => getStations('seoul-9', 'airport')).toThrow('Invalid service')
+    expect(() => getRoute('seoul-5', '방화', '방화')).not.toThrow()
+    expect(() => getRoute('seoul-5', '없는역', '마천')).toThrow('Invalid station')
   })
 
   test('routes Seoul line 4 end to end in both directions', () => {

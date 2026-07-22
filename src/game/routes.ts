@@ -42,9 +42,26 @@ function graphFor(sequences: string[][], oneWaySequences: string[][] = []) {
   return graph
 }
 
-export function getRoute(lineId: string, from: string, to: string, direction = 'forward') {
+function serviceFor(lineId: string, serviceId?: string) {
   const line = getLine(lineId)
-  const stations = new Set([...line.sequences.flat(), ...(line.oneWaySequences?.flat() ?? [])])
+  if (!serviceId) return undefined
+  const service = line.services?.find(item => item.id === serviceId)
+  if (!service) throw new Error('Invalid service')
+  return service
+}
+
+export function getStations(lineId: string, serviceId?: string) {
+  const line = getLine(lineId)
+  const service = serviceFor(lineId, serviceId)
+  return service
+    ? [...service.sequence]
+    : [...new Set([...line.sequences.flat(), ...(line.oneWaySequences?.flat() ?? [])])]
+}
+
+export function getRoute(lineId: string, from: string, to: string, direction = 'forward', serviceId?: string) {
+  const line = getLine(lineId)
+  const service = serviceFor(lineId, serviceId)
+  const stations = new Set(getStations(lineId, serviceId))
   if (!stations.has(from) || !stations.has(to)) throw new Error('Invalid station')
   if (from === to) return { stationIds: [from], direction, pathId: lineId }
 
@@ -66,7 +83,7 @@ export function getRoute(lineId: string, from: string, to: string, direction = '
     return { stationIds: result, direction, pathId: lineId }
   }
 
-  const graph = graphFor(line.sequences, line.oneWaySequences)
+  const graph = service ? graphFor([service.sequence]) : graphFor(line.sequences, line.oneWaySequences)
   const queue: string[][] = [[from]]
   const seen = new Set([from])
 
@@ -101,8 +118,9 @@ export function getFullLoopRoute(lineId: string, origin: string, direction: stri
   return { stationIds, direction, pathId: lineId }
 }
 
-export function getQuickRoutePairs(lineId: string): QuickRoutePair[] {
+export function getQuickRoutePairs(lineId: string, serviceId?: string): QuickRoutePair[] {
   const line = getLine(lineId)
+  const service = serviceFor(lineId, serviceId)
   if (line.loopPreset) {
     const [first, second] = line.loopPreset.directions
     const routeFor = (item: typeof first): QuickRoute => {
@@ -121,16 +139,18 @@ export function getQuickRoutePairs(lineId: string): QuickRoutePair[] {
 
   const pairs: QuickRoutePair[] = []
   const termini = line.serviceTermini ?? []
-  const candidates = line.quickRoutePairs ?? termini.flatMap(({ station: from }, leftIndex) =>
-    termini.slice(leftIndex + 1).map(({ station: to }) => [from, to] as const),
-  )
+  const candidates = service
+    ? [[service.sequence[0]!, service.sequence.at(-1)!] as const]
+    : line.quickRoutePairs ?? termini.flatMap(({ station: from }, leftIndex) =>
+      termini.slice(leftIndex + 1).map(({ station: to }) => [from, to] as const),
+    )
   const seen = new Set<string>()
   for (const [from, to] of candidates) {
       const id = [from, to].sort().join(':')
       if (seen.has(id)) continue
       try {
-        const forward = getRoute(lineId, from, to, 'forward')
-        const reverse = getRoute(lineId, to, from, 'reverse')
+        const forward = getRoute(lineId, from, to, 'forward', serviceId)
+        const reverse = getRoute(lineId, to, from, 'reverse', serviceId)
         const routes: readonly [QuickRoute, QuickRoute] = [
           { ...forward, id: `${lineId}:${from}:${to}`, label: `${from} → ${to}`, from, to },
           { ...reverse, id: `${lineId}:${to}:${from}`, label: `${to} → ${from}`, from: to, to: from },
@@ -154,10 +174,9 @@ export function getQuickRoutePairs(lineId: string): QuickRoutePair[] {
   return pairs
 }
 
-export function dailyStations(lineId: string, dateKey: string) {
-  const line = getLine(lineId)
-  const stations = [...new Set([...line.sequences.flat(), ...(line.oneWaySequences?.flat() ?? [])])]
-  let seed = [...`${lineId}:${dateKey}`].reduce(
+export function dailyStations(lineId: string, dateKey: string, serviceId?: string) {
+  const stations = getStations(lineId, serviceId)
+  let seed = [...`${lineId}:${dateKey}:${serviceId ?? 'all'}`].reduce(
     (value, character) => (value * 31 + character.charCodeAt(0)) >>> 0,
     2166136261,
   )
