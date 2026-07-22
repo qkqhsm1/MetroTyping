@@ -99,6 +99,17 @@ test('Line 5 branches share the Gangdong approach and then diverge', () => {
   expect(hanam.slice(4)).not.toEqual(macheon.slice(4))
 })
 
+test.each([
+  {name:'forward Hanam after 길동 leaves',full:['강동','길동','미사','하남풍산','하남검단산'],visible:['미사','하남풍산','하남검단산'],key:'seoul-5-hanam'},
+  {name:'forward Macheon after 둔촌동 leaves',full:['강동','둔촌동','올림픽공원','방이','오금','마천'],visible:['올림픽공원','방이','오금','마천'],key:'seoul-5-macheon'},
+  {name:'reverse Hanam before 길동 enters',full:['하남검단산','하남풍산','미사','길동','강동'],visible:['하남검단산','하남풍산','미사'],key:'seoul-5-hanam'},
+  {name:'reverse Macheon before 둔촌동 enters',full:['마천','오금','방이','올림픽공원','둔촌동','강동'],visible:['마천','오금','방이','올림픽공원'],key:'seoul-5-macheon'},
+])('keeps $name branch identity outside the visible window', ({full,visible,key}) => {
+  const {container}=render(<RouteMap lineId="seoul-5" stations={visible} geometryStations={full} color="#996CAC" progress={0} />)
+  expect(container.querySelector('polyline[data-route]')).toHaveAttribute('data-geometry',key)
+  expect(container.querySelectorAll('.route-map text')).toHaveLength(visible.length)
+})
+
 test('Line 6 loop has a directed closure distinct from the open trunk', () => {
   const { container,rerender }=render(<RouteMap lineId="seoul-6" stations={['응암','역촌','불광','독바위','연신내','구산']} color="#A9431E" progress={0} />)
   expect(container.querySelector('polyline[data-context]')).toHaveAttribute('data-directed-closure','true')

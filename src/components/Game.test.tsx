@@ -137,6 +137,22 @@ test('shows a readable eight-station segment and swaps segments without blocking
   expect(screen.getByRole('heading',{name:'역8'})).toBeInTheDocument()
 })
 
+test.each([
+  {name:'forward Hanam after 길동 leaves',stations:['강동','길동','A','B','C','D','E','F','G','H'],answers:8,key:'seoul-5-hanam'},
+  {name:'forward Macheon after 둔촌동 leaves',stations:['강동','둔촌동','A','B','C','D','E','F','G','H'],answers:8,key:'seoul-5-macheon'},
+  {name:'reverse Hanam before 길동 enters',stations:['하남검단산','A','B','C','D','E','F','G','길동','강동'],answers:0,key:'seoul-5-hanam'},
+  {name:'reverse Macheon before 둔촌동 enters',stations:['마천','A','B','C','D','E','F','G','둔촌동','강동'],answers:0,key:'seoul-5-macheon'},
+])('keeps Line 5 geometry stable for $name the visible segment', ({stations,answers,key}) => {
+  const {container}=render(<Game lineId="seoul-5" stations={stations} color="#996CAC" onExit={()=>{}} />)
+  const input=screen.getByRole('textbox')
+  stations.slice(0,answers).forEach(station=>{
+    fireEvent.change(input,{target:{value:station}})
+    fireEvent.keyDown(input,{key:'Enter',isComposing:false})
+  })
+  expect(container.querySelector('polyline[data-route]')).toHaveAttribute('data-geometry',key)
+  expect(container.querySelectorAll('.route-map text')).toHaveLength(Math.min(8,stations.length-7*(answers>0?1:0)))
+})
+
 test('shows the final Korean typing speed on the result screen', () => {
   vi.useFakeTimers()
   render(<Game stations={['신도림','문래']} color="#00A84D" onExit={() => {}} />)

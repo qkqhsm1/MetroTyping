@@ -1,8 +1,8 @@
 import { pointAt } from '../game/geometry'
 import { getRouteGeometry } from '../game/routeGeometry'
 
-export default function RouteMap({ lineId,progress,color,stations,showAllLabels=true,targetIndex,trainVisible=true,trainEntering=false }:{ lineId:string; progress:number; color:string; stations:string[]; showAllLabels?:boolean; targetIndex?:number; trainVisible?:boolean; trainEntering?:boolean }) {
-  const geometry=getRouteGeometry(lineId,stations)
+export default function RouteMap({ lineId,progress,color,stations,geometryStations=stations,showAllLabels=true,targetIndex,trainVisible=true,trainEntering=false }:{ lineId:string; progress:number; color:string; stations:string[]; geometryStations?:string[]; showAllLabels?:boolean; targetIndex?:number; trainVisible?:boolean; trainEntering?:boolean }) {
+  const geometry=getRouteGeometry(lineId,geometryStations)
   const route = geometry.path
   if (!route) throw new Error(`Missing route geometry: ${lineId}`)
   const train = pointAt(route, progress)

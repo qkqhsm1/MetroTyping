@@ -169,3 +169,33 @@ There are eight scenarios at each exact 360×900, 768×900, and 1440×900 CSS vi
 `measurements.jsonl` records the exact route key, route/context points, station-node/label count, train transform, target, viewport, and horizontal-overflow measurements for all 24 captures. Visual inspection found readable labels and controls without page overflow at every width; train/path alignment was visually consistent; Seoul 4/7/8 and both Line 9 services retained their recognizable bends; Line 5 visibly changed branch direction between Hanam and Macheon; and Line 6 rendered a closed loop. Each capture had a visible train and 6–8 station labels/nodes.
 
 Remaining uncertainty is unchanged for physical audio, real OS IME composition UI, touch feel, and device GPU rendering. The gameplay geometry is intentionally normalized and schematic; official-map fidelity remains with the overview raster/vector layer.
+
+## Review correction: stable Line 5 branch identity
+
+The topology review found one remaining identity defect: `Game` passed only its current `visibleStations` slice into `RouteMap`, so Line 5 fell back to `seoul-5-trunk` whenever `길동` or `둔촌동` was outside that eight-station window. Geometry could therefore change at a segment boundary even though the selected full route had not changed.
+
+TDD RED added four forward/reverse regressions covering both branches after the marker leaves or before it enters the visible window. All four failed with `data-geometry="seoul-5-trunk"`. The minimal fix adds an optional `geometryStations` input to `RouteMap`; `Game` passes the immutable full `stations` route for identity resolution while continuing to pass only `visibleStations` for labels, nodes, target index, and the maximum-eight rendering cap.
+
+The green regressions cover:
+
+- forward Hanam after `길동` leaves the segment;
+- forward Macheon after `둔촌동` leaves the segment;
+- reverse Hanam before `길동` enters the segment;
+- reverse Macheon before `둔촌동` enters the segment.
+
+Focused verification:
+
+```powershell
+npx vitest run src/components/Game.test.tsx src/components/RouteMap.test.tsx src/game/geometry.test.ts
+```
+
+Result: 3 files passed, 36 tests passed, 0 failed; strict TypeScript also passed.
+
+The final `npm run check` passed ESLint, 85 client tests in 11 files, 2 server tests, strict TypeScript, and the 42-module Vite build; `git diff --check` exited 0.
+
+Fresh Edge evidence is under `.superpowers/sdd/task-6-stable-identity-captures-v2/`. At exact 360, 768, and 1440 CSS-pixel widths, the forward routes were advanced to segment 42, after the branch markers had left the visible window:
+
+- Hanam retained `data-geometry="seoul-5-hanam"`, showed 7 labels, and targeted `상일동` at 44/49.
+- Macheon retained `data-geometry="seoul-5-macheon"`, showed 4 labels, and targeted `개롱` at 44/46.
+
+Visual inspection confirmed that both paths retained their distinct branch direction, labels remained readable, the train remained on the selected path, and no horizontal page overflow appeared at any width. No styles or animation behavior changed.

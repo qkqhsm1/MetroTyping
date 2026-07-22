@@ -77,6 +77,10 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ## Verification
 
+- Task 6 stable-identity correction on 2026-07-22: four RED cases proved Line 5 collapsed to trunk geometry when `길동`/`둔촌동` was outside `visibleStations`. `Game` now passes the immutable full route separately as `geometryStations`, while `RouteMap` still renders only the maximum-eight visible slice. Focused Game/RouteMap/geometry verification passed 36 tests in 3 files plus strict TypeScript.
+- Fresh Edge captures under `.superpowers/sdd/task-6-stable-identity-captures-v2/` advanced both forward Line 5 routes to segment 42 at exact 360/768/1440 widths. With branch markers absent, Hanam remained `seoul-5-hanam` with 7 labels and Macheon remained `seoul-5-macheon` with 4 labels; visual inspection confirmed distinct branches, aligned trains, readable labels, and no overflow.
+- Final stable-identity gate passed ESLint, 85 client tests in 11 files, 2 server tests, strict TypeScript, the 42-module Vite build, and `git diff --check`.
+
 - Task 6 review correction on 2026-07-22 replaced the rejected uniform Seoul 4–9 paths with source-guided normalized gameplay anchors in a renderer-independent module. A 10-failure RED proved missing endpoint metadata, Line 5 branch divergence, and Line 6 directed closure; GREEN passed 28 focused RouteMap/geometry/Game tests. Independent test fixtures parse route, context, station, and train SVG values and enforce endpoint identity, <0.001 SVG-unit station-anchor error, <0.01 station/path and train/path distance, branch distinctness, and loop topology.
 - Fresh correction captures under `.superpowers/sdd/task-6-review-captures/` cover Seoul 4, both Line 5 branches, the Line 6 directed loop, Seoul 7/8, and Line 9 local/express at exact 360, 768, and 1440 CSS-pixel widths (24 PNGs plus JSONL measurements). Inspection confirmed readable labels, visible aligned trains, distinct Line 5 tails, a closed Line 6 loop, 6–8 visible stations, and no page overflow. These are source-guided normalized schematic anchors, not official/geospatial coordinates.
 - Final correction gate passed ESLint, 77 client tests in 11 files, 2 server tests, strict TypeScript, a 42-module Vite build, and `git diff --check`.
@@ -123,6 +127,8 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 - Automated gameplay coverage confirms the train remains at Sindorim while Mullae is the next target, then advances to Mullae only after the correct submission.
 
 ## Mistakes
+
+- 2026-07-22 | Line 5 could revert to trunk geometry at focused-segment boundaries | Geometry identity was inferred from the current maximum-eight display slice instead of the selected full route | Passed immutable full-route context separately while retaining the visible slice for rendering | Resolve topology identity before viewport segmentation and test forward/reverse marker-absent windows.
 
 - 2026-07-22 | Review rejected the six newly public gameplay paths as arbitrary uniform polylines | The release fix stopped at crash prevention and treated same-function station/path sampling plus a render smoke as geometry validation | Separated source-guided normalized anchors from rendering, modeled Line 5 branches and Line 6 loop explicitly, and added independent DOM-parsed anchor/distance/topology tests | A public branched or directed-loop route requires independent reference anchors, topology assertions, and branch-specific gameplay captures before release acceptance.
 
