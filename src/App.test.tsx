@@ -28,7 +28,10 @@ test('shows the product and city map entry', () => {
   expect(screen.getByRole('link', { name: 'METRO/TYPE' })).toHaveAttribute('href', import.meta.env.BASE_URL)
   expect(screen.getByRole('button', { name: '서울' })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: '도쿄' })).toBeInTheDocument()
-  expect(screen.getByText('9 LINES')).toBeInTheDocument()
+  expect(screen.getByText('14 LINES')).toBeInTheDocument()
+  for (const name of ['서울 1호선','서울 2호선','서울 3호선','서울 4호선','서울 5호선','서울 6호선','서울 7호선','서울 8호선','서울 9호선']) {
+    expect(screen.getByRole('button', { name: `${name} 선택` })).toBeEnabled()
+  }
 })
 
 test('opens setup for Line 6', () => {

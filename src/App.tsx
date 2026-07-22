@@ -63,7 +63,7 @@ export default function App() {
         {setupError&&<p className="setup-error" role="alert">{setupError}</p>}
         <button className="primary" style={{background:line.color}} disabled={mode==='route'&&(!from||!to||from===to)} onClick={()=>{if(mode==='random'){setRouteOverride(null);setPlaying(true)}else tryStartRoute()}}>운행 시작 →</button>
       </section> : <MapExplorer onSelect={selectLine} />}
-      <footer><span>SEOUL · INCHEON · TOKYO</span><span>9 LINES</span></footer>
+      <footer><span>SEOUL · INCHEON · TOKYO</span><span>14 LINES</span></footer>
       {profileOpen&&<ProfilePanel onSave={setNickname} onClose={()=>setProfileOpen(false)}/>} 
     </main>
   )

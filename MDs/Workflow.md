@@ -67,15 +67,23 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### In progress
 
-- The approved Seoul Lines 1–9 design and seven-task TDD implementation plan are complete; execution approach is awaiting confirmation.
+- Task 6 release verification is complete locally; the verified branch is ready for integration review.
 
 ### Next
 
-- Execute the approved TDD plan: route data, setup/service selection, overview geometry, responsive verification, the full quality gate, push, and Pages verification.
+- Integrate the verified Seoul Lines 1–9 branch and perform Pages MIME/DOM verification after an authorized push.
 - Connect the leaderboard read model to the UI after a Firebase project/config is supplied.
 - Re-run official station-order verification before freezing production data.
 
 ## Verification
+
+- Task 6 public-count TDD on 2026-07-22: `npx vitest run src/App.test.tsx` failed exactly because the footer still rendered `9 LINES`; after the one-line footer change, all 14 App tests passed and the smoke assertion confirmed enabled controls for Seoul Lines 1–9.
+- Task 6 high-risk gate `npx vitest run src/components/Game.test.tsx src/components/RouteMap.test.tsx src/game/geometry.test.ts src/audio/sounds.test.ts src/App.test.tsx` passed 33 tests in 5 files before browser QA. Browser-flow inspection then exposed missing focused gameplay geometry for Seoul Lines 4–9; a six-case RouteMap regression test failed on all six `Missing route geometry` errors and passed 14 tests in 2 files with the geometry suite after the six declared polylines were added.
+- Fresh Edge production-preview evidence used `npm run build` and `npx vite preview --host 127.0.0.1 --port 4189`, with HTTP 200 `text/html` confirmed under `/MetroTyping/`. Thirty screenshots and machine-readable measurements are under `.superpowers/sdd/task-6-captures/`: ten scenarios each at exact 360, 768, and 1440 CSS-pixel viewports, covering the Seoul overview, Line 5 branch setup, Line 6 loop setup/game before and after departure, Line 8 extension setup, and Line 9 local/express setup/game.
+- Visual inspection of those captures found no page-level horizontal overflow or clipped/overlapping controls. The overview map had no desktop-internal horizontal scrollbar at 768/1440; at 360 its 850 px surface and the line dock retained deliberate touch panning. Labels remained readable, the Line 5 focus overlay followed the official raster, Line 5 showed both branch cards, Line 6 showed the directed-loop card, and Line 8 began at `별내`.
+- Browser measurements recorded exactly 8 gameplay station nodes/labels for every captured game. Line 6 had no `.train` before typing `응암` and did have one after the correct departure answer, with the target advancing to `새절`. Line 9 local began at `개화` (38 stations), while express began at `김포공항` (16 stations) and never displayed `개화`; service controls and quick routes matched each selection at every viewport.
+- Final fresh gates on 2026-07-22: the specified high-risk command passed 39 tests in 5 files; `npm run check` passed ESLint, 73 client tests in 11 files, 2 server tests, strict TypeScript, and the Vite production build; `git diff --check` exited 0 with no whitespace errors.
+- Remaining device-only uncertainty: headless Edge cannot validate physical audio output, a real OS Korean IME candidate window, touch gesture feel, or GPU rendering differences on physical phones. Automated suites continue to cover mute/resume, jaso CPM, IME composition Enter suppression, rapid inputs, reduced motion, and sampled train/path alignment.
 
 - The Line 6 availability regression failed while its dock/map entry and `10 LINES` footer remained, then passed with no `onSelect('seoul-6')`, a construction notice, no setup heading, and `9 LINES`; the focused explorer/App suites passed 16 tests and strict TypeScript passed.
 - On 2026-07-22, the map-hover regression failed without `.map-dimmer`, then passed after removing raster `filter`/`scale` work from the active state; the focused MapExplorer suite passed 9 tests and strict TypeScript passed.
@@ -111,6 +119,9 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 - Automated gameplay coverage confirms the train remains at Sindorim while Mullae is the next target, then advances to Mullae only after the correct submission.
 
 ## Mistakes
+
+- 2026-07-22 | Starting gameplay on newly public Seoul Lines 4–9 would throw `Missing route geometry` | Public setup coverage and data tests did not exercise each line through the shared RouteMap boundary | Added a render smoke for every newly public line and declared the six missing focused SVG polylines | Every public line must pass one setup-to-RouteMap smoke before release-count verification.
+- 2026-07-22 | The first real-browser capture attempt could not find Korean-labeled controls and the second collided with PowerShell's `Measure` alias | Windows PowerShell decoded the temporary UTF-8 script labels incorrectly and the helper used a built-in alias name | Selected stable dock positions from the already-tested order and renamed the helper `Record-Measure` | Keep temporary Windows PowerShell automation ASCII-safe and avoid built-in command/alias names.
 
 - 2026-07-22 | Seoul Line 6 was exposed as playable before the user accepted its implementation | Passing route/unit tests were treated as sufficient product approval for the complex Eungam topology | Removed all public Line 6 entry points while preserving data for correction | A newly modeled branch or one-way loop stays under construction until its end-to-end UI and route behavior receive explicit user approval.
 - 2026-07-22 | Moving across line controls caused visible hover lag | The active state filtered and scaled the entire 10205px raster, forcing expensive GPU work on every hover transition | Kept the raster fixed and moved dimming to a small composited overlay below the SVG highlight | Never animate filters or transforms on full-resolution map rasters; animate overlay opacity and vector strokes only.

@@ -58,3 +58,8 @@ test.each(['seoul-3', 'suin-bundang'])('%s uses distinct focused geometry with s
   rerender(<RouteMap lineId="seoul-2" stations={stations} color="#00A84D" progress={0.5} />)
   expect(container.querySelector('polyline')).not.toHaveAttribute('points', pointsValue)
 })
+
+test.each(['seoul-4','seoul-5','seoul-6','seoul-7','seoul-8','seoul-9'])('%s renders its focused gameplay route', lineId => {
+  const { container } = render(<RouteMap lineId={lineId} stations={['A','B']} color="#333" progress={0} />)
+  expect(container.querySelector('.route-map')).toBeInTheDocument()
+})
