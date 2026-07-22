@@ -25,8 +25,9 @@ test('selects supported lines and explains unsupported lines', () => {
   expect(onSelect).toHaveBeenCalledWith('seoul-1')
   fireEvent.click(screen.getByRole('button', { name: '서울 4호선 선택' }))
   expect(onSelect).toHaveBeenCalledWith('seoul-4')
-  fireEvent.click(screen.getByRole('button', { name: '서울 6호선 선택' }))
-  expect(onSelect).toHaveBeenCalledWith('seoul-6')
+  fireEvent.click(screen.getByRole('button', { name: '서울 6호선' }))
+  expect(onSelect).not.toHaveBeenCalledWith('seoul-6')
+  expect(screen.getByText('현재 공사 중인 노선입니다.')).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: '서울 5호선' }))
   expect(screen.getByText('현재 공사 중인 노선입니다.')).toBeInTheDocument()
 })
@@ -34,7 +35,6 @@ test('selects supported lines and explains unsupported lines', () => {
 test.each([
   ['서울 3호선', 'seoul-3'],
   ['서울 4호선', 'seoul-4'],
-  ['서울 6호선', 'seoul-6'],
   ['수인·분당선', 'suin-bundang'],
 ])('selects %s from its official map geometry', (name, id) => {
   const onSelect = vi.fn()

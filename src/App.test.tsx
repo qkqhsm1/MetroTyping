@@ -20,14 +20,14 @@ test('shows the product and city map entry', () => {
   expect(screen.getByRole('link', { name: 'METRO/TYPE' })).toHaveAttribute('href', import.meta.env.BASE_URL)
   expect(screen.getByRole('button', { name: '서울' })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: '도쿄' })).toBeInTheDocument()
-  expect(screen.getByText('10 LINES')).toBeInTheDocument()
+  expect(screen.getByText('9 LINES')).toBeInTheDocument()
 })
 
-test('offers every Eungam loop station in custom Line 6 selection', () => {
+test('keeps unfinished Line 6 out of gameplay', () => {
   render(<App />)
-  fireEvent.click(screen.getByRole('button', { name: '서울 6호선 선택' }))
-  fireEvent.click(screen.getByRole('combobox', { name: '출발역' }))
-  expect(screen.getByRole('option', { name: '역촌' })).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: '서울 6호선' }))
+  expect(screen.getByText('현재 공사 중인 노선입니다.')).toBeInTheDocument()
+  expect(screen.queryByRole('heading', { name: '서울 6호선' })).not.toBeInTheDocument()
 })
 
 test('plays the line-selection chime only on the first selection', () => {

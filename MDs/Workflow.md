@@ -2,7 +2,7 @@
 
 ## Goal
 
-Build a polished Korean subway typing game for ten lines with route and random modes, animated SVG trains, sound, anonymous nickname accounts, and online rankings.
+Build a polished Korean subway typing game for nine playable lines with route and random modes, animated SVG trains, sound, anonymous nickname accounts, and online rankings.
 
 ## Decisions
 
@@ -10,7 +10,7 @@ Build a polished Korean subway typing game for ten lines with route and random m
 - Client language: TypeScript with custom CSS/SVG; no shadcn/ui, Tailwind, or Express.
 - Quality gate: `npm run check` runs ESLint, Vitest, strict TypeScript checking, and the production build.
 - Selection UX: official high-resolution Seoul overview plus aligned SVG hit areas; dedicated SVG replaces the raster for setup/gameplay. Tokyo uses a dedicated Yamanote loop.
-- Lines: Seoul 1/2/3/4/6, Incheon 1/2, AREX, Suin–Bundang, and JR Yamanote.
+- Playable lines: Seoul 1/2/3/4, Incheon 1/2, AREX, Suin–Bundang, and JR Yamanote. Seoul Line 6 data remains internal but its entry points stay under construction until corrected and re-approved.
 - Seoul Line 4 covers `진접↔오이도`; Seoul Line 6 covers the bidirectional `응암↔신내` trunk and the real one-way Eungam loop.
 - The overview uses PDF-rendered high-resolution raster tiles for text clarity and SVG only for aligned interaction highlights.
 - The first line selection plays one original Web Audio chime; existing effect gain rises from `0.09` to `0.135` with an output ceiling.
@@ -27,6 +27,7 @@ Build a polished Korean subway typing game for ten lines with route and random m
 
 ### Done
 
+- Closed every Seoul Line 6 entry point and restored its dock control to the construction notice without deleting the internal route data needed for correction.
 - Removed hover-time filtering and scaling from the 10205px overview image; line focus now composites a lightweight dimmer layer above the fixed raster and the SVG highlight above that layer.
 - Added Seoul Line 4 `진접↔오이도` and Seoul Line 6 `응암순환+신내`, including directed Eungam-loop routing, custom station selection, and the approved compact quick trips.
 - Added official-PDF-derived Line 4/6 hit geometry and a 10205×10205 responsive WebP map source while keeping SVG limited to interaction highlights.
@@ -70,6 +71,7 @@ Build a polished Korean subway typing game for ten lines with route and random m
 
 ## Verification
 
+- The Line 6 availability regression failed while its dock/map entry and `10 LINES` footer remained, then passed with no `onSelect('seoul-6')`, a construction notice, no setup heading, and `9 LINES`; the focused explorer/App suites passed 16 tests and strict TypeScript passed.
 - On 2026-07-22, the map-hover regression failed without `.map-dimmer`, then passed after removing raster `filter`/`scale` work from the active state; the focused MapExplorer suite passed 9 tests and strict TypeScript passed.
 - The suspended-audio regression failed until the shared `AudioContext` explicitly resumed, then the audio/App suites passed 9 tests with the first-selection cue, mute, limiter, and `0.135` gain intact.
 - GitHub Pages run `29906857744` completed successfully for commit `fdd31ae`. The production page, JavaScript, CSS, 10205px WebP, and supported-lines SVG returned HTTP 200 with `application/javascript`, `text/css`, `image/webp`, and `image/svg+xml`; the deployed bundle contains the new Seoul copy, `seoul-4`, `seoul-6`, and `10 LINES`.
@@ -104,6 +106,7 @@ Build a polished Korean subway typing game for ten lines with route and random m
 
 ## Mistakes
 
+- 2026-07-22 | Seoul Line 6 was exposed as playable before the user accepted its implementation | Passing route/unit tests were treated as sufficient product approval for the complex Eungam topology | Removed all public Line 6 entry points while preserving data for correction | A newly modeled branch or one-way loop stays under construction until its end-to-end UI and route behavior receive explicit user approval.
 - 2026-07-22 | Moving across line controls caused visible hover lag | The active state filtered and scaled the entire 10205px raster, forcing expensive GPU work on every hover transition | Kept the raster fixed and moved dimming to a small composited overlay below the SVG highlight | Never animate filters or transforms on full-resolution map rasters; animate overlay opacity and vector strokes only.
 - 2026-07-22 | The first-selection subway chime could be silent in a browser | The shared `AudioContext` was not explicitly resumed when the browser left it suspended | Resume the context inside the user-triggered sound path and ignore resume failure without blocking navigation | Every user-triggered Web Audio path must handle `suspended` before scheduling tones.
 - 2026-07-22 | A nominal 360px screenshot appeared to clip the new heading | Windows Edge enforced a wider minimum CSS viewport and cropped the raster output, repeating a previously recorded capture pitfall | Re-ran with a 1.3889 device scale so a 500px host window represented 360 CSS pixels | Record and validate CSS viewport dimensions; never infer them from screenshot width alone.
