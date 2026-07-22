@@ -2,13 +2,15 @@ import { useEffect, useRef, useState } from 'react'
 import { LINES } from '../data/lines'
 
 const seoulLines = LINES.filter(line => line.id !== 'yamanote')
-const unsupported = ['서울 4호선', '서울 5호선', '서울 6호선', '서울 7호선', '서울 8호선', '서울 9호선']
+const unsupported = ['서울 5호선', '서울 7호선', '서울 8호선', '서울 9호선']
 const yamanote = LINES.find(line => line.id === 'yamanote')!
 const asset=(path:string)=>`${import.meta.env.BASE_URL}assets/${path}`
 const hitPaths = [
   { id:'seoul-1', name:'서울 1호선', color:'#0052A4' },
   { id:'seoul-2', name:'서울 2호선', color:'#00A84D' },
   { id:'seoul-3', name:'서울 3호선', color:'#EF7C1C' },
+  { id:'seoul-4', name:'서울 4호선', color:'#00A5DE' },
+  { id:'seoul-6', name:'서울 6호선', color:'#A9431E' },
   { id:'suin-bundang', name:'수인·분당선', color:'#F5A200' },
   { id:'incheon-1', name:'인천 1호선', color:'#7CA8D5' },
   { id:'incheon-2', name:'인천 2호선', color:'#ED8B00' },
@@ -35,7 +37,7 @@ export default function MapExplorer({ onSelect }:{ onSelect:(lineId:string)=>voi
       <button className={city==='seoul'?'active':''} onClick={()=>setCity('seoul')}>서울</button>
       <button className={city==='tokyo'?'active':''} onClick={()=>setCity('tokyo')}>도쿄</button>
     </div>
-    <div className="explorer-copy"><p className="eyebrow">SELECT YOUR NETWORK</p><h1>{city==='seoul'?'서울을 달리는 방법.':'東京を、走る。'}</h1><p>노선을 선택하면 해당 구간으로 들어갑니다.</p></div>
+    <div className="explorer-copy"><p className="eyebrow">{city==='seoul'?'노선 선택':'路線選択'}</p><h1>{city==='seoul'?'어느 노선에서 시작할까요?':'どの路線から始めますか？'}</h1><p>{city==='seoul'?'노선을 고르고 타이핑 여행을 시작해 보세요.':'路線を選んで、タイピングの旅を始めましょう。'}</p></div>
     {city==='seoul' ? <>
       <div className="map-frame" data-testid="seoul-map" data-active-line={activeLine??undefined}>
         <div className="map-stage">

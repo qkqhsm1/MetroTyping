@@ -20,7 +20,14 @@ test('shows the product and city map entry', () => {
   expect(screen.getByRole('link', { name: 'METRO/TYPE' })).toHaveAttribute('href', import.meta.env.BASE_URL)
   expect(screen.getByRole('button', { name: '서울' })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: '도쿄' })).toBeInTheDocument()
-  expect(screen.getByText('8 LINES')).toBeInTheDocument()
+  expect(screen.getByText('10 LINES')).toBeInTheDocument()
+})
+
+test('offers every Eungam loop station in custom Line 6 selection', () => {
+  render(<App />)
+  fireEvent.click(screen.getByRole('button', { name: '서울 6호선 선택' }))
+  fireEvent.click(screen.getByRole('combobox', { name: '출발역' }))
+  expect(screen.getByRole('option', { name: '역촌' })).toBeInTheDocument()
 })
 
 test('starts a quick route by asking for its departure station first', () => {
