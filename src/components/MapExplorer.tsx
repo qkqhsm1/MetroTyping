@@ -37,7 +37,7 @@ export default function MapExplorer({ onSelect }:{ onSelect:(lineId:string)=>voi
       <button className={city==='seoul'?'active':''} onClick={()=>setCity('seoul')}>서울</button>
       <button className={city==='tokyo'?'active':''} onClick={()=>setCity('tokyo')}>도쿄</button>
     </div>
-    <div className="explorer-copy"><p className="eyebrow">{city==='seoul'?'노선 선택':'路線選択'}</p><h1>{city==='seoul'?'어느 노선에서 시작할까요?':'どの路線から始めますか？'}</h1><p>{city==='seoul'?'노선을 고르고 타이핑 여행을 시작해 보세요.':'路線を選んで、タイピングの旅を始めましょう。'}</p></div>
+    <div className="explorer-copy"><p className="eyebrow">{city==='seoul'?'노선 선택':'路線選択'}</p><h1 className="explorer-title">{city==='seoul'?'어느 노선에서 시작할까요?':'どの路線から始めますか？'}</h1><p>{city==='seoul'?'노선을 고르고 타이핑 여행을 시작해 보세요.':'路線を選んで、タイピングの旅を始めましょう。'}</p></div>
     {city==='seoul' ? <>
       <div className="map-frame" data-testid="seoul-map" data-active-line={activeLine??undefined}>
         <div className="map-stage">

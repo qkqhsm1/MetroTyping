@@ -6,7 +6,7 @@ afterEach(() => vi.useRealTimers())
 
 test('switches between the official Seoul map and original Tokyo map', () => {
   render(<MapExplorer onSelect={vi.fn()} />)
-  expect(screen.getByText('어느 노선에서 시작할까요?')).toBeInTheDocument()
+  expect(screen.getByText('어느 노선에서 시작할까요?')).toHaveClass('explorer-title')
   expect(screen.getByText('노선을 고르고 타이핑 여행을 시작해 보세요.')).toBeInTheDocument()
   expect(screen.getByRole('img', { name: '서울 수도권 지하철 노선도' })).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: '도쿄' }))

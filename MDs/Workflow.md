@@ -27,6 +27,10 @@ Build a polished Korean subway typing game for ten lines with route and random m
 
 ### Done
 
+- Added Seoul Line 4 `진접↔오이도` and Seoul Line 6 `응암순환+신내`, including directed Eungam-loop routing, custom station selection, and the approved compact quick trips.
+- Added official-PDF-derived Line 4/6 hit geometry and a 10205×10205 responsive WebP map source while keeping SVG limited to interaction highlights.
+- Replaced the Seoul/Tokyo explorer copy, updated the footer to `10 LINES`, and retained readable responsive typography at actual 360 CSS pixels.
+- Added a once-per-page original line-selection chime, raised effect gain to `0.135`, and routed cues through a shared Web Audio dynamics compressor.
 - Doubled effect peak gain from `0.045` to `0.09` and changed the key tone from a 260 Hz sine to a clearer 520 Hz triangle while preserving the other cues, mute, 80 ms decay, and context cleanup.
 - Reduced Suin–Bundang quick travel to four two-way cards: `인천↔오이도`, `인천↔왕십리`, `죽전↔고색`, and `인천↔청량리`; custom station selection remains available.
 - Hid the route train until the departure station is typed, then added a non-blocking 260 ms SVG entrance that preserves the front-edge path anchor and accepts rapid answers.
@@ -56,16 +60,18 @@ Build a polished Korean subway typing game for ten lines with route and random m
 
 ### In progress
 
-- The Seoul Lines 4/6, high-resolution tiled overview, revised Seoul/Tokyo copy, and audio polish design is written and awaiting final design-document review before implementation planning.
+- Final deployment verification for the ten-line release.
 
 ### Next
 
-- Convert the approved design into a TDD implementation plan, then implement and visually verify it at 360, 768, and 1440 CSS pixels.
 - Connect the leaderboard read model to the UI after a Firebase project/config is supplied.
 - Re-run official station-order verification before freezing production data.
 
 ## Verification
 
+- On 2026-07-22, `npm run check` passed ESLint, 56 client tests, 2 server tests, strict TypeScript, and the Vite production build. Focused RED/GREEN cycles covered Line 4 end-to-end travel, Line 6 directed-loop routing, quick-trip counts/directions, custom loop-station selection, new explorer copy/controls, 10205px responsive map selection, the once-only chime, mute, `0.135` gain, and shared output limiting.
+- The generated official-map overlay contains 32 Line 4 paths and 28 Line 6 paths. The PDF-rendered WebP is 10205×10205 at 3,733,012 bytes; visual inspection confirmed Korean labels remained present and sharp.
+- Fresh overview captures at 768 and 1440 CSS pixels and a Windows-Edge-scaled capture representing 360 CSS pixels showed readable copy, map labels, Line 4/6 dock controls, attribution, and `10 LINES` without page overflow. Gameplay remains on the existing tested eight-station `RouteMap` component.
 - On 2026-07-22, deployed Edge diagnostics confirmed each typing event created a running audio context, completed playback, closed normally, and raised no browser errors. The sound regression then failed against the old 260 Hz sine and passed with the approved 520 Hz triangle, `0.09` gain, unchanged cue frequencies, 80 ms decay, and mute behavior; `npm run check` passed 48 client tests, 2 server tests, lint, strict TypeScript, and build.
 - On 2026-07-22, the Suin–Bundang quick-route regression failed against the previous 15 combinations, then passed with exactly four approved pairs and both directions. `npm run check` passed ESLint, 48 client tests, 2 server tests, strict TypeScript, and the Vite production build.
 - GitHub Pages deployment run `29890876444` completed successfully on 2026-07-22 for commit `3acb36c`. `https://qkqhsm1.github.io/MetroTyping/` returned HTTP 200 and served the new `index-CBzr9U5R.js` and `index-B3Zh_kEc.css` bundles with JavaScript/CSS MIME types; the deployed bundle contains `8 LINES`. Local `main` and `origin/main` were synchronized after deployment.
@@ -94,6 +100,8 @@ Build a polished Korean subway typing game for ten lines with route and random m
 
 ## Mistakes
 
+- 2026-07-22 | A nominal 360px screenshot appeared to clip the new heading | Windows Edge enforced a wider minimum CSS viewport and cropped the raster output, repeating a previously recorded capture pitfall | Re-ran with a 1.3889 device scale so a 500px host window represented 360 CSS pixels | Record and validate CSS viewport dimensions; never infer them from screenshot width alone.
+- 2026-07-22 | The first new visual capture showed old copy and an incompletely decoded map | Port 4173 was still served by a stale preview and the 10205px image had not finished decoding | Used a fresh preview port and a 5-second virtual-time budget | Use a unique preview port per build and wait for large responsive images before capture.
 - 2026-07-21 | Production preview loaded a blank page although the HTML returned HTTP 200 | Vite preview used `/` while the built HTML referenced `/MetroTyping/assets/`, so asset requests returned the HTML fallback | Applied the Pages base to build and preview and verified asset MIME types plus browser rendering | Verify response MIME/content and rendered DOM, not status code alone, for base-path checks.
 - 2026-07-21 | Seoul 3 gameplay overflowed horizontally at 360 and 768 CSS pixels | The explorer's generic `.map-stage` 850 px minimum also matched the gameplay map | Overrode the minimum inside `.game` and repeated exact-viewport captures | Scope layout selectors to their owning surface when a class name is shared.
 - 2026-07-21 | Reduced-motion CDP evidence aborted after captures | The evaluator tried to serialize a DOM node with an object reference chain | Evaluated a boolean in the page context and reran the evidence set | Return primitives from browser automation measurements.
