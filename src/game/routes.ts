@@ -12,10 +12,10 @@ export type QuickRoute = {
 export type QuickRoutePair = {
   id: string
   title: string
-  routes: readonly [QuickRoute, QuickRoute]
+  routes: readonly QuickRoute[]
 }
 
-function graphFor(sequences: string[][]) {
+function graphFor(sequences: string[][], oneWaySequences: string[][] = []) {
   const graph = new Map<string, Set<string>>()
 
   for (const sequence of sequences) {
@@ -29,12 +29,22 @@ function graphFor(sequences: string[][]) {
     })
   }
 
+  for (const sequence of oneWaySequences) {
+    sequence.slice(0, -1).forEach((station, index) => {
+      const next = sequence[index + 1]
+      if (!next) return
+      const links = graph.get(station) ?? new Set<string>()
+      links.add(next)
+      graph.set(station, links)
+    })
+  }
+
   return graph
 }
 
 export function getRoute(lineId: string, from: string, to: string, direction = 'forward') {
   const line = getLine(lineId)
-  const stations = new Set(line.sequences.flat())
+  const stations = new Set([...line.sequences.flat(), ...(line.oneWaySequences?.flat() ?? [])])
   if (!stations.has(from) || !stations.has(to)) throw new Error('Invalid station')
   if (from === to) return { stationIds: [from], direction, pathId: lineId }
 
@@ -56,7 +66,7 @@ export function getRoute(lineId: string, from: string, to: string, direction = '
     return { stationIds: result, direction, pathId: lineId }
   }
 
-  const graph = graphFor(line.sequences)
+  const graph = graphFor(line.sequences, line.oneWaySequences)
   const queue: string[][] = [[from]]
   const seen = new Set([from])
 
@@ -131,11 +141,22 @@ export function getQuickRoutePairs(lineId: string): QuickRoutePair[] {
         if (!(error instanceof Error) || error.message !== 'No route') throw error
       }
   }
+  for (const route of line.quickOneWayRoutes ?? []) {
+    const from = route.stations[0]
+    const to = route.stations.at(-1)
+    if (!from || !to) continue
+    pairs.push({
+      id: `${lineId}:${route.title}`,
+      title: route.title,
+      routes: [{ id:`${lineId}:${route.title}`, label:`${route.title} →`, from, to, direction:'forward', stationIds:[...route.stations] }],
+    })
+  }
   return pairs
 }
 
 export function dailyStations(lineId: string, dateKey: string) {
-  const stations = [...new Set(getLine(lineId).sequences.flat())]
+  const line = getLine(lineId)
+  const stations = [...new Set([...line.sequences.flat(), ...(line.oneWaySequences?.flat() ?? [])])]
   let seed = [...`${lineId}:${dateKey}`].reduce(
     (value, character) => (value * 31 + character.charCodeAt(0)) >>> 0,
     2166136261,

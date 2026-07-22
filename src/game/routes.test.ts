@@ -3,9 +3,34 @@ import { getLine, LINES } from '../data/lines'
 import { dailyStations, getFullLoopRoute, getQuickRoutePairs, getRoute } from './routes'
 
 describe('route data', () => {
-  test('contains the eight approved lines', () => {
+  test('contains the ten approved lines', () => {
     expect(LINES.map(line => line.id)).toEqual([
-      'seoul-1', 'seoul-2', 'seoul-3', 'suin-bundang', 'incheon-1', 'incheon-2', 'arex', 'yamanote',
+      'seoul-1', 'seoul-2', 'seoul-3', 'seoul-4', 'seoul-6', 'suin-bundang',
+      'incheon-1', 'incheon-2', 'arex', 'yamanote',
+    ])
+  })
+
+  test('routes Seoul line 4 end to end in both directions', () => {
+    expect(getRoute('seoul-4', '진접', '오이도').stationIds.at(-1)).toBe('오이도')
+    expect(getRoute('seoul-4', '오이도', '진접').stationIds.at(-1)).toBe('진접')
+  })
+
+  test('keeps the Eungam loop one-way while connecting it to the trunk', () => {
+    expect(getRoute('seoul-6', '응암', '구산').stationIds).toEqual([
+      '응암', '역촌', '불광', '독바위', '연신내', '구산',
+    ])
+    expect(getRoute('seoul-6', '구산', '역촌').stationIds).toEqual(['구산', '응암', '역촌'])
+    expect(getRoute('seoul-6', '신내', '역촌').stationIds.at(-1)).toBe('역촌')
+  })
+
+  test('offers only the approved Line 4 and Line 6 quick trips', () => {
+    expect(getQuickRoutePairs('seoul-4').map(pair => pair.title)).toEqual(['진접 ↔ 오이도'])
+    const line6 = getQuickRoutePairs('seoul-6')
+    expect(line6.map(pair => pair.title)).toEqual(['응암 ↔ 신내', '응암순환'])
+    expect(line6[0]?.routes).toHaveLength(2)
+    expect(line6[1]?.routes).toHaveLength(1)
+    expect(line6[1]?.routes[0]?.stationIds).toEqual([
+      '응암', '역촌', '불광', '독바위', '연신내', '구산',
     ])
   })
 
@@ -91,11 +116,13 @@ describe('route data', () => {
       expect(new Set(pairs.map(pair => pair.id)).size).toBe(pairs.length)
 
       for (const pair of pairs) {
-        expect(pair.routes).toHaveLength(2)
-        expect(pair.routes[0].direction).not.toBe(pair.routes[1].direction)
-        if (!line.loop) {
-          expect(pair.routes[0].from).toBe(pair.routes[1].to)
-          expect(pair.routes[0].to).toBe(pair.routes[1].from)
+        expect(pair.routes.length).toBeGreaterThan(0)
+        if (pair.routes.length === 2) {
+          expect(pair.routes[0]?.direction).not.toBe(pair.routes[1]?.direction)
+        }
+        if (!line.loop && pair.routes.length === 2) {
+          expect(pair.routes[0]!.from).toBe(pair.routes[1]!.to)
+          expect(pair.routes[0]!.to).toBe(pair.routes[1]!.from)
         }
         for (const route of pair.routes) {
           expect(route.stationIds[0]).toBe(route.from)
@@ -112,15 +139,15 @@ describe('route data', () => {
 
   test('limits Suin-Bundang quick travel to the four approved pairs', () => {
     const pairs = getQuickRoutePairs('suin-bundang')
-    expect(pairs.map(pair => `${pair.routes[0].from}:${pair.routes[0].to}`)).toEqual([
+    expect(pairs.map(pair => `${pair.routes[0]!.from}:${pair.routes[0]!.to}`)).toEqual([
       '인천:오이도',
       '인천:왕십리',
       '죽전:고색',
       '인천:청량리',
     ])
     for (const pair of pairs) {
-      expect(pair.routes[1].from).toBe(pair.routes[0].to)
-      expect(pair.routes[1].to).toBe(pair.routes[0].from)
+      expect(pair.routes[1]!.from).toBe(pair.routes[0]!.to)
+      expect(pair.routes[1]!.to).toBe(pair.routes[0]!.from)
     }
     expect(getQuickRoutePairs('seoul-1')).toHaveLength(3)
   })
