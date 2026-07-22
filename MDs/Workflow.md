@@ -71,7 +71,7 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### In progress
 
-- Approved the eight-station random gameplay-route design: each segment gets one stable randomized shape, official relative direction remains fixed, and the SVG/label safe area grows. Awaiting written-spec review before implementation planning.
+- Implementing the approved eight-station random gameplay-route plan: stable per-segment randomness, official relative direction, larger SVG safe area, and non-overlapping labels.
 
 ### Next
 
