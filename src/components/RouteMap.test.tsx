@@ -28,6 +28,16 @@ test('labels every station on the route', () => {
   expect([...container.querySelectorAll('text')].map(node => node.textContent)).toEqual(stations)
 })
 
+test('keeps one seeded shape stable and changes it for another seed',()=>{
+  const props={lineId:'incheon-2',stations:['검단오류','왕길','검단사거리','마전','완정','독정','검암','검바위'],color:'#ED8B00',progress:0,shapeSeed:11}
+  const {container,rerender}=render(<RouteMap {...props}/>)
+  const first=container.querySelector('[data-route]')!.getAttribute('points')
+  rerender(<RouteMap {...props}/>)
+  expect(container.querySelector('[data-route]')).toHaveAttribute('points',first)
+  rerender(<RouteMap {...props} shapeSeed={12}/>)
+  expect(container.querySelector('[data-route]')).not.toHaveAttribute('points',first)
+})
+
 test('clips a Line 2 window to its first and last visible stations', () => {
   const full=getFullLoopRoute('seoul-2','신도림','clockwise').stationIds
   const visible=full.slice(0,8)

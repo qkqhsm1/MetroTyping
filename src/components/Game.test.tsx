@@ -127,8 +127,12 @@ test('shows a readable eight-station segment and swaps segments without blocking
   const { container }=render(<Game stations={stations} color="#0052A4" onExit={() => {}} />)
   expect([...container.querySelectorAll('.route-map text')].map(node=>node.textContent)).toEqual(stations.slice(0,8))
   const firstWindow=container.querySelector('polyline[data-route]')?.getAttribute('data-global-start')
+  const firstShape=container.querySelector('polyline[data-route]')?.getAttribute('points')
 
   const input=screen.getByRole('textbox')
+  fireEvent.change(input,{target:{value:'typing'}})
+  expect(container.querySelector('polyline[data-route]')).toHaveAttribute('points',firstShape)
+  fireEvent.change(input,{target:{value:''}})
   stations.slice(0,8).forEach(station=>{
     fireEvent.change(input,{target:{value:station}})
     fireEvent.keyDown(input,{key:'Enter',isComposing:false})
@@ -136,6 +140,7 @@ test('shows a readable eight-station segment and swaps segments without blocking
 
   expect([...container.querySelectorAll('.route-map text')].map(node=>node.textContent)).toEqual(stations.slice(7))
   expect(container.querySelector('polyline[data-route]')).not.toHaveAttribute('data-global-start',firstWindow)
+  expect(container.querySelector('polyline[data-route]')).not.toHaveAttribute('points',firstShape)
   expect(screen.getByRole('heading',{name:'역8'})).toBeInTheDocument()
 })
 

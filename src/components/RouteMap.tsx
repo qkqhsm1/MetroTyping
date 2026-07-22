@@ -1,13 +1,14 @@
 import { pointAt, type Point } from '../game/geometry'
 import { getFocusedRouteGeometry, getRouteGeometry } from '../game/routeGeometry'
+import { randomizeRoute } from '../game/randomRoute'
 
-export default function RouteMap({ lineId,progress,color,stations,geometryStations=stations,routeStationCount,segmentStart=0,showAllLabels=true,targetIndex,trainVisible=true,trainEntering=false }:{ lineId:string; progress:number; color:string; stations:string[]; geometryStations?:string[]; routeStationCount?:number; segmentStart?:number; showAllLabels?:boolean; targetIndex?:number; trainVisible?:boolean; trainEntering?:boolean }) {
+export default function RouteMap({ lineId,progress,color,stations,geometryStations=stations,routeStationCount,segmentStart=0,shapeSeed,showAllLabels=true,targetIndex,trainVisible=true,trainEntering=false }:{ lineId:string; progress:number; color:string; stations:string[]; geometryStations?:string[]; routeStationCount?:number; segmentStart?:number; shapeSeed?:number; showAllLabels?:boolean; targetIndex?:number; trainVisible?:boolean; trainEntering?:boolean }) {
   const sourceGeometry=routeStationCount===undefined?getRouteGeometry(lineId,geometryStations):getFocusedRouteGeometry(lineId,geometryStations,routeStationCount,segmentStart,stations.length)
   const readablePath=routeStationCount!==undefined&&sourceGeometry.path[0]![0]>sourceGeometry.path.at(-1)![0]
     ?sourceGeometry.path.map(([x,y])=>[600-x,y] as Point)
     :sourceGeometry.path
   const geometry={...sourceGeometry,path:routeStationCount!==undefined&&lineId==='seoul-2'?[[45,145],[555,145]] as Point[]:readablePath}
-  const route = geometry.path
+  const route = shapeSeed===undefined?geometry.path:randomizeRoute(geometry.path,shapeSeed)
   if (!route) throw new Error(`Missing route geometry: ${lineId}`)
   const train = pointAt(route, progress)
   const points = route.map(point => point.join(',')).join(' ')
