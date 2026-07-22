@@ -24,6 +24,7 @@ Build a polished Korean subway typing game for eight lines with route and random
 
 ### Done
 
+- Doubled effect peak gain from `0.045` to `0.09` and changed the key tone from a 260 Hz sine to a clearer 520 Hz triangle while preserving the other cues, mute, 80 ms decay, and context cleanup.
 - Reduced Suin–Bundang quick travel to four two-way cards: `인천↔오이도`, `인천↔왕십리`, `죽전↔고색`, and `인천↔청량리`; custom station selection remains available.
 - Hid the route train until the departure station is typed, then added a non-blocking 260 ms SVG entrance that preserves the front-edge path anchor and accepts rapid answers.
 - Inspected the empty workspace and reference website flow.
@@ -61,6 +62,7 @@ Build a polished Korean subway typing game for eight lines with route and random
 
 ## Verification
 
+- On 2026-07-22, deployed Edge diagnostics confirmed each typing event created a running audio context, completed playback, closed normally, and raised no browser errors. The sound regression then failed against the old 260 Hz sine and passed with the approved 520 Hz triangle, `0.09` gain, unchanged cue frequencies, 80 ms decay, and mute behavior; `npm run check` passed 48 client tests, 2 server tests, lint, strict TypeScript, and build.
 - On 2026-07-22, the Suin–Bundang quick-route regression failed against the previous 15 combinations, then passed with exactly four approved pairs and both directions. `npm run check` passed ESLint, 48 client tests, 2 server tests, strict TypeScript, and the Vite production build.
 - GitHub Pages deployment run `29890876444` completed successfully on 2026-07-22 for commit `3acb36c`. `https://qkqhsm1.github.io/MetroTyping/` returned HTTP 200 and served the new `index-CBzr9U5R.js` and `index-B3Zh_kEc.css` bundles with JavaScript/CSS MIME types; the deployed bundle contains `8 LINES`. Local `main` and `origin/main` were synchronized after deployment.
 - Task 7 final gate on 2026-07-21: `npm run check` passed ESLint, 47 client tests in 10 files, 2 server tests, strict `tsc -p tsconfig.json`, and the Vite production build. The focused command `npm test -- --run src/components/Game.test.tsx src/App.test.tsx src/audio/sounds.test.ts` passed 17 tests in 3 files.
