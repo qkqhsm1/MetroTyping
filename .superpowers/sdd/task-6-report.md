@@ -108,3 +108,64 @@ No changes were made to IME composition handling, jaso CPM calculation, audio im
 - Touch gesture feel and GPU rendering differences still require a physical-phone smoke test.
 - The focused gameplay polylines are schematic, as they already are for other lines; official-route fidelity is carried by the overview raster/vector overlay. Station and train alignment on each gameplay polyline is numerically enforced.
 - No push or deployment was performed.
+
+## Review correction: topology-aware gameplay geometry
+
+The first Task 6 commit's six newly added uniform polylines were rejected in review because they did not preserve Line 5 branch choice or the Line 6 directed loop, and its render-only smoke did not independently validate geometry. This section supersedes the earlier geometry acceptance claim.
+
+### Source and method
+
+`src/game/routeGeometry.ts` now owns the geometry separately from the renderer. Its Seoul 4–9 values are **source-guided normalized gameplay anchors**, manually digitized into the 600×290 gameplay `viewBox` while comparing the bundled official 2025-09-29 overview raster and `public/assets/seoul-supported-lines.svg`. They preserve recognizable direction changes, endpoints, the Gangdong branch choice, and the directed Eungam loop. They are schematic presentation coordinates, not official or geospatial station coordinates.
+
+Line 5 declares separate trunk, Hanam, and Macheon paths. The two branch paths share their Gangdong approach and then diverge, while a muted context path shows the sibling branch. Line 6 declares an open trunk independently from its directed loop; the loop has a separate closure segment from Gusan back to Eungam.
+
+### TDD correction evidence
+
+The replacement test was written before the correction and failed 10 of 16 RouteMap tests against the uniform paths: all eight topology fixtures lacked the required route metadata/reference endpoints, the Line 5 paths did not express shared-then-divergent topology, and Line 6 had no directed closure.
+
+The corrected tests keep expected normalized anchors in `RouteMap.test.tsx`, independently from production selection and rendering. They parse rendered SVG route points, station-circle coordinates, train transforms, and context paths. For every Seoul 4–9 topology case they assert:
+
+- the independently expected route key and endpoints;
+- station-to-reference-anchor error below 0.001 SVG unit;
+- station-to-rendered-path distance below 0.01 SVG unit;
+- train-to-rendered-path distance below 0.01 SVG unit;
+- distinct Line 5 Hanam/Macheon tails after a shared four-anchor Gangdong approach;
+- a directed Line 6 loop closure that is absent from the open trunk.
+
+Focused command:
+
+```powershell
+npx vitest run src/components/RouteMap.test.tsx src/game/geometry.test.ts src/components/Game.test.tsx
+```
+
+Result: 3 files passed, 28 tests passed, 0 failed.
+
+Final correction gate:
+
+```powershell
+npm run check
+git diff --check
+```
+
+Result: ESLint passed; 77 client tests in 11 files passed; 2 server tests passed; strict TypeScript passed; Vite built 42 modules; `git diff --check` exited 0.
+
+### Corrected gameplay captures
+
+A fresh Edge preview on port 4189 produced 24 additional gameplay captures under:
+
+`G:\Projects\MetroTyping\.worktrees\seoul-lines-1-9\.superpowers\sdd\task-6-review-captures\`
+
+There are eight scenarios at each exact 360×900, 768×900, and 1440×900 CSS viewport:
+
+- `WIDTH-review-line4-game.png`
+- `WIDTH-review-line5-hanam-game.png`
+- `WIDTH-review-line5-macheon-game.png`
+- `WIDTH-review-line6-loop-game.png`
+- `WIDTH-review-line7-game.png`
+- `WIDTH-review-line8-game.png`
+- `WIDTH-review-line9-local-game.png`
+- `WIDTH-review-line9-express-game.png`
+
+`measurements.jsonl` records the exact route key, route/context points, station-node/label count, train transform, target, viewport, and horizontal-overflow measurements for all 24 captures. Visual inspection found readable labels and controls without page overflow at every width; train/path alignment was visually consistent; Seoul 4/7/8 and both Line 9 services retained their recognizable bends; Line 5 visibly changed branch direction between Hanam and Macheon; and Line 6 rendered a closed loop. Each capture had a visible train and 6–8 station labels/nodes.
+
+Remaining uncertainty is unchanged for physical audio, real OS IME composition UI, touch feel, and device GPU rendering. The gameplay geometry is intentionally normalized and schematic; official-map fidelity remains with the overview raster/vector layer.

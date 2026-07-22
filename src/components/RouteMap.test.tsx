@@ -59,7 +59,49 @@ test.each(['seoul-3', 'suin-bundang'])('%s uses distinct focused geometry with s
   expect(container.querySelector('polyline')).not.toHaveAttribute('points', pointsValue)
 })
 
-test.each(['seoul-4','seoul-5','seoul-6','seoul-7','seoul-8','seoul-9'])('%s renders its focused gameplay route', lineId => {
-  const { container } = render(<RouteMap lineId={lineId} stations={['A','B']} color="#333" progress={0} />)
-  expect(container.querySelector('.route-map')).toBeInTheDocument()
+const topologyCases:Array<{key:string;lineId:string;stations:string[];endpoints:[Point,Point];anchors:Point[];context?:string}> = [
+  { key:'seoul-4', lineId:'seoul-4', stations:['진접','오이도'], endpoints:[[70,35],[530,250]], anchors:[[70,35],[530,250]] },
+  { key:'seoul-5-hanam', lineId:'seoul-5', stations:['강동','길동','하남검단산'], endpoints:[[45,145],[555,65]], anchors:[[45,145],[300.840553,105],[555,65]] },
+  { key:'seoul-5-macheon', lineId:'seoul-5', stations:['강동','둔촌동','마천'], endpoints:[[45,145],[555,250]], anchors:[[45,145],[324.345943,105],[555,250]] },
+  { key:'seoul-6-trunk', lineId:'seoul-6', stations:['응암','새절','신내'], endpoints:[[45,235],[555,55]], anchors:[[45,235],[292.660318,125],[555,55]] },
+  { key:'seoul-6-loop', lineId:'seoul-6', stations:['응암','역촌','불광','독바위','연신내','구산'], endpoints:[[300,250],[365,210]], anchors:[[300,250],[158.003203,221.503603],[109.932436,102.920412],[224.387228,36.757448],[358.804666,81.802722],[365,210]], context:'365,210 300,250' },
+  { key:'seoul-7', lineId:'seoul-7', stations:['장암','석남'], endpoints:[[65,35],[535,250]], anchors:[[65,35],[535,250]] },
+  { key:'seoul-8', lineId:'seoul-8', stations:['별내','모란'], endpoints:[[80,35],[520,255]], anchors:[[80,35],[520,255]] },
+  { key:'seoul-9', lineId:'seoul-9', stations:['개화','중앙보훈병원'], endpoints:[[45,225],[555,45]], anchors:[[45,225],[555,45]] },
+]
+
+test.each(topologyCases)('$key uses source-guided anchors with stations and train on its route', ({key,lineId,stations,endpoints,anchors,context}) => {
+  const { container } = render(<RouteMap lineId={lineId} stations={[...stations]} color="#333" progress={0.5} />)
+  const route=container.querySelector<SVGPolylineElement>('polyline[data-route]')!
+  const points=parsePoints(route.getAttribute('points')!)
+  expect(route).toHaveAttribute('data-geometry',key)
+  expect(points[0]).toEqual(endpoints[0])
+  expect(points.at(-1)).toEqual(endpoints[1])
+  if(context) expect(container.querySelector('polyline[data-context]')).toHaveAttribute('points',context)
+
+  for (const [index,station] of [...container.querySelectorAll('g:not(.train) > circle:not(.target-ring)')].entries()) {
+    const point: Point = [Number(station.getAttribute('cx')), Number(station.getAttribute('cy'))]
+    expect(Math.hypot(point[0]-anchors[index]![0],point[1]-anchors[index]![1])).toBeLessThan(0.001)
+    expect(Math.min(...points.slice(1).map((end,index)=>distanceToSegment(point,points[index]!,end)))).toBeLessThan(0.01)
+  }
+  const transform=container.querySelector('.train')!.getAttribute('style')!
+  const [,x,y]=transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/)!
+  const train:Point=[Number(x),Number(y)]
+  expect(Math.min(...points.slice(1).map((end,index)=>distanceToSegment(train,points[index]!,end)))).toBeLessThan(0.01)
+})
+
+test('Line 5 branches share the Gangdong approach and then diverge', () => {
+  const { container,rerender }=render(<RouteMap lineId="seoul-5" stations={['강동','길동','하남검단산']} color="#996CAC" progress={0} />)
+  const hanam=parsePoints(container.querySelector('polyline[data-route]')!.getAttribute('points')!)
+  rerender(<RouteMap lineId="seoul-5" stations={['강동','둔촌동','마천']} color="#996CAC" progress={0} />)
+  const macheon=parsePoints(container.querySelector('polyline[data-route]')!.getAttribute('points')!)
+  expect(hanam.slice(0,4)).toEqual(macheon.slice(0,4))
+  expect(hanam.slice(4)).not.toEqual(macheon.slice(4))
+})
+
+test('Line 6 loop has a directed closure distinct from the open trunk', () => {
+  const { container,rerender }=render(<RouteMap lineId="seoul-6" stations={['응암','역촌','불광','독바위','연신내','구산']} color="#A9431E" progress={0} />)
+  expect(container.querySelector('polyline[data-context]')).toHaveAttribute('data-directed-closure','true')
+  rerender(<RouteMap lineId="seoul-6" stations={['응암','새절','신내']} color="#A9431E" progress={0} />)
+  expect(container.querySelector('polyline[data-context]')).not.toBeInTheDocument()
 })
