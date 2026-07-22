@@ -77,6 +77,9 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ## Verification
 
+- Final broad-review RED failed four first/later/forward/reverse focused-window cases because later segments reused the full route and failed the map-source test on `10204w`. GREEN passes 50 focused RouteMap/Game/MapExplorer/geometry tests: Game supplies global segment start/count, the geometry layer slices the correctly oriented full polyline, normalizes only that interval, exposes independent global endpoints, retains at most eight labels, and keeps the train within 0.01 SVG unit of the focused path. The verified 10205×10205 WebP descriptor is now `10205w`.
+- Final broad-review gate passed ESLint, 89 client tests in 11 files, 2 server tests, strict TypeScript, the 42-module Vite build, and working-tree `git diff --check`. The ignored `.superpowers/sdd/task-6-report.md` scratch report was removed from Git tracking while retained locally for handoff.
+
 - Task 6 stable-identity correction on 2026-07-22: four RED cases proved Line 5 collapsed to trunk geometry when `길동`/`둔촌동` was outside `visibleStations`. `Game` now passes the immutable full route separately as `geometryStations`, while `RouteMap` still renders only the maximum-eight visible slice. Focused Game/RouteMap/geometry verification passed 36 tests in 3 files plus strict TypeScript.
 - Fresh Edge captures under `.superpowers/sdd/task-6-stable-identity-captures-v2/` advanced both forward Line 5 routes to segment 42 at exact 360/768/1440 widths. With branch markers absent, Hanam remained `seoul-5-hanam` with 7 labels and Macheon remained `seoul-5-macheon` with 4 labels; visual inspection confirmed distinct branches, aligned trains, readable labels, and no overflow.
 - Final stable-identity gate passed ESLint, 85 client tests in 11 files, 2 server tests, strict TypeScript, the 42-module Vite build, and `git diff --check`.
@@ -127,6 +130,9 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 - Automated gameplay coverage confirms the train remains at Sindorim while Mullae is the next target, then advances to Mullae only after the correct submission.
 
 ## Mistakes
+
+- 2026-07-22 | Later focused gameplay windows restarted visually at the route origin | Stable branch identity was fixed, but every visible slice still sampled local 0..1 over the full geometry | Passed global segment metadata, sliced the oriented full polyline by station-index progress, then normalized only the subpath | Test first/later and forward/reverse global endpoints independently whenever viewport segmentation is introduced.
+- 2026-07-22 | The 10205×10205 overview WebP was advertised as `10204w` | The descriptor was typed from an earlier assumption instead of the verified asset dimension | Corrected to `10205w` and asserted the exact descriptor | Image candidate descriptors must match inspected pixel dimensions exactly.
 
 - 2026-07-22 | Line 5 could revert to trunk geometry at focused-segment boundaries | Geometry identity was inferred from the current maximum-eight display slice instead of the selected full route | Passed immutable full-route context separately while retaining the visible slice for rendering | Resolve topology identity before viewport segmentation and test forward/reverse marker-absent windows.
 

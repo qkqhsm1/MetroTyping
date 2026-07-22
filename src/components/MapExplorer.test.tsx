@@ -71,9 +71,8 @@ test.each([
 
 test('offers the PDF-rendered high-resolution Seoul map when needed', () => {
   render(<MapExplorer onSelect={vi.fn()} />)
-  expect(screen.getByRole('img', { name: '서울 수도권 지하철 노선도' })).toHaveAttribute(
-    'srcSet', expect.stringContaining('seoul-metro-map-20250929@2x.webp'),
-  )
+  expect(screen.getByRole('img', { name: '서울 수도권 지하철 노선도' })).toHaveAttribute('srcSet',
+    expect.stringContaining('seoul-metro-map-20250929@2x.webp 10205w'))
 })
 
 test('links dock hover to the matching map highlight', () => {

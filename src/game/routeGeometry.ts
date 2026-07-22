@@ -1,6 +1,6 @@
-import type { Point } from './geometry'
+import { pointAt, type Point } from './geometry'
 
-export type RouteGeometry={key:string;path:Point[];context?:Point[];directedClosure?:boolean}
+export type RouteGeometry={key:string;path:Point[];context?:Point[];directedClosure?:boolean;globalStart?:Point;globalEnd?:Point}
 
 const baseRoutes:Record<string,Point[]>={
   'seoul-1':[[35,250],[135,250],[210,190],[280,190],[340,115],[430,115],[520,35],[565,35]],
@@ -38,4 +38,37 @@ export function getRouteGeometry(lineId:string,stations:string[]):RouteGeometry{
   const path=topology?.path??baseRoutes[lineId]
   if(!path)throw new Error(`Missing route geometry: ${lineId}`)
   return topology?{key,...topology}:{key,path}
+}
+
+const reverseOrigins:Record<string,string>={
+  'seoul-4':'오이도','seoul-5-hanam':'하남검단산','seoul-5-macheon':'마천','seoul-6-trunk':'신내',
+  'seoul-7':'석남','seoul-8':'모란','seoul-9':'중앙보훈병원',
+}
+const rounded=(value:number)=>Math.round(value*1e6)/1e6
+const pathMetrics=(path:Point[])=>{
+  const cumulative=[0]
+  for(let index=1;index<path.length;index++)cumulative.push(cumulative[index-1]!+Math.hypot(path[index]![0]-path[index-1]![0],path[index]![1]-path[index-1]![1]))
+  return cumulative
+}
+const focusedPath=(path:Point[],startProgress:number,endProgress:number)=>{
+  const cumulative=pathMetrics(path),total=cumulative.at(-1)!,startDistance=startProgress*total,endDistance=endProgress*total
+  const start=pointAt(path,startProgress),end=pointAt(path,endProgress)
+  return [[start.x,start.y] as Point,...path.filter((_,index)=>cumulative[index]!>startDistance&&cumulative[index]!<endDistance),[end.x,end.y] as Point]
+}
+const normalizePath=(path:Point[])=>{
+  const xs=path.map(([x])=>x),ys=path.map(([,y])=>y),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys)
+  const width=Math.max(1,maxX-minX),height=Math.max(1,maxY-minY),scale=Math.min(510/width,220/height)
+  const offsetX=300-(minX+maxX)/2*scale,offsetY=145-(minY+maxY)/2*scale
+  return path.map(([x,y])=>[rounded(x*scale+offsetX),rounded(y*scale+offsetY)] as Point)
+}
+
+export function getFocusedRouteGeometry(lineId:string,stations:string[],routeStationCount:number,segmentStart:number,segmentLength:number){
+  const geometry=getRouteGeometry(lineId,stations)
+  const reversed=reverseOrigins[geometry.key]===stations[0]
+  const fullPath=reversed?[...geometry.path].reverse():geometry.path
+  const denominator=Math.max(1,routeStationCount-1)
+  const startProgress=Math.min(1,segmentStart/denominator)
+  const endProgress=Math.min(1,(segmentStart+Math.max(0,segmentLength-1))/denominator)
+  const globalPath=focusedPath(fullPath,startProgress,endProgress).map(([x,y])=>[rounded(x),rounded(y)] as Point)
+  return {...geometry,path:normalizePath(globalPath),context:undefined,globalStart:globalPath[0]!,globalEnd:globalPath.at(-1)!}
 }

@@ -126,6 +126,7 @@ test('shows a readable eight-station segment and swaps segments without blocking
   const stations=Array.from({length:12},(_,index)=>`역${index}`)
   const { container }=render(<Game stations={stations} color="#0052A4" onExit={() => {}} />)
   expect([...container.querySelectorAll('.route-map text')].map(node=>node.textContent)).toEqual(stations.slice(0,8))
+  const firstWindow=container.querySelector('polyline[data-route]')?.getAttribute('data-global-start')
 
   const input=screen.getByRole('textbox')
   stations.slice(0,8).forEach(station=>{
@@ -134,6 +135,7 @@ test('shows a readable eight-station segment and swaps segments without blocking
   })
 
   expect([...container.querySelectorAll('.route-map text')].map(node=>node.textContent)).toEqual(stations.slice(7))
+  expect(container.querySelector('polyline[data-route]')).not.toHaveAttribute('data-global-start',firstWindow)
   expect(screen.getByRole('heading',{name:'역8'})).toBeInTheDocument()
 })
 

@@ -110,6 +110,26 @@ test.each([
   expect(container.querySelectorAll('.route-map text')).toHaveLength(visible.length)
 })
 
+test.each([
+  {name:'first forward',full:['방화','길동','하남검단산'],start:0,expectedStart:'45,145',expectedEnd:'122.22809,145'},
+  {name:'later forward',full:['방화','길동','하남검단산'],start:35,expectedStart:'414.003839,74.140664',expectedEnd:'488.804494,65'},
+  {name:'first reverse',full:['하남검단산','길동','방화'],start:0,expectedStart:'555,65',expectedEnd:'477.77191,65'},
+  {name:'later reverse',full:['하남검단산','길동','방화'],start:35,expectedStart:'184.290482,126.510361',expectedEnd:'111.195506,145'},
+])('derives the $name focused window from independent full-route anchors', ({full,start,expectedStart,expectedEnd}) => {
+  const visible=Array.from({length:8},(_,index)=>`S${start+index}`)
+  const {container}=render(<RouteMap lineId="seoul-5" stations={visible} geometryStations={full} routeStationCount={49} segmentStart={start} color="#996CAC" progress={0.5} />)
+  const route=container.querySelector('polyline[data-route]')!
+  expect(route).toHaveAttribute('data-global-start',expectedStart)
+  expect(route).toHaveAttribute('data-global-end',expectedEnd)
+  expect(route.getAttribute('points')).not.toBe(`${expectedStart} ${expectedEnd}`)
+  expect(container.querySelectorAll('.route-map text')).toHaveLength(8)
+  const points=parsePoints(route.getAttribute('points')!)
+  const transform=container.querySelector('.train')!.getAttribute('style')!
+  const [,x,y]=transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/)!
+  const train:Point=[Number(x),Number(y)]
+  expect(Math.min(...points.slice(1).map((end,index)=>distanceToSegment(train,points[index]!,end)))).toBeLessThan(0.01)
+})
+
 test('Line 6 loop has a directed closure distinct from the open trunk', () => {
   const { container,rerender }=render(<RouteMap lineId="seoul-6" stations={['응암','역촌','불광','독바위','연신내','구산']} color="#A9431E" progress={0} />)
   expect(container.querySelector('polyline[data-context]')).toHaveAttribute('data-directed-closure','true')

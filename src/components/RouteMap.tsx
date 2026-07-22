@@ -1,14 +1,14 @@
 import { pointAt } from '../game/geometry'
-import { getRouteGeometry } from '../game/routeGeometry'
+import { getFocusedRouteGeometry, getRouteGeometry } from '../game/routeGeometry'
 
-export default function RouteMap({ lineId,progress,color,stations,geometryStations=stations,showAllLabels=true,targetIndex,trainVisible=true,trainEntering=false }:{ lineId:string; progress:number; color:string; stations:string[]; geometryStations?:string[]; showAllLabels?:boolean; targetIndex?:number; trainVisible?:boolean; trainEntering?:boolean }) {
-  const geometry=getRouteGeometry(lineId,geometryStations)
+export default function RouteMap({ lineId,progress,color,stations,geometryStations=stations,routeStationCount,segmentStart=0,showAllLabels=true,targetIndex,trainVisible=true,trainEntering=false }:{ lineId:string; progress:number; color:string; stations:string[]; geometryStations?:string[]; routeStationCount?:number; segmentStart?:number; showAllLabels?:boolean; targetIndex?:number; trainVisible?:boolean; trainEntering?:boolean }) {
+  const geometry=routeStationCount===undefined?getRouteGeometry(lineId,geometryStations):getFocusedRouteGeometry(lineId,geometryStations,routeStationCount,segmentStart,stations.length)
   const route = geometry.path
   if (!route) throw new Error(`Missing route geometry: ${lineId}`)
   const train = pointAt(route, progress)
   const points = route.map(point => point.join(',')).join(' ')
   return <svg className="route-map" viewBox="0 0 600 290" role="img" aria-label="전체 노선도">
-    <polyline data-route="" data-geometry={geometry.key} points={points} fill="none" stroke="#deddd7" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round" />
+    <polyline data-route="" data-geometry={geometry.key} data-global-start={geometry.globalStart?.join(',')} data-global-end={geometry.globalEnd?.join(',')} points={points} fill="none" stroke="#deddd7" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round" />
     {geometry.context&&<polyline data-context="" data-directed-closure={geometry.directedClosure||undefined} points={geometry.context.map(point=>point.join(',')).join(' ')} fill="none" stroke="#deddd7" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round" />}
     <polyline points={points} fill="none" stroke={color} strokeWidth="16" strokeLinecap="round" strokeLinejoin="round" pathLength="1" strokeDasharray={`${progress} 1`} />
     {stations.map((station,index) => {
