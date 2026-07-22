@@ -3,11 +3,27 @@ import { getLine, LINES } from '../data/lines'
 import { dailyStations, getFullLoopRoute, getQuickRoutePairs, getRoute } from './routes'
 
 describe('route data', () => {
-  test('contains the ten approved lines', () => {
+  test('contains the fourteen approved lines', () => {
     expect(LINES.map(line => line.id)).toEqual([
-      'seoul-1', 'seoul-2', 'seoul-3', 'seoul-4', 'seoul-6', 'suin-bundang',
-      'incheon-1', 'incheon-2', 'arex', 'yamanote',
+      'seoul-1', 'seoul-2', 'seoul-3', 'seoul-4', 'seoul-5', 'seoul-6',
+      'seoul-7', 'seoul-8', 'seoul-9', 'suin-bundang', 'incheon-1',
+      'incheon-2', 'arex', 'yamanote',
     ])
+  })
+
+  test('freezes Seoul lines 5 through 9 topology and service patterns', () => {
+    expect(getLine('seoul-5').quickRoutePairs).toEqual([
+      ['방화', '하남검단산'],
+      ['방화', '마천'],
+    ])
+    expect(getRoute('seoul-5', '방화', '하남검단산').stationIds).toContain('길동')
+    expect(getRoute('seoul-5', '방화', '마천').stationIds).toContain('둔촌동')
+    expect(getRoute('seoul-6', '응암', '구산').stationIds).toEqual([
+      '응암', '역촌', '불광', '독바위', '연신내', '구산',
+    ])
+    expect(getRoute('seoul-7', '장암', '석남').stationIds.at(-1)).toBe('석남')
+    expect(getRoute('seoul-8', '별내', '모란').stationIds).toContain('암사역사공원')
+    expect(getLine('seoul-9').services?.map(service => service.id)).toEqual(['local', 'express'])
   })
 
   test('routes Seoul line 4 end to end in both directions', () => {

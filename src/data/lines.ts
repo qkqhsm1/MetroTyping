@@ -1,4 +1,10 @@
 export type ServiceTerminus = { station: string; source: string }
+export type ServicePattern = {
+  id: 'local' | 'express'
+  label: '일반' | '급행'
+  sequence: string[]
+  source: string
+}
 export type LoopDirection = { value: 'clockwise' | 'counterclockwise' | 'outer' | 'inner'; label: string }
 export type LoopPreset = { origin: string; directions: readonly [LoopDirection, LoopDirection] }
 export type Line = {
@@ -9,6 +15,7 @@ export type Line = {
   sequences: string[][]
   oneWaySequences?: string[][]
   serviceTermini?: ServiceTerminus[]
+  services?: readonly ServicePattern[]
   quickRoutePairs?: readonly (readonly [string, string])[]
   quickOneWayRoutes?: readonly { title: string; stations: readonly string[] }[]
   loopPreset?: LoopPreset
@@ -56,12 +63,20 @@ const suinBundang = [
   '송도', '인하대', '숭의', '신포', '인천',
 ]
 const seoul4 = '진접 오남 별내별가람 불암산 상계 노원 창동 쌍문 수유 미아 미아사거리 길음 성신여대입구 한성대입구 혜화 동대문 동대문역사문화공원 충무로 명동 회현 서울역 숙대입구 삼각지 신용산 이촌 동작 총신대입구(이수) 사당 남태령 선바위 경마공원 대공원 과천 정부과천청사 인덕원 평촌 범계 금정 산본 수리산 대야미 반월 상록수 한대앞 중앙 고잔 초지 안산 능길 정왕 오이도'.split(' ')
+const seoul5Trunk = '방화 개화산 김포공항 송정 마곡 발산 우장산 화곡 까치산 신정 목동 오목교 양평 영등포구청 영등포시장 신길 여의도 여의나루 마포 공덕 애오개 충정로 서대문 광화문 종로3가 을지로4가 동대문역사문화공원 청구 신금호 행당 왕십리 마장 답십리 장한평 군자 아차산 광나루 천호 강동'.split(' ')
+const seoul5Hanam = '강동 길동 굽은다리 명일 고덕 상일동 강일 미사 하남풍산 하남시청 하남검단산'.split(' ')
+const seoul5Macheon = '강동 둔촌동 올림픽공원 방이 오금 개롱 거여 마천'.split(' ')
 const seoul6 = '응암 새절 증산 디지털미디어시티 월드컵경기장 마포구청 망원 합정 상수 광흥창 대흥 공덕 효창공원앞 삼각지 녹사평 이태원 한강진 버티고개 약수 청구 신당 동묘앞 창신 보문 안암 고려대 월곡 상월곡 돌곶이 석계 태릉입구 화랑대 봉화산 신내'.split(' ')
 const eungamLoop = '응암 역촌 불광 독바위 연신내 구산 응암'.split(' ')
+const seoul7 = '장암 도봉산 수락산 마들 노원 중계 하계 공릉 태릉입구 먹골 중화 상봉 면목 사가정 용마산 중곡 군자 어린이대공원 건대입구 자양(뚝섬한강공원) 청담 강남구청 학동 논현 반포 고속터미널 내방 총신대입구(이수) 남성 숭실대입구(살피재) 상도 장승배기 신대방삼거리 보라매 신풍 대림 남구로 가산디지털단지 철산 광명사거리 천왕 온수 까치울 부천종합운동장 춘의 신중동 부천시청 상동 삼산체육관 굴포천 부평구청 산곡 석남'.split(' ')
+const seoul8 = '별내 다산 동구릉 구리 장자호수공원 암사역사공원 암사 천호 강동구청 몽촌토성 잠실 석촌 송파 가락시장 문정 장지 복정 남위례 산성 남한산성입구 단대오거리 신흥 수진 모란'.split(' ')
+const seoul9Local = '개화 김포공항 공항시장 신방화 마곡나루 양천향교 가양 증미 등촌 염창 신목동 선유도 당산 국회의사당 여의도 샛강 노량진 노들 흑석 동작 구반포 신반포 고속터미널 사평 신논현 언주 선정릉 삼성중앙 봉은사 종합운동장 삼전 석촌 석촌고분 송파나루 한성백제 올림픽공원 둔촌오륜 중앙보훈병원'.split(' ')
+const seoul9Express = '김포공항 마곡나루 가양 염창 당산 여의도 노량진 동작 고속터미널 신논현 선정릉 봉은사 종합운동장 석촌 올림픽공원 중앙보훈병원'.split(' ')
 
 const korailSource = 'https://info.korail.com/info/contents.do?key=863'
 const korailNoticeSource = 'https://info.korail.com/info/selectBbsNttView.do?bbsNo=199&key=911&nttNo=23761'
 const seoulMapSource = 'https://data.seoul.go.kr/dataList/OA-22535/F/1/datasetView.do'
+const seoulTimetableCurrentSource = 'https://data.seoul.go.kr/dataList/OA-22522/L/1/datasetView.do'
 const seoulTimetableSource = 'https://data.seoul.go.kr/dataList/OA-101/A/1/datasetView.do'
 const incheonSource = 'https://www.ictr.or.kr/main/railway/intro.jsp'
 const arexSource = 'https://www.arex.or.kr/station/trainTime.do?menuNo=MN201503300000000012&stnCd=010&tab=3'
@@ -71,7 +86,11 @@ export const LINES:Line[] = [
   { id:'seoul-2', name:'서울 2호선', color:'#00A84D', loop:true, sequences:['신도림 문래 영등포구청 당산 합정 홍대입구 신촌 이대 아현 충정로 시청 을지로입구 을지로3가 을지로4가 동대문역사문화공원 신당 상왕십리 왕십리 한양대 뚝섬 성수 건대입구 구의 강변 잠실나루 잠실 잠실새내 종합운동장 삼성 선릉 역삼 강남 교대 서초 방배 사당 낙성대 서울대입구 봉천 신림 신대방 구로디지털단지 대림'.split(' ')], loopPreset:{origin:'신도림',directions:[{value:'clockwise',label:'시계 방향'},{value:'counterclockwise',label:'반시계 방향'}]} },
   { id:'seoul-3', name:'서울 3호선', color:'#EF7C1C', sequences:[seoul3], serviceTermini:[{station:'대화',source:korailNoticeSource},{station:'구파발',source:seoulTimetableSource},{station:'삼송',source:korailNoticeSource},{station:'오금',source:seoulMapSource}] },
   { id:'seoul-4', name:'서울 4호선', color:'#00A5DE', sequences:[seoul4], serviceTermini:['진접','오이도'].map(station=>({station,source:seoulMapSource})), quickRoutePairs:[['진접','오이도']] },
+  { id:'seoul-5', name:'서울 5호선', color:'#996CAC', sequences:[seoul5Trunk,seoul5Hanam,seoul5Macheon], serviceTermini:['방화','하남검단산','마천'].map(station=>({station,source:seoulMapSource})), quickRoutePairs:[['방화','하남검단산'],['방화','마천']] },
   { id:'seoul-6', name:'서울 6호선', color:'#A9431E', sequences:[seoul6], oneWaySequences:[eungamLoop], serviceTermini:['응암','신내'].map(station=>({station,source:seoulMapSource})), quickRoutePairs:[['응암','신내']], quickOneWayRoutes:[{title:'응암순환',stations:eungamLoop.slice(0,-1)}] },
+  { id:'seoul-7', name:'서울 7호선', color:'#747F00', sequences:[seoul7], serviceTermini:['장암','석남'].map(station=>({station,source:seoulMapSource})), quickRoutePairs:[['장암','석남']] },
+  { id:'seoul-8', name:'서울 8호선', color:'#E6186C', sequences:[seoul8], serviceTermini:['별내','모란'].map(station=>({station,source:seoulMapSource})), quickRoutePairs:[['별내','모란']] },
+  { id:'seoul-9', name:'서울 9호선', color:'#BDB092', sequences:[seoul9Local], services:[{id:'local',label:'일반',sequence:seoul9Local,source:seoulTimetableCurrentSource},{id:'express',label:'급행',sequence:seoul9Express,source:seoulTimetableCurrentSource}], serviceTermini:['개화','중앙보훈병원'].map(station=>({station,source:seoulMapSource})), quickRoutePairs:[['개화','중앙보훈병원']] },
   { id:'suin-bundang', name:'수인·분당선', color:'#F5A200', sequences:[suinBundang], serviceTermini:['청량리','왕십리','죽전','고색','오이도','인천'].map(station=>({station,source:korailSource})), quickRoutePairs:[['인천','오이도'],['인천','왕십리'],['죽전','고색'],['인천','청량리']] },
   { id:'incheon-1', name:'인천 1호선', color:'#7CA8D5', sequences:['검단호수공원 신검단중앙 아라 계양 귤현 박촌 임학 계산 경인교대입구 작전 갈산 부평구청 부평시장 부평 동수 부평삼거리 간석오거리 인천시청 예술회관 인천터미널 문학경기장 선학 신연수 원인재 동춘 동막 캠퍼스타운 테크노파크 지식정보단지 인천대입구 센트럴파크 국제업무지구 송도달빛축제공원'.split(' ')], serviceTermini:['검단호수공원','송도달빛축제공원'].map(station=>({station,source:incheonSource})) },
   { id:'incheon-2', name:'인천 2호선', color:'#ED8B00', sequences:['검단오류 왕길 검단사거리 마전 완정 독정 검암 검바위 아시아드경기장 서구청 가정 가정중앙시장 석남 서부여성회관 인천가좌 가재울 주안국가산단 주안 시민공원 석바위시장 인천시청 석천사거리 모래내시장 만수 남동구청 인천대공원 운연'.split(' ')], serviceTermini:['검단오류','운연'].map(station=>({station,source:incheonSource})) },
