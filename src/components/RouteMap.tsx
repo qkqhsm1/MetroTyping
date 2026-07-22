@@ -1,8 +1,9 @@
-import { pointAt } from '../game/geometry'
+import { pointAt, type Point } from '../game/geometry'
 import { getFocusedRouteGeometry, getRouteGeometry } from '../game/routeGeometry'
 
 export default function RouteMap({ lineId,progress,color,stations,geometryStations=stations,routeStationCount,segmentStart=0,showAllLabels=true,targetIndex,trainVisible=true,trainEntering=false }:{ lineId:string; progress:number; color:string; stations:string[]; geometryStations?:string[]; routeStationCount?:number; segmentStart?:number; showAllLabels?:boolean; targetIndex?:number; trainVisible?:boolean; trainEntering?:boolean }) {
-  const geometry=routeStationCount===undefined?getRouteGeometry(lineId,geometryStations):getFocusedRouteGeometry(lineId,geometryStations,routeStationCount,segmentStart,stations.length)
+  const sourceGeometry=routeStationCount===undefined?getRouteGeometry(lineId,geometryStations):getFocusedRouteGeometry(lineId,geometryStations,routeStationCount,segmentStart,stations.length)
+  const geometry=routeStationCount!==undefined&&lineId==='seoul-2'?{...sourceGeometry,path:[[45,145],[555,145]] as Point[]}:sourceGeometry
   const route = geometry.path
   if (!route) throw new Error(`Missing route geometry: ${lineId}`)
   const train = pointAt(route, progress)

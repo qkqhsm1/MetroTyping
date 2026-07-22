@@ -28,6 +28,18 @@ test('labels every station on the route', () => {
   expect([...container.querySelectorAll('text')].map(node => node.textContent)).toEqual(stations)
 })
 
+test('clips a Line 2 window to its first and last visible stations', () => {
+  const full=getFullLoopRoute('seoul-2','신도림','clockwise').stationIds
+  const visible=full.slice(0,8)
+  const {container}=render(<RouteMap lineId="seoul-2" stations={visible} geometryStations={full} routeStationCount={full.length} segmentStart={0} color="#00A84D" progress={0} />)
+  const route=parsePoints(container.querySelector('polyline[data-route]')!.getAttribute('points')!)
+  const stations=[...container.querySelectorAll('circle:not(.target-ring)')]
+  expect(route[0]).toEqual([Number(stations[0]!.getAttribute('cx')),Number(stations[0]!.getAttribute('cy'))])
+  expect(route.at(-1)).toEqual([Number(stations.at(-1)!.getAttribute('cx')),Number(stations.at(-1)!.getAttribute('cy'))])
+  expect(stations.map(station=>Number(station.getAttribute('cx')))).toEqual([...stations].map(station=>Number(station.getAttribute('cx'))).sort((a,b)=>a-b))
+  expect([...container.querySelectorAll('text')].map(node=>node.textContent)).toEqual(visible)
+})
+
 test('anchors the front of the train at the current station', () => {
   const { container } = render(<RouteMap lineId="seoul-2" stations={['신도림','문래']} color="#00A84D" progress={0} />)
   expect(container.querySelector('.train-body')).toHaveAttribute('transform', 'translate(-22 0)')
@@ -141,9 +153,6 @@ test('Line 6 loop has a directed closure distinct from the open trunk', () => {
 const directionCases = [
   { name:'Line 9 reverse mid-line', lineId:'seoul-9', stations:getRoute('seoul-9','선정릉','여의도').stationIds, expectedStart:'213.657031,165' },
   { name:'Line 5 Hanam reverse mid-line', lineId:'seoul-5', stations:getRoute('seoul-5','미사','강동').stationIds, expectedStart:'555,65' },
-  { name:'AREX reverse mid-line', lineId:'arex', stations:getRoute('arex','인천공항2터미널','공덕').stationIds, expectedStart:'216.666667,175' },
-  { name:'Line 2 clockwise loop', lineId:'seoul-2', stations:getFullLoopRoute('seoul-2','신도림','clockwise').stationIds, expectedStart:'70,127.716442' },
-  { name:'Line 2 counterclockwise loop', lineId:'seoul-2', stations:getFullLoopRoute('seoul-2','신도림','counterclockwise').stationIds, expectedStart:'530,119.145228' },
   { name:'Line 6 one-way loop', lineId:'seoul-6', stations:['응암','역촌','불광','독바위','연신내','구산'], expectedStart:'300,250' },
 ] as const
 

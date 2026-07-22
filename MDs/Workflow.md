@@ -29,6 +29,8 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### Done
 
+- Restored focused maximum-eight-station gameplay geometry and made Line 2 gameplay segments consistently read left-to-right, so station order cannot be confused by loop bends; retained the white halo and brighter lightweight overview highlight without animating the full-resolution raster.
+
 - Deployed canonical `main` commit `d73dd358c7f2d3c69e3c36e322769c6163600442`; GitHub Pages run `29918681323` completed successfully on 2026-07-22.
 
 - Approved and documented the Seoul Lines 1–9 expansion, including Line 5 branches, the Line 6 directed Eungam loop, Lines 7/8 current endpoints, and Line 9-only local/express play.
@@ -77,6 +79,8 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 - Re-run official station-order verification before freezing production data.
 
 ## Verification
+
+- Continuation gate on 2026-07-22 passed ESLint, 102 client tests, 2 server tests, strict TypeScript, the 42-module Vite production build, and `git diff --check`. RED regressions proved Line 2's visible path extended beyond its displayed stations and then ran right-to-left; GREEN clips each segment and renders Line 2 gameplay as one stable left-to-right path. Fresh Edge overview captures at 360, 768, and 1440 CSS-pixel widths remain under `.artifacts/continue-20260722/`.
 
 - Production release verification on 2026-07-22: Pages run `29918681323` succeeded for `d73dd358c7f2d3c69e3c36e322769c6163600442`. `/MetroTyping/` returned HTTP 200 HTML and referenced `index-D_ZVS76d.js` (HTTP 200, `application/javascript`, 349,503 bytes) and `index-BRLDS_gI.css` (HTTP 200, `text/css`, 17,503 bytes). The deployed JPG (6,617,130 bytes), 10205px WebP (3,733,012 bytes), and supported-lines SVG (166,493 bytes) returned the correct image MIME types and valid JPEG/RIFF-WEBP/SVG content signatures. A fresh Edge rendered-DOM smoke at 1440 CSS pixels confirmed `/MetroTyping/`, all Seoul 1–9 dock and SVG controls, `14 LINES`, no page overflow, no desktop-internal map scrollbar, Line 9 `일반`/`급행` switching, and a complete 16-station express typing run with zero errors.
 
@@ -137,6 +141,12 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 - Automated gameplay coverage confirms the train remains at Sindorim while Mullae is the next target, then advances to Mullae only after the correct submission.
 
 ## Mistakes
+
+- 2026-07-22 | The first correction still made Hapjeong appear after Hongik Univ. | Testing only that visible route endpoints matched their station circles did not verify human-readable direction; normalized loop geometry still ran right-to-left and bent vertically | Fixed Line 2 gameplay to a stable left-to-right path and asserted monotonically increasing station x-coordinates | Gameplay route tests must verify readable station ordering, not only geometric attachment and path distance.
+
+- 2026-07-22 | A Line 2 gameplay segment made Hongik Univ. appear visually earlier than Hapjeong and scattered labels around unused line | Preserving the whole legacy route shape while rendering only eight station labels left path geometry outside the visible station window | Removed the legacy full-route exception and restored focused segment normalization | Every gameplay polyline must start at its first visible station and end at its last; recognizable full-route shape belongs only in overview/setup.
+
+- 2026-07-22 | The first responsive capture command was rejected before execution | Too many preview, polling, and Edge capture operations were embedded in one PowerShell command | Split preview startup, HTTP verification, and browser captures into separate commands | Keep Windows browser QA commands small and independently observable.
 
 - 2026-07-22 | Line 5 cross-branch trips rendered only the Hanam leg | Branch selection tested `길동` before checking whether `둔촌동` was also present, while the sibling leg existed only as removable context | Detect both markers first and use an explicit two-leg path for each route ordering | Multi-branch route identity must be derived from the complete marker set before any single-branch fallback.
 

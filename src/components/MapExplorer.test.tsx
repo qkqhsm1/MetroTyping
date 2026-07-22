@@ -87,8 +87,17 @@ test('links dock hover to the matching map highlight', () => {
   expect(screen.getByTestId('seoul-map').querySelector('.map-dimmer')).toBeInTheDocument()
   const mapLine = screen.getByRole('button', { name: '지도에서 서울 2호선 선택' })
   expect(mapLine).toHaveAttribute('data-active', 'true')
+  expect(mapLine.querySelector('.line-halo')).toBeInTheDocument()
   expect(mapLine.querySelector('.line-highlight')).toBeInTheDocument()
   expect(mapLine.querySelector('.line-hit')).toBeInTheDocument()
+})
+
+test('uses lightweight brighter hover layers without filtering the full route vector', () => {
+  const styles=readFileSync('src/styles.css','utf8')
+  expect(styles).toMatch(/\.map-frame\[data-active-line\] \.map-dimmer\{opacity:\.13\}/)
+  expect(styles).toMatch(/\.map-hitareas g\[data-active="true"\] \.line-highlight\{opacity:1;stroke-width:10\.1\}/)
+  expect(styles).toMatch(/\.line-halo\{[^}]*stroke:#fff[^}]*stroke-width:14/s)
+  expect(styles).not.toMatch(/\.line-highlight\{[^}]*drop-shadow/s)
 })
 
 test('ignores a pointer that leaves before the highlight delay', () => {
