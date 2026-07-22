@@ -110,6 +110,21 @@ describe('route data', () => {
     }
   })
 
+  test('limits Suin-Bundang quick travel to the four approved pairs', () => {
+    const pairs = getQuickRoutePairs('suin-bundang')
+    expect(pairs.map(pair => `${pair.routes[0].from}:${pair.routes[0].to}`)).toEqual([
+      '인천:오이도',
+      '인천:왕십리',
+      '죽전:고색',
+      '인천:청량리',
+    ])
+    for (const pair of pairs) {
+      expect(pair.routes[1].from).toBe(pair.routes[0].to)
+      expect(pair.routes[1].to).toBe(pair.routes[0].from)
+    }
+    expect(getQuickRoutePairs('seoul-1')).toHaveLength(3)
+  })
+
   test('builds exact one-lap routes without repeating the origin', () => {
     const clockwise = getFullLoopRoute('seoul-2', '신도림', 'clockwise')
     expect(clockwise.stationIds[0]).toBe('신도림')

@@ -111,12 +111,11 @@ export function getQuickRoutePairs(lineId: string): QuickRoutePair[] {
 
   const pairs: QuickRoutePair[] = []
   const termini = line.serviceTermini ?? []
+  const candidates = line.quickRoutePairs ?? termini.flatMap(({ station: from }, leftIndex) =>
+    termini.slice(leftIndex + 1).map(({ station: to }) => [from, to] as const),
+  )
   const seen = new Set<string>()
-  for (let leftIndex = 0; leftIndex < termini.length; leftIndex += 1) {
-    for (let rightIndex = leftIndex + 1; rightIndex < termini.length; rightIndex += 1) {
-      const from = termini[leftIndex]?.station
-      const to = termini[rightIndex]?.station
-      if (!from || !to) throw new Error('Invalid line data')
+  for (const [from, to] of candidates) {
       const id = [from, to].sort().join(':')
       if (seen.has(id)) continue
       try {
@@ -131,7 +130,6 @@ export function getQuickRoutePairs(lineId: string): QuickRoutePair[] {
       } catch (error) {
         if (!(error instanceof Error) || error.message !== 'No route') throw error
       }
-    }
   }
   return pairs
 }

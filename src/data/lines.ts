@@ -8,6 +8,7 @@ export type Line = {
   loop?: boolean
   sequences: string[][]
   serviceTermini?: ServiceTerminus[]
+  quickRoutePairs?: readonly (readonly [string, string])[]
   loopPreset?: LoopPreset
 }
 
@@ -64,7 +65,7 @@ export const LINES:Line[] = [
   { id:'seoul-1', name:'서울 1호선', color:'#0052A4', sequences:[s1North,s1Incheon,s1Sinchang], serviceTermini:['연천','인천','신창'].map(station=>({station,source:korailNoticeSource})) },
   { id:'seoul-2', name:'서울 2호선', color:'#00A84D', loop:true, sequences:['신도림 문래 영등포구청 당산 합정 홍대입구 신촌 이대 아현 충정로 시청 을지로입구 을지로3가 을지로4가 동대문역사문화공원 신당 상왕십리 왕십리 한양대 뚝섬 성수 건대입구 구의 강변 잠실나루 잠실 잠실새내 종합운동장 삼성 선릉 역삼 강남 교대 서초 방배 사당 낙성대 서울대입구 봉천 신림 신대방 구로디지털단지 대림'.split(' ')], loopPreset:{origin:'신도림',directions:[{value:'clockwise',label:'시계 방향'},{value:'counterclockwise',label:'반시계 방향'}]} },
   { id:'seoul-3', name:'서울 3호선', color:'#EF7C1C', sequences:[seoul3], serviceTermini:[{station:'대화',source:korailNoticeSource},{station:'구파발',source:seoulTimetableSource},{station:'삼송',source:korailNoticeSource},{station:'오금',source:seoulMapSource}] },
-  { id:'suin-bundang', name:'수인·분당선', color:'#F5A200', sequences:[suinBundang], serviceTermini:['청량리','왕십리','죽전','고색','오이도','인천'].map(station=>({station,source:korailSource})) },
+  { id:'suin-bundang', name:'수인·분당선', color:'#F5A200', sequences:[suinBundang], serviceTermini:['청량리','왕십리','죽전','고색','오이도','인천'].map(station=>({station,source:korailSource})), quickRoutePairs:[['인천','오이도'],['인천','왕십리'],['죽전','고색'],['인천','청량리']] },
   { id:'incheon-1', name:'인천 1호선', color:'#7CA8D5', sequences:['검단호수공원 신검단중앙 아라 계양 귤현 박촌 임학 계산 경인교대입구 작전 갈산 부평구청 부평시장 부평 동수 부평삼거리 간석오거리 인천시청 예술회관 인천터미널 문학경기장 선학 신연수 원인재 동춘 동막 캠퍼스타운 테크노파크 지식정보단지 인천대입구 센트럴파크 국제업무지구 송도달빛축제공원'.split(' ')], serviceTermini:['검단호수공원','송도달빛축제공원'].map(station=>({station,source:incheonSource})) },
   { id:'incheon-2', name:'인천 2호선', color:'#ED8B00', sequences:['검단오류 왕길 검단사거리 마전 완정 독정 검암 검바위 아시아드경기장 서구청 가정 가정중앙시장 석남 서부여성회관 인천가좌 가재울 주안국가산단 주안 시민공원 석바위시장 인천시청 석천사거리 모래내시장 만수 남동구청 인천대공원 운연'.split(' ')], serviceTermini:['검단오류','운연'].map(station=>({station,source:incheonSource})) },
   { id:'arex', name:'공항철도', color:'#0090D2', sequences:['서울역 공덕 홍대입구 디지털미디어시티 마곡나루 김포공항 계양 검암 청라국제도시 영종 운서 공항화물청사 인천공항1터미널 인천공항2터미널'.split(' ')], serviceTermini:['서울역','인천공항2터미널'].map(station=>({station,source:arexSource})) },
