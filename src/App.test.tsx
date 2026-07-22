@@ -1,9 +1,17 @@
 import { fireEvent, render, screen } from '@testing-library/react'
+import type { ComponentProps } from 'react'
 import { afterEach, expect, test, vi } from 'vitest'
 import App from './App'
 import { playSound } from './audio/sounds'
+import * as routes from './game/routes'
 
 vi.mock('./audio/sounds',()=>({playSound:vi.fn()}))
+vi.mock('./components/Game',async importOriginal=>{
+  const {default:Game}=await importOriginal<typeof import('./components/Game')>()
+  return {default:(props:ComponentProps<typeof Game>)=>props.lineId==='seoul-9'
+    ? <section data-testid="line-9-game" data-stations={props.stations.join('|')}><h1>{props.stations[0]}</h1><div className="route-progress">1 / {props.stations.length}</div>{props.durationSeconds&&<span>노선 전체에서 무작위 출제</span>}</section>
+    : <Game {...props}/>}
+})
 afterEach(()=>vi.mocked(playSound).mockClear())
 
 test('passes the header mute state into gameplay sounds', () => {
@@ -88,4 +96,60 @@ test('does not show service selection for Line 8', () => {
   fireEvent.click(screen.getByRole('button', { name: '서울 8호선 선택' }))
   expect(screen.queryByRole('button', { name: '일반' })).not.toBeInTheDocument()
   expect(screen.queryByRole('button', { name: '급행' })).not.toBeInTheDocument()
+})
+
+test('starts the full Line 9 express quick route', () => {
+  render(<App />)
+  fireEvent.click(screen.getByRole('button', { name: '서울 9호선 선택' }))
+  fireEvent.click(screen.getByRole('button', { name: '급행' }))
+  fireEvent.click(screen.getByRole('button', { name: '김포공항에서 중앙보훈병원까지 바로 시작' }))
+
+  expect(screen.getByRole('heading', { name: '김포공항' })).toBeInTheDocument()
+  expect(document.querySelector('.route-progress')).toHaveTextContent('1 / 16')
+  expect(screen.getByTestId('line-9-game')).toHaveAttribute('data-stations','김포공항|마곡나루|가양|염창|당산|여의도|노량진|동작|고속터미널|신논현|선정릉|봉은사|종합운동장|석촌|올림픽공원|중앙보훈병원')
+})
+
+test('starts a custom route using only Line 9 express stops', () => {
+  render(<App />)
+  fireEvent.click(screen.getByRole('button', { name: '서울 9호선 선택' }))
+  fireEvent.click(screen.getByRole('button', { name: '급행' }))
+  fireEvent.click(screen.getByRole('combobox', { name: '출발역' }))
+  fireEvent.click(screen.getByRole('option', { name: '김포공항' }))
+  fireEvent.click(screen.getByRole('combobox', { name: '도착역' }))
+  fireEvent.click(screen.getByRole('option', { name: '가양' }))
+  fireEvent.click(screen.getByRole('button', { name: '운행 시작 →' }))
+
+  expect(screen.getByRole('heading', { name: '김포공항' })).toBeInTheDocument()
+  expect(document.querySelector('.route-progress')).toHaveTextContent('1 / 3')
+  expect(screen.getByTestId('line-9-game')).toHaveAttribute('data-stations','김포공항|마곡나루|가양')
+})
+
+test('uses Line 9 express stops for random gameplay', () => {
+  const dateKey=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul'}).format(new Date())
+  const expected=routes.dailyStations('seoul-9',dateKey,'express')[0]!
+  render(<App />)
+  fireEvent.click(screen.getByRole('button', { name: '서울 9호선 선택' }))
+  fireEvent.click(screen.getByRole('button', { name: '급행' }))
+  fireEvent.click(screen.getByRole('button', { name: '랜덤 역명' }))
+  fireEvent.click(screen.getByRole('button', { name: '운행 시작 →' }))
+
+  expect(screen.getByRole('heading', { name: expected })).toBeInTheDocument()
+  expect(screen.getByText('노선 전체에서 무작위 출제')).toBeInTheDocument()
+  expect(screen.getByTestId('line-9-game')).toHaveAttribute('data-stations',routes.dailyStations('seoul-9',dateKey,'express').join('|'))
+})
+
+test('keeps setup usable when custom route calculation fails', () => {
+  render(<App />)
+  fireEvent.click(screen.getByRole('button', { name: '서울 9호선 선택' }))
+  fireEvent.click(screen.getByRole('combobox', { name: '출발역' }))
+  fireEvent.click(screen.getByRole('option', { name: '개화' }))
+  fireEvent.click(screen.getByRole('combobox', { name: '도착역' }))
+  fireEvent.click(screen.getByRole('option', { name: '김포공항' }))
+  const failure=vi.spyOn(routes,'getRoute').mockImplementationOnce(()=>{throw new Error('route unavailable')})
+  fireEvent.click(screen.getByRole('button', { name: '운행 시작 →' }))
+
+  expect(screen.getByRole('alert')).toHaveTextContent('선택한 구간을 운행할 수 없습니다.')
+  expect(screen.getByRole('heading', { name: '서울 9호선' })).toBeInTheDocument()
+  expect(screen.getByRole('combobox', { name: '출발역' })).toBeInTheDocument()
+  failure.mockRestore()
 })
