@@ -24,6 +24,8 @@ Derive each label offset from the route tangent and alternate it across the rout
 
 All 43 station nodes remain mounted even when labels outside the viewport are clipped.
 
+The current-target halo moves back and forth through the station centre only along the route normal at that exact path point. A horizontal route produces vertical motion; a vertical route produces horizontal motion; curved sections use their local tangent. The halo must not scale, rotate, orbit, or use a viewport-relative transform origin. Keep its amplitude between 12 and 16 SVG units and render it behind the train and station content. Reduced motion keeps it stationary.
+
 ## Direction panel
 
 Keep the previous/current/next direction panel. At game start, measure the longest Korean and English station names in the selected route and choose one bounded centre-card width. Keep that outer width unchanged through arrival so target changes never make the layout pulse.
@@ -38,7 +40,7 @@ Keep the previous/current/next direction panel. At game start, measure the longe
 
 ## Typing field
 
-Place the typing field directly below the current station card and give it the same stable outer width. Do not show the station number inside the field. Increase its station-name text to visually match the centre card.
+Place the typing field directly below the current station card and give it the same stable outer width and rounded station-sign shell. Repeat the current station's number inside a fixed pale-grey outlined circle so the typing surface visibly matches the card above. Centre the combined number/name group inside the shell.
 
 Keep the native input as the focus, selection, keyboard, and Korean IME owner. Render a pointer-inert visual text layer aligned with the input:
 
@@ -48,6 +50,8 @@ Keep the native input as the focus, selection, keyboard, and Korean IME owner. R
 - correct characters after an isolated substitution return to bold dark;
 - untyped target characters remain grey;
 - characters beyond the target length appear red.
+
+The number circle remains pale grey and never participates in answer colouring. Only station-name characters change between grey, bold dark, and red.
 
 Do not submit while IME composition is active. The visual layer may reflect the current composition value, but it must not replace native input state or caret behavior.
 
@@ -61,5 +65,7 @@ Do not submit while IME composition is active. The visual layer may reflect the 
 - Assert the centre card and typing field keep the same route-derived width across short and long targets.
 - Assert empty, correct-prefix, isolated-wrong-character, remaining-target, and extra-character visual states.
 - Assert Korean IME composition still blocks Enter submission.
+- Assert the typing sign includes the current station number while only name characters receive answer-state colours.
+- Assert the target halo transform endpoints are collinear with the route normal and symmetric around the station.
 - Assert reduced motion settles immediately.
 - Inspect real gameplay at 360, 768, and 1440 CSS pixels, including Sindorim, Gangnam, Sindaebang, and Dongdaemun History & Culture Park sections.

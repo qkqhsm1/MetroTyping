@@ -93,7 +93,7 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### In progress
 
-- No active implementation; awaiting production review of the Line 2 continuous-world replacement and typing feedback.
+- Finalize the approved Line 2 station-sign typing surface and route-normal target-halo motion.
 
 ### Next
 
