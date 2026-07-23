@@ -11,7 +11,8 @@
 - Keep scoring/input state independent from train animation state. Typing must never wait for animation.
 - Keep the train on the last completed station; present the next station as a separate typing target and advance the train only after a correct submission.
 - Ask the player to type the selected departure station first; never silently count it as completed.
-- Show at most eight route stations at once and swap focused segments without blocking input; never compress a long route into one unreadable gameplay SVG.
+- Render every line as one persistent SVG world built from the whole line and clipped to the current run; move the camera and train within it and never swap or remount station groups as the player advances.
+- Keep arc length per station constant across a whole resolved line sequence, including across a junction such as Guro, so camera speed never jumps mid-run.
 - Show the Seoul overview as one large full-width source image without desktop-internal scrollbars; keep the raster static and animate only lightweight dimming and SVG highlight layers.
 - Calculate Korean typing speed from Unicode Hangul jaso entered after the first input, not completed syllable count or time spent waiting before typing.
 - Treat Korean IME composition correctly and never submit while composition is active.
