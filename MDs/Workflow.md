@@ -94,7 +94,7 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### In progress
 
-- No active implementation; awaiting review of the deployed Line 2 presentation.
+- Implement the approved Line 2 platform-sign direction band and visible-feedback caret.
 
 ### Next
 
