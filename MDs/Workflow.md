@@ -89,10 +89,11 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### In progress
 
-- No release work is in progress.
+- Design and implement a Line 2-only official-vector tracking map: target-centred camera, four-station context, English names, station numbers, and elapsed gameplay time.
 
 ### Next
 
+- Implement the approved Line 2 tracking-map design, review it in production, then decide whether to extend it to other lines.
 - Connect the leaderboard read model to the UI after a Firebase project/config is supplied.
 - Re-run official station-order verification before freezing production data.
 
