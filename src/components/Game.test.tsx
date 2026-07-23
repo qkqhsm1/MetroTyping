@@ -98,10 +98,10 @@ test('asks for the departure station first, then advances to the next station', 
 test('moves the Line 2 tracking camera to Mullae immediately after Sindorim is correct', () => {
   const { container }=render(<Game lineId="seoul-2" stations={['신도림','문래','영등포구청','당산']} color="#00A84D" onExit={()=>{}} />)
   const input=screen.getByRole('textbox')
-  expect(container.querySelector('.line2-tracking-map')).toHaveAttribute('data-camera-station','신도림')
+  expect(container.querySelector('.tracking-map')).toHaveAttribute('data-camera-station','신도림')
   fireEvent.change(input,{target:{value:'신도림'}})
   fireEvent.keyDown(input,{key:'Enter',isComposing:false})
-  expect(container.querySelector('.line2-tracking-map')).toHaveAttribute('data-camera-station','문래')
+  expect(container.querySelector('.tracking-map')).toHaveAttribute('data-camera-station','문래')
   expect(screen.getByRole('heading',{name:'문래'})).toBeInTheDocument()
 })
 
