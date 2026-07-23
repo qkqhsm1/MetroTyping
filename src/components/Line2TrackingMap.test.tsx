@@ -56,3 +56,12 @@ test('settles immediately when reduced motion is requested', () => {
   expect(container.querySelector('svg')).toHaveAttribute('data-motion-state','settled')
   expect(request).not.toHaveBeenCalled()
 })
+
+test('moves the target halo symmetrically along the local route normal', () => {
+  const {container}=render(<Line2TrackingMap stations={['잠실나루','잠실','잠실새내']} targetIndex={0} color="#00A84D" />)
+  const halo=container.querySelector('.line2-target-halo')!
+  const normal=halo.getAttribute('data-halo-normal')!.split(',').map(Number)
+  const tangent=halo.getAttribute('data-route-tangent')!.split(',').map(Number)
+  expect(normal[0]!*tangent[0]!+normal[1]!*tangent[1]!).toBeCloseTo(0,3)
+  expect(halo).toHaveStyle({'--halo-from-x':`${-normal[0]!*22}px`,'--halo-to-x':`${normal[0]!*22}px`})
+})

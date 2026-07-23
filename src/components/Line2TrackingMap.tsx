@@ -1,4 +1,4 @@
-import { useEffect,useMemo,useRef,useState } from 'react'
+import { useEffect,useMemo,useRef,useState,type CSSProperties } from 'react'
 import { LINE_2_STATIONS } from '../data/line2'
 import { LINE_2_PATH_D,line2CameraWidth,line2PointAt,line2StationDistance,unwrapLine2Route } from '../game/line2Geometry'
 
@@ -36,15 +36,18 @@ export default function Line2TrackingMap({stations,targetIndex,color}:{stations:
   },[reducedMotion,routeDistances,targetDistance,targetWidth])
   const rendered=reducedMotion?{train:targetDistance,camera:targetDistance,width:targetWidth,moving:false}:motion
   const current=stations[targetIndex]!,train=line2PointAt(rendered.train),camera=line2PointAt(rendered.camera),height=rendered.width*.625
+  const currentPoint=line2PointAt(line2StationDistance(current)),currentRadians=currentPoint.angle*Math.PI/180
+  const tangent={x:Math.cos(currentRadians),y:Math.sin(currentRadians)},normal={x:-tangent.y,y:tangent.x}
+  const haloStyle={'--halo-from-x':`${-normal.x*22}px`,'--halo-from-y':`${-normal.y*22}px`,'--halo-to-x':`${normal.x*22}px`,'--halo-to-y':`${normal.y*22}px`} as CSSProperties
   return <svg className="route-map line2-tracking-map" data-camera-station={current} data-camera-width={rendered.width} data-train-distance={rendered.train} data-motion-state={rendered.moving?'moving':'settled'} viewBox={`${camera.x-rendered.width/2} ${camera.y-height/2} ${rendered.width} ${height}`} role="img" aria-label="서울 2호선 추적 노선도">
     <path d={LINE_2_PATH_D} fill="none" stroke="#deddd7" strokeWidth="22" strokeLinecap="round" />
     <path d={LINE_2_PATH_D} fill="none" stroke={color} strokeWidth="13" strokeLinecap="round" />
+    <circle className="target-ring line2-target-halo" data-halo-normal={`${normal.x},${normal.y}`} data-route-tangent={`${tangent.x},${tangent.y}`} style={haloStyle} cx={currentPoint.x} cy={currentPoint.y} r="20" fill="white" stroke={color} strokeWidth="4" />
     {LINE_2_STATIONS.map((station,index)=>{
       const point=line2PointAt(line2StationDistance(station.korean)),isCurrent=station.korean===current
       const radians=point.angle*Math.PI/180,side=index%2===0?1:-1,offset=30+(index%3)*9
       const labelX=point.x-Math.sin(radians)*offset*side,labelY=point.y+Math.cos(radians)*offset*side
       return <g key={station.korean} data-station={station.korean} data-current={isCurrent||undefined}>
-        {isCurrent&&<circle className="target-ring" cx={point.x} cy={point.y} r="18" fill="white" stroke={color} strokeWidth="4" />}
         <circle cx={point.x} cy={point.y} r="13" fill="white" stroke={color} strokeWidth="4" />
         <text className="line2-node-number" x={point.x} y={point.y+4} textAnchor="middle">{station.number}</text>
         <text className="line2-station-label" x={labelX} y={labelY} textAnchor="middle"><tspan className="line2-station-ko" x={labelX}>{station.korean}</tspan><tspan className="line2-station-en" x={labelX} dy="13">{station.english}</tspan></text>

@@ -3,10 +3,12 @@ import { createRef } from 'react'
 import { expect,test,vi } from 'vitest'
 import Line2TypingField from './Line2TypingField'
 
-const renderField=(value:string)=>render(<Line2TypingField target="구로디지털단지" value={value} inputRef={createRef<HTMLInputElement>()} onChange={vi.fn()} onKeyDown={vi.fn()} />)
+const renderField=(value:string)=>render(<Line2TypingField target="구로디지털단지" number="232" value={value} inputRef={createRef<HTMLInputElement>()} onChange={vi.fn()} onKeyDown={vi.fn()} />)
 
 test('shows remaining target, correct characters, an isolated typo, and extra input distinctly', () => {
   const empty=renderField('')
+  expect(empty.container.querySelector('.line2-typing-number')).toHaveTextContent('232')
+  expect(empty.container.querySelector('.line2-typing-number')).not.toHaveClass('remaining','correct','wrong')
   expect(empty.container.querySelectorAll('.remaining')).toHaveLength(7)
   empty.unmount()
 
