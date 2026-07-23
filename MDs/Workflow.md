@@ -88,10 +88,11 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### In progress
 
-- No release work is in progress.
+- Correct gameplay route orientation across all supported lines: preserve official-map station positions and travel direction while randomizing only intermediate curve shape.
 
 ### Next
 
+- Implement and visually verify the approved official-orientation rule after design review.
 - Connect the leaderboard read model to the UI after a Firebase project/config is supplied.
 - Re-run official station-order verification before freezing production data.
 
