@@ -1,5 +1,5 @@
 import { useEffect,useMemo,useRef,useState,type CSSProperties } from 'react'
-import { LINE_2_STATIONS } from '../data/line2'
+import { STATION_INFO } from '../data/stationInfo'
 import { LINE_2_PATH_D,line2CameraWidth,line2PointAt,line2StationDistance,unwrapLine2Route } from '../game/line2Geometry'
 
 const easeOut=(progress:number)=>1-(1-progress)**3
@@ -43,7 +43,7 @@ export default function Line2TrackingMap({stations,targetIndex,color}:{stations:
     <path d={LINE_2_PATH_D} fill="none" stroke="#deddd7" strokeWidth="22" strokeLinecap="round" />
     <path d={LINE_2_PATH_D} fill="none" stroke={color} strokeWidth="13" strokeLinecap="round" />
     <circle className="target-ring line2-target-halo" data-halo-normal={`${normal.x},${normal.y}`} data-route-tangent={`${tangent.x},${tangent.y}`} style={haloStyle} cx={currentPoint.x} cy={currentPoint.y} r="20" fill="white" stroke={color} strokeWidth="4" />
-    {LINE_2_STATIONS.map((station,index)=>{
+    {Object.values(STATION_INFO['seoul-2']!).map((station,index)=>{
       const point=line2PointAt(line2StationDistance(station.korean)),isCurrent=station.korean===current
       const radians=point.angle*Math.PI/180,side=index%2===0?1:-1,offset=30+(index%3)*9
       const labelX=point.x-Math.sin(radians)*offset*side,labelY=point.y+Math.cos(radians)*offset*side

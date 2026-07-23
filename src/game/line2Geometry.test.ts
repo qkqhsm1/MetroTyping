@@ -1,6 +1,8 @@
 import { expect,test } from 'vitest'
-import { LINE_2_STATIONS } from '../data/line2'
+import { STATION_INFO } from '../data/stationInfo'
 import { LINE_2_TOTAL_LENGTH,line2CameraWidth,line2PointAt,line2StationDistance,unwrapLine2Route } from './line2Geometry'
+
+const LINE_2_STATIONS=Object.values(STATION_INFO['seoul-2']!)
 
 test('places every Line 2 station at an even measured interval on one closed path', () => {
   const distances=LINE_2_STATIONS.map(station=>line2StationDistance(station.korean))

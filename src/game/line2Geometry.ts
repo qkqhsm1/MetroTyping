@@ -1,4 +1,6 @@
-import { LINE_2_STATIONS } from '../data/line2'
+import { STATION_INFO } from '../data/stationInfo'
+
+const LINE_2_STATIONS=Object.values(STATION_INFO['seoul-2']!)
 
 type Point={x:number;y:number}
 type Cubic=[Point,Point,Point,Point]
