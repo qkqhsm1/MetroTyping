@@ -1,7 +1,7 @@
 import { type Point } from './geometry'
-import { getLine } from '../data/lines'
 
-export type RouteGeometry={key:string;path:Point[];context?:Point[];directedClosure?:boolean;globalStart?:Point;globalEnd?:Point}
+// Source-guided control polylines consumed by lineTopology.ts to build each line's persistent world.
+type RouteShape={path:Point[];context?:Point[];directedClosure?:boolean}
 
 export const baseRoutes:Record<string,Point[]>={
   // 신도림(서쪽 끝)에서 위로 올라가 당산 부근에서 오른쪽으로 꺾이는 실제 지리 방향을 보존
@@ -20,26 +20,12 @@ export const line1Legs:Point[][]=[
   [[300,180],[210,180],[125,220],[35,220]], // Guro -> Incheon
   [[300,180],[230,235],[160,325]], // Guro -> Sinchang
 ]
-const line1Geometry=(stations:string[]):RouteGeometry=>{
-  const sequences=getLine('seoul-1').sequences
-  const branch=(ordered:string[])=>ordered.filter(station=>station!=='구로').map(station=>sequences.findIndex(sequence=>sequence.includes(station))).find(index=>index>=0)??0
-  const startBranch=branch(stations),endBranch=branch([...stations].reverse())
-  if(startBranch===endBranch){
-    const path=line1Legs[startBranch]!
-    const sequence=sequences[startBranch]!
-    return {key:`seoul-1-${startBranch}`,path:sequence.indexOf(stations[0]!)<=sequence.indexOf(stations.at(-1)!)?path:[...path].reverse()}
-  }
-  const fromJunction=startBranch===0?line1Legs[0]!: [...line1Legs[startBranch]!].reverse()
-  const toDestination=endBranch===0?[...line1Legs[0]!].reverse():line1Legs[endBranch]!
-  return {key:`seoul-1-${startBranch}-${endBranch}`,path:[...fromJunction,...toDestination.slice(1)]}
-}
-
 // Source-guided normalized gameplay anchors, manually digitized into the
 // 600x290 gameplay viewBox from the bundled official 2025-09-29 overview and
 // public/assets/seoul-supported-lines.svg. They preserve recognizable bends,
 // endpoints, junction choice, and loop direction; they are schematic, not
 // geospatial coordinates. Named comments record the reference topology.
-export const topologyRoutes:Record<string,Omit<RouteGeometry,'key'>>={
+export const topologyRoutes:Record<string,RouteShape>={
   'seoul-4':{path:[[530,35],[430,35],[365,95],[365,180],[270,250],[70,250]]}, // 진접 → 오이도
   'seoul-5-trunk':{path:[[45,145],[145,145],[230,105],[360,105],[455,145],[555,145]]}, // 방화 → 강동
   'seoul-5-hanam':{path:[[45,145],[145,145],[230,105],[360,105],[430,65],[555,65]],context:[[360,105],[430,200],[555,250]]}, // 강동 → 길동 → 하남검단산; sibling 마천 branch
@@ -51,20 +37,4 @@ export const topologyRoutes:Record<string,Omit<RouteGeometry,'key'>>={
   'seoul-7':{path:[[535,35],[465,80],[390,80],[315,145],[220,145],[145,205],[65,250]]}, // 장암 → 석남
   'seoul-8':{path:[[80,35],[155,80],[155,150],[255,150],[330,210],[445,210],[520,255]]}, // 별내 → 모란
   'seoul-9':{path:[[45,225],[135,225],[205,165],[300,165],[370,105],[465,105],[555,45]]}, // 개화/김포공항 → 중앙보훈병원
-}
-
-export function getRouteGeometry(lineId:string,stations:string[]):RouteGeometry{
-  if(lineId==='seoul-1')return line1Geometry(stations)
-  let key=lineId
-  if(lineId==='seoul-5'){
-    const hanamIndex=stations.indexOf('길동'),macheonIndex=stations.indexOf('둔촌동')
-    key=hanamIndex>=0&&macheonIndex>=0
-      ?hanamIndex<macheonIndex?'seoul-5-hanam-macheon':'seoul-5-macheon-hanam'
-      :hanamIndex>=0?'seoul-5-hanam':macheonIndex>=0?'seoul-5-macheon':'seoul-5-trunk'
-  }
-  if(lineId==='seoul-6')key=stations.some(station=>['역촌','불광','독바위','연신내','구산'].includes(station))?'seoul-6-loop':'seoul-6-trunk'
-  const topology=topologyRoutes[key]
-  const path=topology?.path??baseRoutes[lineId]
-  if(!path)throw new Error(`Missing route geometry: ${lineId}`)
-  return topology?{key,...topology}:{key,path}
 }
