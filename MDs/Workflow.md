@@ -96,7 +96,7 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### In progress
 
-- Final verification and deployment of the approved balanced Line 2 platform sign.
+- Implement the approved input-only Line 2 per-character correct/error motion.
 
 ### Next
 
