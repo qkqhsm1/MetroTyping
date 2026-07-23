@@ -79,6 +79,8 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 - Fixed two-line label overlap: target labels render at 11px but the second tspan used a fixed 10px offset, so lines overlapped. Offset now scales to font size (13px target, 11px regular). Verified by zoomed screenshot of 동대문역사문화공원 and 자양(뚝섬한강공원) targets.
 - Full all-line visual audit: rendered every line/branch across all 8-station windows (96 windows) via SSR + headless Chrome screenshots and inspected each. Found one systemic issue — the moving train pill covered the current station's label and its neighbors at each window's start, worst on vertical/steep-start windows (Line 1 north, Line 3 vertical, Line 7 outer, Yamanote). Fixed by treating the train as an obstacle in label placement (`trainBox` passed to `computeLabels`), so nearby labels step aside. Also gave Yamanote the same smooth loop shape as Line 2 to remove its octagon corner cluster. Lines 4/5/6/8/9 and Suin-Bundang were already clean (left-to-right, well spaced). `npm run check` passed 113 client tests, 2 server tests, lint, strict TypeScript, and the build.
 
+- Fixed target-label ambiguity: when the target (당산) sat just above another station (영등포구청), the lower station's "above" label landed nearer the target's node than its own, so it read as the target's name. Added an "own-node closest" constraint to label placement — a label's box center must be nearest its own station node, not a neighbour — plus neighbour-node obstacle boxes. Verified across 8 seeds of the 당산-target window and a full re-audit (Lines 1/3/6/7, Yamanote) with no regressions. `npm run check` passed 114 client tests, 2 server tests, lint, strict TypeScript, and the build.
+
 ### In progress
 
 - No release work is in progress.

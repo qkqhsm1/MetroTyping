@@ -47,10 +47,14 @@ const routeHitsBox = (route: readonly Point[], box: LabelBox) => {
 export const trainBox = (x: number, y: number): LabelBox => ({ x: x - 30, y: y - 22, width: 60, height: 44 })
 
 export function computeLabels(route: readonly Point[], stations: readonly string[], avoid?: LabelBox): StationLabel[] {
-  const obstacles: LabelBox[] = avoid ? [avoid] : []
+  const trainObstacle: LabelBox[] = avoid ? [avoid] : []
+  // Every other station's marker is an obstacle: a label placed on top of a
+  // neighboring node reads as belonging to that node (당산 vs 영등포구청).
+  const points = stations.map((_, index) => pointAt(route, index / Math.max(1, stations.length - 1)))
+  const nodeBoxes = points.map(p => ({ x: p.x - 13, y: p.y - 13, width: 26, height: 26 }))
   const boxes: LabelBox[] = []
   return stations.map((station, index) => {
-    const p = pointAt(route, index / Math.max(1, stations.length - 1))
+    const p = points[index]!
     const split = station.length > 6 ? Math.ceil(station.length / 2) : station.length
     const width = Math.max(split, station.length - split) * 9
     const height = split < station.length ? 22 : 12
@@ -60,12 +64,24 @@ export function computeLabels(route: readonly Point[], stations: readonly string
       { position: 'left', x: p.x - 16, y: p.y + 4, anchor: 'end', box: { x: p.x - width - 16, y: p.y - 7, width, height } },
       { position: 'right', x: p.x + 16, y: p.y + 4, anchor: 'start', box: { x: p.x + 16, y: p.y - 7, width, height } },
     ] as const
-    const clearOfLabels = (c: (typeof candidates)[number]) =>
-      inBounds(c.box) && !boxes.some(box => overlaps(c.box, box)) && !obstacles.some(box => overlaps(c.box, box))
+    const otherNodes = nodeBoxes.filter((_, other) => other !== index)
+    // A label must read as belonging to its own station: its box center must be
+    // closest to this node, not to a neighbouring node above/below it.
+    const ownClosest = (box: LabelBox) => {
+      const cx = box.x + box.width / 2, cy = box.y + box.height / 2
+      const dist = (q: { x: number; y: number }) => (cx - q.x) ** 2 + (cy - q.y) ** 2
+      const own = dist(p)
+      return points.every((q, other) => other === index || dist(q) >= own)
+    }
+    const noLabelHit = (c: (typeof candidates)[number]) => inBounds(c.box) && !boxes.some(box => overlaps(c.box, box))
+    const noObstacle = (c: (typeof candidates)[number]) =>
+      !trainObstacle.some(box => overlaps(c.box, box)) && !otherNodes.some(box => overlaps(c.box, box))
     const label =
-      candidates.find(c => clearOfLabels(c) && !routeHitsBox(route, c.box)) ??
-      candidates.find(clearOfLabels) ??
-      candidates.find(c => inBounds(c.box) && !boxes.some(box => overlaps(c.box, box))) ??
+      candidates.find(c => noLabelHit(c) && noObstacle(c) && ownClosest(c.box) && !routeHitsBox(route, c.box)) ??
+      candidates.find(c => noLabelHit(c) && noObstacle(c) && ownClosest(c.box)) ??
+      candidates.find(c => noLabelHit(c) && noObstacle(c)) ??
+      candidates.find(c => noLabelHit(c) && !trainObstacle.some(box => overlaps(c.box, box))) ??
+      candidates.find(noLabelHit) ??
       candidates[0]
     boxes.push(label.box)
     return { point: p, split, position: label.position, x: label.x, y: label.y, anchor: label.anchor }

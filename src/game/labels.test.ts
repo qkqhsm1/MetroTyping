@@ -58,6 +58,20 @@ describe('computeLabels', () => {
     })
   })
 
+  it('places every label closest to its own station node', () => {
+    const labels = computeLabels(verticalThenBend, stations)
+    const nodes = stations.map((_, index) => pointAt(verticalThenBend, index / (stations.length - 1)))
+    labels.forEach((label, index) => {
+      const box = boxFor(label, stations[index]!)
+      const cx = box.x + box.width / 2, cy = box.y + box.height / 2
+      const dist = (q: { x: number; y: number }) => (cx - q.x) ** 2 + (cy - q.y) ** 2
+      const own = dist(nodes[index]!)
+      nodes.forEach((node, other) => {
+        if (other !== index) expect(dist(node)).toBeGreaterThanOrEqual(own)
+      })
+    })
+  })
+
   it('anchors each label to its station point', () => {
     const labels = computeLabels(verticalThenBend, stations)
     labels.forEach((label, index) => {
