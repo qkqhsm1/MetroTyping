@@ -32,6 +32,7 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### Done
 
+- Added the approved Line 2 direction panel and continuous tracker: previous/current/next stations show numbered circles, Korean and English labels; the current target dominates; the panel slides in travel order; the persistent SVG train and camera interpolate for 220 ms with the train leading slightly; rapid answers retarget from the rendered frame; reduced motion settles immediately.
 - Added the Seoul Line 2-only official-vector tracking prototype: the target station is camera-centred, a correct answer immediately snaps the train/camera to the next target, context is previous one/current/next two, all 43 stations have English names and numbers, and gameplay time runs from first typed character through arrival.
 
 - Completed the approved randomized gameplay-route plan: each Game instance derives a stable seed, each seven-step/eight-station window gets a different non-self-intersecting path, labels select non-overlapping in-bounds positions in a 600×360 viewBox, and Line 1 composes explicit Yeoncheon, Incheon, and Sinchang legs at Guro.
@@ -91,16 +92,17 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### In progress
 
-- Finalize the approved Line 2 direction panel and continuous train/camera morphing design before implementation.
+- No active implementation; awaiting production review of the Line 2 direction panel and continuous tracker.
 
 ### Next
 
-- Implement the approved Line 2 three-station direction panel and non-blocking morphing tracker, then verify and deploy it.
+- Review the deployed Line 2 morphing tracker, then decide whether to extend this presentation to other lines.
 - Connect the leaderboard read model to the UI after a Firebase project/config is supplied.
 - Re-run official station-order verification before freezing production data.
 
 ## Verification
 
+- Line 2 direction/morphing update on 2026-07-23: `npm run check` passed ESLint, 140 client tests, 2 server tests, strict TypeScript, and the production build. Motion tests cover intermediate frames, rapid retargeting, persistent SVG identity, final camera settlement, and reduced motion. Real Chrome captures at 360, 768, and 1440 CSS pixels confirmed a readable numbered previous/current/next panel without horizontal overflow.
 - Line 2 tracking prototype on 2026-07-23: focused Vitest coverage passed metadata, four-station context, immediate Sindorim-to-Mullae camera advance, and first-input-to-arrival timing. `npm run check` passed ESLint, 137 client tests, 2 server tests, strict TypeScript, and the production build. Real SVG captures at 360, 768, and 1440 CSS pixels confirmed centred tracking and readable Korean/English/number labels.
 
 - Official-orientation gate on 2026-07-23: RED reproduced eight reversed/equal-direction cases in Line 1, Line 4, Line 7, Suin–Bundang, and AREX; GREEN passed 60 focused RouteMap/random-route tests. Headless Chrome captures of the real SVG at 360, 768, and 1440 CSS pixels confirmed Oido and Seoknam start left, Handae-ap→Incheon starts right and moves left, Gajaeul→Geomdan Oryu moves upward, and seeded bends remain varied. Final `npm run check` passed ESLint, 133 client tests, 2 server tests, strict TypeScript, and the Vite build (`index-BFo-p2js.js`).
