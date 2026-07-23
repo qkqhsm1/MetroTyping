@@ -37,7 +37,7 @@ The target station receives the strongest node and label treatment. The previous
 
 ## Time and Existing Metrics
 
-- Add elapsed game time from the player's first typed input until route completion.
+- Add elapsed game time only to ordered Seoul Line 2 play, from the player's first typed input until route completion.
 - Display it during route play as `MM:SS.t`.
 - Include the final elapsed time on the completion result.
 - Waiting before the first keystroke is excluded, matching the existing typing-speed start rule.
@@ -46,7 +46,9 @@ The target station receives the strongest node and label treatment. The previous
 ## Scope and Fallback
 
 - Apply the new map only when `lineId === "seoul-2"` and the game is in ordered route mode.
+- Apply the elapsed-time display and final elapsed result only to that same Seoul Line 2 route-mode scope.
 - Other lines keep the existing focused eight-station randomized SVG.
+- Other lines keep their existing metrics and result screen unchanged.
 - Random station mode keeps its current destination-free presentation.
 - If validated Line 2 vector or station metadata is unavailable, render the existing focused RouteMap rather than an incomplete or misaligned tracking map.
 
@@ -62,4 +64,3 @@ The target station receives the strongest node and label treatment. The previous
 - Test reduced motion, Korean IME Enter suppression, mute, and existing CPM behavior.
 - Capture and inspect real renders at 360, 768, and 1440 CSS-pixel viewport widths.
 - Run `npm run check`, push `main`, and verify the deployed Pages asset MIME/content and rendered page.
-

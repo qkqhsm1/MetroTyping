@@ -176,6 +176,7 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ## Mistakes
 
+- 2026-07-23 | Proposed applying elapsed gameplay time to every line after the user had limited the trial to Line 2 | Separated the timing feature from the tracking-map scope without authorization | Restricted tracking, metadata, and elapsed time to ordered Seoul Line 2 play | When a user approves a line-specific prototype, keep every bundled feature inside that prototype unless they explicitly broaden one.
 - 2026-07-23 | Full check failed at TypeScript after all runtime tests passed | A table-driven test destructured `serviceId` from a discriminated union where most cases omitted that property | Guard property access with `'serviceId' in directionCase` | Run the strict TypeScript gate after focused Vitest checks whenever adding heterogeneous `as const` test tables.
 
 - 2026-07-22 | Work appeared to stop after the user asked to keep it running | Interpreted continuation as keeping the Vite server alive instead of resuming the four-step implementation plan | Recovered the pushed commit, dirty RED tests, and written plan, then resumed all remaining tasks | When a continuation request follows an active plan, inspect Workflow, git state, and the plan before treating it as process uptime.
