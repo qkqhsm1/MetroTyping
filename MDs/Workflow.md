@@ -81,6 +81,8 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 - Fixed target-label ambiguity: when the target (당산) sat just above another station (영등포구청), the lower station's "above" label landed nearer the target's node than its own, so it read as the target's name. Added an "own-node closest" constraint to label placement — a label's box center must be nearest its own station node, not a neighbour — plus neighbour-node obstacle boxes. Verified across 8 seeds of the 당산-target window and a full re-audit (Lines 1/3/6/7, Yamanote) with no regressions. `npm run check` passed 114 client tests, 2 server tests, lint, strict TypeScript, and the build.
 
+- Resolved the recurring "which ring is the target" confusion in vertical windows. Root cause across every reported case: the confusing label was always the *current* station (under the train, adjacent to the target). Since the current station is already named in the "현재 X" pill and marked by the train, its map label is redundant — now hidden. The target ring keeps its own label and nothing crowds it. Reproduced the 문래-target / 신도림-current window across 6 seeds to confirm, and updated 8 label-count/text assertions plus added an explicit hide-behavior test. `npm run check` passed 115 client tests, 2 server tests, lint, strict TypeScript, and the build.
+
 ### In progress
 
 - No release work is in progress.

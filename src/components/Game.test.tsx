@@ -138,7 +138,7 @@ test('shows a readable eight-station segment and swaps segments without blocking
     fireEvent.keyDown(input,{key:'Enter',isComposing:false})
   })
 
-  expect([...container.querySelectorAll('.route-map text')].map(node=>node.textContent)).toEqual(stations.slice(7))
+  expect([...container.querySelectorAll('.route-map text')].map(node=>node.textContent)).toEqual(stations.slice(8)) // 역7 is the current station, hidden under the train
   expect(container.querySelector('polyline[data-route]')).not.toHaveAttribute('data-global-start',firstWindow)
   expect(container.querySelector('polyline[data-route]')).not.toHaveAttribute('points',firstShape)
   expect(screen.getByRole('heading',{name:'역8'})).toBeInTheDocument()
@@ -157,7 +157,7 @@ test.each([
     fireEvent.keyDown(input,{key:'Enter',isComposing:false})
   })
   expect(container.querySelector('polyline[data-route]')).toHaveAttribute('data-geometry',key)
-  expect(container.querySelectorAll('.route-map text')).toHaveLength(Math.min(8,stations.length-7*(answers>0?1:0)))
+  expect(container.querySelectorAll('.route-map text')).toHaveLength(Math.min(8,stations.length-7*(answers>0?1:0))-(answers>0?1:0)) // train hides the current station label once it appears
 })
 
 test('shows the final Korean typing speed on the result screen', () => {

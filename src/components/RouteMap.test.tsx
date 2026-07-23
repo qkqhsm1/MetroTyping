@@ -24,7 +24,7 @@ test('uses line-specific geometry and normalized progress on one coordinate syst
 
 test('labels every station on the route', () => {
   const stations = ['신도림','문래','영등포구청','당산']
-  const { container } = render(<RouteMap lineId="seoul-2" stations={stations} color="#00A84D" progress={0.25} />)
+  const { container } = render(<RouteMap lineId="seoul-2" stations={stations} color="#00A84D" progress={0.25} trainVisible={false} />)
   expect([...container.querySelectorAll('text')].map(node => node.textContent)).toEqual(stations)
 })
 
@@ -59,7 +59,7 @@ test('keeps seeded routes and labels inside a tall collision-free safe area',()=
 test('clips a Line 2 window to its first and last visible stations', () => {
   const full=getFullLoopRoute('seoul-2','신도림','clockwise').stationIds
   const visible=full.slice(0,8)
-  const {container}=render(<RouteMap lineId="seoul-2" stations={visible} geometryStations={full} routeStationCount={full.length} segmentStart={0} color="#00A84D" progress={0} />)
+  const {container}=render(<RouteMap lineId="seoul-2" stations={visible} geometryStations={full} routeStationCount={full.length} segmentStart={0} color="#00A84D" progress={0} trainVisible={false} />)
   const route=parsePoints(container.querySelector('polyline[data-route]')!.getAttribute('points')!)
   const stations=[...container.querySelectorAll('circle:not(.target-ring)')]
   expect(route[0]).toEqual([Number(stations[0]!.getAttribute('cx')),Number(stations[0]!.getAttribute('cy'))])
@@ -80,6 +80,16 @@ test('anchors the front of the train at the current station', () => {
   expect(container.querySelector('.train-body')).toHaveAttribute('transform', 'translate(-22 0)')
 })
 
+test('hides the current station map label (shown under the train) but keeps the target', () => {
+  const stations=['신도림','문래','영등포구청','당산','합정','홍대입구','신촌','이대']
+  const { container,rerender } = render(<RouteMap lineId="seoul-2" stations={stations} color="#00A84D" progress={0} targetIndex={1} />)
+  const shown=[...container.querySelectorAll('.route-map text')].map(node=>node.textContent)
+  expect(shown).not.toContain('신도림') // current station under the train
+  expect(shown).toContain('문래') // target stays labelled
+  rerender(<RouteMap lineId="seoul-2" stations={stations} color="#00A84D" progress={0} targetIndex={1} trainVisible={false} />)
+  expect([...container.querySelectorAll('.route-map text')].map(node=>node.textContent)).toContain('신도림')
+})
+
 test('renders train visibility and entrance state from props', () => {
   const props={lineId:'seoul-2',stations:['신도림','문래'],color:'#00A84D',progress:0}
   const { container,rerender }=render(<RouteMap {...props} trainVisible={false} />)
@@ -93,7 +103,7 @@ test('renders train visibility and entrance state from props', () => {
 
 test.each(['seoul-3', 'suin-bundang'])('%s uses distinct focused geometry with sampled stations on its path', lineId => {
   const stations = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
-  const { container, rerender } = render(<RouteMap lineId={lineId} stations={stations} color="#f58220" progress={0.5} />)
+  const { container, rerender } = render(<RouteMap lineId={lineId} stations={stations} color="#f58220" progress={0.5} trainVisible={false} />)
   const pointsValue = container.querySelector('polyline')!.getAttribute('points')!
   const points = parsePoints(pointsValue)
 
@@ -103,7 +113,7 @@ test.each(['seoul-3', 'suin-bundang'])('%s uses distinct focused geometry with s
     expect(Math.min(...points.slice(1).map((end,index)=>distanceToSegment(point,points[index]!,end)))).toBeLessThan(0.01)
   }
 
-  rerender(<RouteMap lineId="seoul-2" stations={stations} color="#00A84D" progress={0.5} />)
+  rerender(<RouteMap lineId="seoul-2" stations={stations} color="#00A84D" progress={0.5} trainVisible={false} />)
   expect(container.querySelector('polyline')).not.toHaveAttribute('points', pointsValue)
 })
 
@@ -153,7 +163,7 @@ test.each([
   {name:'reverse Hanam before 길동 enters',full:['하남검단산','하남풍산','미사','길동','강동'],visible:['하남검단산','하남풍산','미사'],key:'seoul-5-hanam'},
   {name:'reverse Macheon before 둔촌동 enters',full:['마천','오금','방이','올림픽공원','둔촌동','강동'],visible:['마천','오금','방이','올림픽공원'],key:'seoul-5-macheon'},
 ])('keeps $name branch identity outside the visible window', ({full,visible,key}) => {
-  const {container}=render(<RouteMap lineId="seoul-5" stations={visible} geometryStations={full} color="#996CAC" progress={0} />)
+  const {container}=render(<RouteMap lineId="seoul-5" stations={visible} geometryStations={full} color="#996CAC" progress={0} trainVisible={false} />)
   expect(container.querySelector('polyline[data-route]')).toHaveAttribute('data-geometry',key)
   expect(container.querySelectorAll('.route-map text')).toHaveLength(visible.length)
 })
@@ -170,7 +180,7 @@ test.each([
   expect(route).toHaveAttribute('data-global-start',expectedStart)
   expect(route).toHaveAttribute('data-global-end',expectedEnd)
   expect(route.getAttribute('points')).not.toBe(`${expectedStart} ${expectedEnd}`)
-  expect(container.querySelectorAll('.route-map text')).toHaveLength(8)
+  expect(container.querySelectorAll('.route-map text')).toHaveLength(7) // current station label hidden under the train
   const points=parsePoints(route.getAttribute('points')!)
   const transform=container.querySelector('.train')!.getAttribute('style')!
   const [,x,y]=transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/)!
@@ -197,7 +207,7 @@ test.each(directionCases)('$name resolves geometry direction from official stati
   const {container}=render(<RouteMap lineId={lineId} stations={visible} geometryStations={[...stations]} routeStationCount={stations.length} segmentStart={segmentStart} color="#333" progress={0.5} />)
   const route=container.querySelector<SVGPolylineElement>('polyline[data-route]')!
   expect(route).toHaveAttribute('data-global-start',expectedStart)
-  expect(container.querySelectorAll('.route-map text')).toHaveLength(Math.min(8,stations.length-segmentStart))
+  expect(container.querySelectorAll('.route-map text')).toHaveLength(Math.min(8,stations.length-segmentStart)-1) // current station label hidden
   const points=parsePoints(route.getAttribute('points')!)
   const transform=container.querySelector('.train')!.getAttribute('style')!
   const [,x,y]=transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/)!
@@ -222,7 +232,7 @@ test.each(crossBranchCases)('$name keeps both Line 5 legs in focused geometry', 
   expect(route).toHaveAttribute('data-geometry',key)
   expect(route).toHaveAttribute('data-global-start',globalStart)
   expect(route).toHaveAttribute('data-global-end',globalEnd)
-  expect(container.querySelectorAll('.route-map text')).toHaveLength(Math.min(8,stations.length-start))
+  expect(container.querySelectorAll('.route-map text')).toHaveLength(Math.min(8,stations.length-start)-1) // current station label hidden
   const points=parsePoints(route.getAttribute('points')!)
   const transform=container.querySelector('.train')!.getAttribute('style')!
   const [,x,y]=transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/)!
