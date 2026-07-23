@@ -91,11 +91,11 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### In progress
 
-- Verify and deploy the completed Line 2-only official-vector tracking prototype.
+- Finalize the approved Line 2 direction panel and continuous train/camera morphing design before implementation.
 
 ### Next
 
-- Review the Line 2 tracking prototype in production, then decide whether to extend it to other lines.
+- Implement the approved Line 2 three-station direction panel and non-blocking morphing tracker, then verify and deploy it.
 - Connect the leaderboard read model to the UI after a Firebase project/config is supplied.
 - Re-run official station-order verification before freezing production data.
 
