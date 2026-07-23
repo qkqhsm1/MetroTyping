@@ -28,6 +28,51 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 - The current station's map label is not drawn: it is already named in the `현재 X` pill and marked by the train, and drawing it crowded the adjacent target ring. The map contract is therefore "every visible station except the current one is labelled".
 - Visual defects (label overlap, text on the line, cramped layout) are reviewed by rendering, not by reading coordinates: a throwaway Vitest SSR-renders the real `RouteMap` to HTML, headless Chrome screenshots it, and the PNG is inspected before the fix is accepted.
 
+## Seoul Line 2 Current Implementation
+
+### Scope and route model
+
+- The new tracking presentation applies only to ordered Seoul Line 2 play. Other lines continue to use the shared focused-segment renderer until separately approved.
+- Line 2 uses one persistent 43-station SVG world in a single `viewBox`; station groups are never swapped or remounted as the player advances.
+- The route path, station circles, target halo, and train share one SVG coordinate system. Station and train positions come from measured SVG path-length sampling rather than CSS pixels or cubic-parameter guesses.
+- Forward and reverse loop trips unwrap against the selected station order, so camera and train distance remain continuous across the loop seam.
+- Every station retains its official number, Korean name, and English name. SVG station numbers use the circle's exact `x`/`y`, `text-anchor="middle"`, and `dominant-baseline="middle"`.
+
+### Tracking camera, train, and halo
+
+- Immediately before an answer, the requested station is the camera focus. Immediately after a correct answer, the next requested station becomes the focus.
+- Camera center, camera width, and train position interpolate within the persistent world instead of replacing route fragments. Motion lasts 320–520 ms according to station span and rapid answers retarget from the currently rendered frame.
+- Input/scoring never waits for the camera or train. Reduced motion settles the camera and train immediately.
+- Camera width adapts to local station density so sparse and dense parts of the loop remain readable without enforcing a fixed four-station window.
+- The pale target halo translates symmetrically along the local route normal with a 22 SVG-pixel excursion; it does not orbit, scale, or drift diagonally relative to the track. Reduced motion removes the translation.
+
+### Balanced platform direction sign
+
+- The direction display is one continuous green platform sign with a white pill-shaped current-station sign over its center.
+- Previous-station content is centered between the assembly's left edge and the current sign's left face. Next-station content is centered between the current sign's right face and the assembly's right edge.
+- Adjacent regions use green backgrounds, white text, white station-number rings, and rounded outer ends. The white arrow appears only on the next-station side immediately outside the current sign.
+- The current sign and typing shell derive width from Korean character count only: a two-character station uses 270 CSS pixels, then width grows by Korean length up to the existing cap. English length never expands the sign.
+- Long English subtitles scale down inside the current sign instead of wrapping, clipping, or changing the Korean-driven width.
+- The current sign and decorative typing shell always share `--line2-target-width`. The native input interaction surface keeps the route-wide `--line2-interaction-width`, so rapid typing is not displaced while the visible shells morph.
+- Desktop shows the complete balanced assembly. Mobile keeps the current sign centered and intentionally exposes only partial adjacent green regions without page overflow.
+
+### Typing surface and feedback
+
+- The typing surface visually repeats the current station sign: pale station-number ring, pale untyped Korean target, and a centered single-line layout.
+- The native controlled input remains responsible for focus, Korean IME composition, keyboard events, accessibility, and submission, but its text and native caret are transparent.
+- A dedicated visible caret lives in the same feedback character flow and is placed immediately after the entered prefix, so it cannot cross the middle of the displayed target.
+- Correct characters turn to the active line color and perform a subtle 160 ms upward/scale pop. Incorrect characters turn red and use the existing 180 ms horizontal `target-shake`. Remaining characters stay grey and still.
+- Character motion applies only to the input feedback layer. The reference sign, direction band, map, halo, and train receive no typing-triggered shake.
+- Reduced motion preserves correct/error colors and caret position while removing character translation, scale, and shake.
+- Extra characters remain isolated red errors, and Korean normalization/IME Enter guards remain unchanged.
+
+### Timing, responsiveness, and verification
+
+- Line 2 play time begins on the first entered Hangul jaso and ends on the final correct arrival; waiting before the first keystroke is excluded.
+- Live and final Korean typing speed continue to use Unicode Hangul jaso units, independent from train animation state.
+- The complete Line 2 flow has been rendered and inspected at 360, 768, and 1440 CSS pixels, including rapid answers, two-character `교대`, long English subtitles, an isolated typo, caret placement, mobile clipping, route-normal halo motion, and reduced motion.
+- The latest full gate passed ESLint, 147 client tests, 2 server tests, strict TypeScript, and the production build. The deployed bundle is `index-mUby2FkL.js` with `index-CSBFDIhK.css`, released from `main` commit `3527488`.
+
 ## Progress
 
 ### Done
@@ -97,7 +142,7 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### In progress
 
-- Final verification and deployment of the approved Line 2 input-only character motion.
+- No active Line 2 implementation; awaiting review before extending its presentation to other lines.
 
 ### Next
 
