@@ -144,7 +144,8 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### In progress
 
-- No active Line 2 implementation; all approved changes are recorded above and awaiting production review.
+- Extending the Line 2 presentation to every supported line. Design approved and written to `docs/superpowers/specs/2026-07-23-all-lines-tracking-design.md`; the nine-task implementation plan is `docs/superpowers/plans/2026-07-23-all-lines-tracking.md`. Approved shape: station English names and numbers generated into `src/data/stationInfo.ts` keyed by line then Korean name; the persistent world is built from the whole resolved line sequence and clipped to the current run; arc length per station stays constant across a whole sequence including the Line 1 Guro junction; timed random play receives the sign and typing field but not the tracking map; `RouteMap`, `labels.ts` and `randomRoute.ts` are deleted after the visual gate passes.
+- No active Line 2-only implementation; all approved Line 2 changes are recorded above and awaiting production review.
 
 ### Next
 
