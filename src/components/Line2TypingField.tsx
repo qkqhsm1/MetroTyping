@@ -7,7 +7,7 @@ export default function Line2TypingField({target,number,value,inputRef,onChange,
     <div className="line2-typing-content">
       <span className="line2-typing-number" aria-hidden="true">{number}</span>
       <div className="line2-typing-name">
-        <div className="line2-typing-feedback" aria-hidden="true">
+        <div className="line2-typing-feedback" data-motion="input-only" aria-hidden="true">
           {targetCharacters.slice(0,typed.length).map((character,index)=><span className={typed[index]===character?'correct':'wrong'} key={index}>{typed[index]}</span>)}
           {typed.slice(targetCharacters.length).map((character,index)=><span className="wrong" key={`extra-${index}`}>{character}</span>)}
           <span className="line2-typing-caret" />

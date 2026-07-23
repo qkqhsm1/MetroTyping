@@ -32,6 +32,7 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### Done
 
+- Added input-only Line 2 character motion: correct characters pop upward in the line color, incorrect characters shake in red, remaining characters and the reference sign stay still, and reduced motion preserves color without transforms.
 - Implemented the approved balanced Line 2 platform sign: the green side regions meet behind a pill-shaped current sign, previous/next content is centered in each exposed half, two-character Korean targets use 270px regardless of English length, the next arrow anchors beside the current sign, and SVG station numbers use native middle alignment.
 - Connected the Line 2 previous/current/next signs with a green route band, inverted the adjacent signs to green with white type/number rings, and placed a white arrow toward the next station. Replaced the misplaced transparent-input caret with a visible feedback-flow caret immediately after entered characters.
 - Completed the Line 2 station-sign input: the target number remains pale, typed matches become bold black, errors become red, and the decorative current/input shells morph to each station name while the centered native input surface stays fixed for rapid typing. The map halo now oscillates only along the local route normal, and mobile keeps partial previous/next cards visible.
@@ -96,7 +97,7 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### In progress
 
-- Implement the approved input-only Line 2 per-character correct/error motion.
+- Final verification and deployment of the approved Line 2 input-only character motion.
 
 ### Next
 
@@ -106,6 +107,7 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ## Verification
 
+- Line 2 input-motion update on 2026-07-23: RED/GREEN coverage asserts the input-only motion contract while retaining correct/wrong/remaining/caret order. `npm run check` passed ESLint, 147 client tests, 2 server tests, strict TypeScript, and the production build (`index-mUby2FkL.js`, `index-CSBFDIhK.css`). Real Chrome captures at 360, 768, and 1440 CSS pixels confirmed a green lifted correct prefix, isolated red typo, still grey suffix, and an unchanged reference sign/map; a reduced-motion capture confirmed color feedback without displacement.
 - Balanced Line 2 platform-sign update on 2026-07-23: RED/GREEN tests cover a 270px Korean-only `교대` width despite its long English name, the balanced layout marker, long-English scaling, and exact SVG circle/text `x`/`y` with `dominant-baseline="middle"`. `npm run check` passed ESLint, 147 client tests, 2 server tests, strict TypeScript, and the production build (`index-bPKNDINr.js`, `index-CAhZa00b.css`). Chrome captures at 360, 768, and 1440 CSS pixels confirmed the pill current sign, equal exposed green halves, correctly placed next arrow, matching input shell, and centered route numbers.
 - Line 2 platform-sign/caret update on 2026-07-23: RED tests reproduced the missing feedback-flow caret and absent travel-side marker; focused GREEN passed 19 component tests. `npm run check` passed ESLint, 145 client tests, 2 server tests, strict TypeScript, and the production build (`index-DPZ_c7IX.js`, `index-CYZt6uv6.css`). Chrome captures at 360, 768, and 1440 CSS pixels confirmed the connected green band, white next arrow, inverted adjacent signs, partial mobile side signs, and the caret between the black entered prefix and grey remaining suffix.
 - Line 2 station-sign/halo update on 2026-07-23: `npm run check` passed ESLint, 144 client tests, 2 server tests, strict TypeScript, and the production build (`index-DPB1ekck.js`, `index-D9R2GYso.css`). Real Chrome captures at 360, 768, and 1440 CSS pixels confirmed centered sign-shaped input, fixed interaction geometry, matching current/input decorative widths, partially visible adjacent cards on mobile, and route-normal halo displacement.

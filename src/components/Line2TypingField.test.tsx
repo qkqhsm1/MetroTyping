@@ -32,6 +32,7 @@ test('places the visible caret immediately after the entered characters', () => 
   const feedback=container.querySelector('.line2-typing-feedback')!
   const caret=feedback.querySelector('.line2-typing-caret')!
 
+  expect(feedback).toHaveAttribute('data-motion','input-only')
   expect(caret).toBeTruthy()
   expect(caret.previousElementSibling).toHaveClass('correct')
   expect(caret.nextElementSibling).toHaveClass('remaining')
