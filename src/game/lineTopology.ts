@@ -63,12 +63,14 @@ export function resolveTopology(lineId:string,stations:string[]):Topology{
     if(forwardStart<0)throw new Error(`Unknown station on ${lineId}: ${stations[0]}`)
     const reversed=stations.length>1&&sequence[(forwardStart+1)%sequence.length]!==stations[1]
     const oriented=reversed?rotate(reverse(sequence),sequence.length-1-forwardStart):rotate(sequence,forwardStart)
-    return {key,sequence:oriented,path:reversed?reverse(path):path,loop:true}
+    // The polyline is an open list closed implicitly, so reversing cyclically keeps the anchor
+    // point at index 0 instead of dropping the closing edge off the front.
+    return {key,sequence:oriented,path:reversed?[path[0]!,...reverse(path.slice(1))]:path,loop:true}
   }
-  // Tightest world that still holds the whole run: a run inside one branch keeps that branch,
-  // while a run crossing a junction only fits a join and picks that.
+  // Widest world that still holds the whole run: the world is the whole line the run travels on,
+  // so a run inside one branch keeps trunk plus that branch rather than a junction-to-junction stub.
   const worlds=candidates.flatMap(({key,sequence,path})=>[{key,sequence,path},{key,sequence:reverse(sequence),path:reverse(path)}])
-  const best=worlds.filter(world=>fits(world.sequence,stations)).sort((left,right)=>left.sequence.length-right.sequence.length)[0]
+  const best=worlds.filter(world=>fits(world.sequence,stations)).sort((left,right)=>right.sequence.length-left.sequence.length)[0]
   if(!best)throw new Error(`Unresolvable run on ${lineId}: ${stations[0]} → ${stations.at(-1)}`)
   return {...best,loop:false}
 }

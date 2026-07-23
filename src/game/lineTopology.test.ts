@@ -1,4 +1,5 @@
 import { expect,test } from 'vitest'
+import type { Point } from './geometry'
 import { getRoute,getFullLoopRoute } from './routes'
 import { resolveTopology } from './lineTopology'
 
@@ -86,6 +87,15 @@ test.each([['clockwise'],['counterclockwise']])('the line 2 loop rotates to the 
   expect(topology.sequence).toEqual(stations)
 })
 
+test('both directions of a line 2 loop run anchor their path at the same point',()=>{
+  const clockwise=resolveTopology('seoul-2',getFullLoopRoute('seoul-2','신도림','clockwise').stationIds)
+  const counter=resolveTopology('seoul-2',getFullLoopRoute('seoul-2','신도림','counterclockwise').stationIds)
+  expect(counter.path[0]).toEqual(clockwise.path[0])
+  expect(counter.path.length).toBe(clockwise.path.length)
+  const sorted=(path:readonly Point[])=>[...path].map(point=>point.join(',')).sort()
+  expect(sorted(counter.path)).toEqual(sorted(clockwise.path))
+})
+
 test('yamanote is a loop world',()=>{
   const stations=getFullLoopRoute('yamanote','도쿄','outer').stationIds
   expect(resolveTopology('yamanote',stations).loop).toBe(true)
@@ -95,11 +105,11 @@ test('an unknown line throws',()=>{
   expect(()=>resolveTopology('nope',['가'])).toThrow()
 })
 
-test('a run inside one line 1 leg resolves to that leg, not a cross-guro join',()=>{
+test('a run inside one line 1 leg still gets a whole-line world, not one ending at guro',()=>{
   const stations=getRoute('seoul-1','서울역','신도림').stationIds
   const topology=resolveTopology('seoul-1',stations)
-  expect(topology.key).toBe('seoul-1-north')
-  expect(topology.sequence.at(-1)).toBe('구로')
+  expect(topology.key).toBe('seoul-1-north-sinchang')
+  expect(topology.sequence.at(-1)).toBe('신창')
   expect(contiguous(topology.sequence,stations)).toBe(true)
 })
 
