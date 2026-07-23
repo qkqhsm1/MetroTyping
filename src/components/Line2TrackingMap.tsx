@@ -49,7 +49,7 @@ export default function Line2TrackingMap({stations,targetIndex,color}:{stations:
       const labelX=point.x-Math.sin(radians)*offset*side,labelY=point.y+Math.cos(radians)*offset*side
       return <g key={station.korean} data-station={station.korean} data-current={isCurrent||undefined}>
         <circle cx={point.x} cy={point.y} r="13" fill="white" stroke={color} strokeWidth="4" />
-        <text className="line2-node-number" x={point.x} y={point.y+4} textAnchor="middle">{station.number}</text>
+        <text className="line2-node-number" x={point.x} y={point.y} textAnchor="middle" dominantBaseline="middle">{station.number}</text>
         <text className="line2-station-label" x={labelX} y={labelY} textAnchor="middle"><tspan className="line2-station-ko" x={labelX}>{station.korean}</tspan><tspan className="line2-station-en" x={labelX} dy="13">{station.english}</tspan></text>
       </g>
     })}

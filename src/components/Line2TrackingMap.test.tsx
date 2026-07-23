@@ -65,3 +65,15 @@ test('moves the target halo symmetrically along the local route normal', () => {
   expect(normal[0]!*tangent[0]!+normal[1]!*tangent[1]!).toBeCloseTo(0,3)
   expect(halo).toHaveStyle({'--halo-from-x':`${-normal[0]!*22}px`,'--halo-to-x':`${normal[0]!*22}px`})
 })
+
+test('centers every station number on its SVG circle', () => {
+  const {container}=render(<Line2TrackingMap stations={['교대','서초','방배']} targetIndex={0} color="#00A84D" />)
+
+  for(const station of container.querySelectorAll('[data-station]')){
+    const circle=station.querySelector('circle')!
+    const number=station.querySelector('.line2-node-number')!
+    expect(number).toHaveAttribute('x',circle.getAttribute('cx'))
+    expect(number).toHaveAttribute('y',circle.getAttribute('cy'))
+    expect(number).toHaveAttribute('dominant-baseline','middle')
+  }
+})

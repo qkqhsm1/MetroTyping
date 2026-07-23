@@ -95,6 +95,7 @@ test('shows numbered previous, current, and next Line 2 stations in travel order
   const firstTargetWidth=game.style.getPropertyValue('--line2-target-width')
   const panel=()=>container.querySelector('.line2-direction-panel')!
   expect(panel()).toHaveAttribute('data-travel-side','next')
+  expect(panel()).toHaveAttribute('data-layout','balanced')
   expect(panel().querySelector('[data-position="previous"]')).toBeEmptyDOMElement()
   expect(panel().querySelector('[data-position="current"]')).toHaveTextContent('234신도림Sindorim')
   expect(panel().querySelector('[data-position="next"]')).toHaveTextContent('235문래Mullae')
@@ -111,6 +112,13 @@ test('shows numbered previous, current, and next Line 2 stations in travel order
   fireEvent.keyDown(input,{key:'Enter',isComposing:false})
   expect(game.style.getPropertyValue('--line2-interaction-width')).toBe(stableInteractionWidth)
   expect(game.style.getPropertyValue('--line2-target-width')).not.toBe(firstTargetWidth)
+})
+
+test('sizes a two-character Line 2 sign from its Korean name, not its long English name', () => {
+  const {container}=render(<Game lineId="seoul-2" stations={['교대','서초']} color="#00A84D" onExit={()=>{}} />)
+
+  expect(container.querySelector<HTMLElement>('.game')!.style.getPropertyValue('--line2-target-width')).toBe('270px')
+  expect(container.querySelector('[data-position="current"] small')).toHaveAttribute('data-long','true')
 })
 
 test('measures Line 2 gameplay time from the first typed character through arrival', () => {
