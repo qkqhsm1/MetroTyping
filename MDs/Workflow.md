@@ -92,7 +92,7 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### In progress
 
-- Design the approved Line 2 persistent 43-station SVG world, arc-length motion, adaptive camera, collision-free labels, and single-line fluid direction cards.
+- Finalize the approved Line 2 persistent world with stable-width direction cards and an inline per-character typing feedback field.
 
 ### Next
 
