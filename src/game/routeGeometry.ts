@@ -97,8 +97,8 @@ const focusedPath=(path:Point[],startProgress:number,endProgress:number)=>{
 }
 const normalizePath=(path:Point[])=>{
   const xs=path.map(([x])=>x),ys=path.map(([,y])=>y),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys)
-  const width=Math.max(1,maxX-minX),height=Math.max(1,maxY-minY),scale=Math.min(510/width,220/height)
-  const offsetX=300-(minX+maxX)/2*scale,offsetY=145-(minY+maxY)/2*scale
+  const width=Math.max(1,maxX-minX),height=Math.max(1,maxY-minY),scale=Math.min(540/width,290/height)
+  const offsetX=300-(minX+maxX)/2*scale,offsetY=180-(minY+maxY)/2*scale
   return path.map(([x,y])=>[rounded(x*scale+offsetX),rounded(y*scale+offsetY)] as Point)
 }
 
