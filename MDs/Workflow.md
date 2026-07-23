@@ -92,11 +92,11 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### In progress
 
-- No active implementation; awaiting production review of the Line 2 direction panel and continuous tracker.
+- Design the approved Line 2 persistent 43-station SVG world, arc-length motion, adaptive camera, collision-free labels, and single-line fluid direction cards.
 
 ### Next
 
-- Review the deployed Line 2 morphing tracker, then decide whether to extend this presentation to other lines.
+- Implement and deploy the approved Line 2 continuous-world replacement, then review it before extending the presentation to other lines.
 - Connect the leaderboard read model to the UI after a Firebase project/config is supplied.
 - Re-run official station-order verification before freezing production data.
 
@@ -181,6 +181,8 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 - Automated gameplay coverage confirms the train remains at Sindorim while Mullae is the next target, then advances to Mullae only after the correct submission.
 
 ## Mistakes
+
+- 2026-07-23 | Line 2 labels overlapped near Sindaebang, sparse sections showed too few stations, station windows disappeared abruptly, and long direction-card names wrapped | Kept a fixed previous/current/next-two SVG window, placed stations by cubic parameter rather than measured path length, and used fixed card widths | Replace the window with one persistent 43-station SVG world, path-length placement, adaptive camera density, collision-aware labels, and single-line content-sized cards | Never simulate continuous map travel by swapping station subsets; persistent world elements and one shared path-length coordinate are required.
 
 - 2026-07-23 | Proposed applying elapsed gameplay time to every line after the user had limited the trial to Line 2 | Separated the timing feature from the tracking-map scope without authorization | Restricted tracking, metadata, and elapsed time to ordered Seoul Line 2 play | When a user approves a line-specific prototype, keep every bundled feature inside that prototype unless they explicitly broaden one.
 - 2026-07-23 | Full check failed at TypeScript after all runtime tests passed | A table-driven test destructured `serviceId` from a discriminated union where most cases omitted that property | Guard property access with `'serviceId' in directionCase` | Run the strict TypeScript gate after focused Vitest checks whenever adding heterogeneous `as const` test tables.
