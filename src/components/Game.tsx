@@ -55,16 +55,14 @@ export default function Game({ lineId,stations,color,sound=true,durationSeconds,
   if(finished) return <section className="result" style={{'--line':color} as React.CSSProperties}><p className="eyebrow">{timed?'TIME UP':'ARRIVED'}</p><h1>{timed?'랜덤 도전 완료':'운행 완료'}</h1><div className="final-speed" role="status" aria-label={`최종 타수 ${speed} 타/분`}><span>최종 타수</span><b>{speed}</b><small>타/분</small></div><p>오타 {errors}회 · {index}개 역 통과</p><button className="primary" onClick={onExit}>다른 노선 운행</button></section>
   const target=stations[index%stations.length]!
   const japanese=lineId==='yamanote' ? YAMANOTE_LABELS[target] : undefined
-  const normalizedValue=value.normalize('NFC')
-  const correctPrefix=Array.from(target).findIndex((character,position)=>normalizedValue[position]!==character)
-  const matched=correctPrefix===-1?Math.min(normalizedValue.length,target.length):correctPrefix
   const signWidth=(name:string)=>Math.max(270,Math.min(680,170+name.length*50))
-  const signInteractionWidth=tracking?Math.max(...stations.map(signWidth)):0,signTargetWidth=tracking?signWidth(target):0
+  const signInteractionWidth=Math.max(...stations.map(signWidth)),signTargetWidth=signWidth(target)
   const gameStyle={'--line':color,'--sign-interaction-width':`${signInteractionWidth}px`,'--sign-target-width':`${signTargetWidth}px`} as React.CSSProperties
   return <section className="game" style={gameStyle}>
     <div className="game-top"><button className="back" onClick={onExit}>← 운행 종료</button><div className="game-metrics">{tracking&&<div className="live-time"><span>PLAY TIME</span><b>{formatElapsed(elapsedMilliseconds)}</b></div>}<div className="speed-meter" role="status" aria-label={`실시간 타수 ${speed} 타/분`}><span>실시간 타수</span><b>{speed}</b><small>타/분</small></div><div className="route-progress">{timed?<><b>{remaining}초</b> · {index}개</>:<><b>{index+1}</b> / {stations.length}</>}</div></div></div>
     {timed?<div className="random-stage"><span>RANDOM STATION · 60 SEC</span><b>노선 전체에서 무작위 출제</b><small>종착역 없이 제한 시간 동안 계속됩니다.</small></div>:<div className="map-stage route-segment"><TrackingMap lineId={lineKey} stations={stations} targetIndex={index} color={color} /><div className="current-station" role="status">{`다음 ${target}`}</div></div>}
-    {tracking?<>{japanese&&<p className="japanese"><b>{japanese.kanji}</b><span>{japanese.kana}</span></p>}<DirectionSign lineId={lineKey} previous={stations[index-1]} current={target} next={stations[index+1]} /></>:<div className="target"><p className="eyebrow">TYPE STATION · 역명 입력</p>{japanese&&<p className="japanese"><b>{japanese.kanji}</b><span>{japanese.kana}</span></p>}<h1 data-long={target.length>6} aria-label={target}>{Array.from(target).map((character,position)=><span className={position<matched?'matched':normalizedValue[position]&&normalizedValue[position]!==character?'miss':''} key={`${index}-${position}`}>{character}</span>)}</h1></div>}
-    {tracking?<StationTypingField target={target} number={stationInfo(lineKey,target).number} value={value} errorAttempt={errors} inputRef={input} onChange={changeInput} onKeyDown={submit} />:<input ref={input} value={value} onChange={changeInput} onKeyDown={submit} placeholder="역명을 입력하고 Enter" aria-label="역명 입력" autoComplete="off" />}
+    {japanese&&<p className="japanese"><b>{japanese.kanji}</b><span>{japanese.kana}</span></p>}
+    <DirectionSign lineId={lineKey} previous={tracking?stations[index-1]:undefined} current={target} next={tracking?stations[index+1]:undefined} solo={!tracking} />
+    <StationTypingField target={target} number={stationInfo(lineKey,target).number} value={value} errorAttempt={errors} inputRef={input} onChange={changeInput} onKeyDown={submit} />
   </section>
 }

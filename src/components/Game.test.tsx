@@ -244,3 +244,12 @@ test('ordered play shows a live play time that starts on the first jaso',()=>{
   const {container}=render(<Game lineId="seoul-4" stations={stations} color="#00A5DE" onExit={()=>{}} />)
   expect(container.querySelector('.live-time')?.textContent).toContain('00:00.0')
 })
+
+test('timed random play shows the solo station sign and the typing field but no tracking map',()=>{
+  const {container}=render(<Game lineId="seoul-2" stations={['신도림','강남','시청']} color="#00A84D" durationSeconds={60} onExit={()=>{}} />)
+  expect(container.querySelector('.random-stage')).not.toBeNull()
+  expect(container.querySelector('.tracking-map')).toBeNull()
+  expect(container.querySelector('.direction-panel[data-layout="solo"]')).not.toBeNull()
+  expect(container.querySelector('.typing-field')).not.toBeNull()
+  expect(container.querySelectorAll('.direction-panel [data-position]')).toHaveLength(1)
+})
