@@ -37,6 +37,22 @@ test('does not submit Enter during Korean composition', () => {
   expect(screen.getByRole('heading', { name: '신도림' })).toBeInTheDocument()
 })
 
+test('restarts the Line 2 sign shake on every incorrect Enter without replacing the input', () => {
+  const {container}=render(<Game lineId="seoul-2" stations={['신도림','문래']} color="#00A84D" onExit={()=>{}} />)
+  const input=screen.getByRole('textbox')
+  fireEvent.change(input,{target:{value:'신도림X'}})
+
+  fireEvent.keyDown(input,{key:'Enter',isComposing:false})
+  expect(container.querySelector('.line2-typing-visual')).toHaveAttribute('data-error-attempt','1')
+  expect(screen.getByRole('textbox')).toBe(input)
+  expect(input).toHaveValue('신도림X')
+
+  fireEvent.keyDown(input,{key:'Enter',isComposing:false})
+  expect(container.querySelector('.line2-typing-visual')).toHaveAttribute('data-error-attempt','2')
+  expect(screen.getByRole('textbox')).toBe(input)
+  expect(input).toHaveValue('신도림X')
+})
+
 test('finishes after a correct composed answer', () => {
   render(<Game stations={['신도림', '문래']} color="#00A84D" onExit={() => {}} />)
   const input = screen.getByRole('textbox')

@@ -3,7 +3,7 @@ import { createRef } from 'react'
 import { expect,test,vi } from 'vitest'
 import Line2TypingField from './Line2TypingField'
 
-const renderField=(value:string)=>render(<Line2TypingField target="구로디지털단지" number="232" value={value} inputRef={createRef<HTMLInputElement>()} onChange={vi.fn()} onKeyDown={vi.fn()} />)
+const renderField=(value:string)=>render(<Line2TypingField target="구로디지털단지" number="232" value={value} errorAttempt={0} inputRef={createRef<HTMLInputElement>()} onChange={vi.fn()} onKeyDown={vi.fn()} />)
 
 test('shows remaining target, correct characters, an isolated typo, and extra input distinctly', () => {
   const empty=renderField('')
