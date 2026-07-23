@@ -32,6 +32,7 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### Done
 
+- Replaced the Line 2 station window with one persistent 43-station SVG world. Stations and train now share an official-path arc-length lookup; the camera adapts to local geometry and retargets rapid answers without remounting stations. Added stable single-line direction cards and a same-width native IME input with grey target, bold correct, and red incorrect character feedback.
 - Added the approved Line 2 direction panel and continuous tracker: previous/current/next stations show numbered circles, Korean and English labels; the current target dominates; the panel slides in travel order; the persistent SVG train and camera interpolate for 220 ms with the train leading slightly; rapid answers retarget from the rendered frame; reduced motion settles immediately.
 - Added the Seoul Line 2-only official-vector tracking prototype: the target station is camera-centred, a correct answer immediately snaps the train/camera to the next target, context is previous one/current/next two, all 43 stations have English names and numbers, and gameplay time runs from first typed character through arrival.
 
@@ -92,16 +93,17 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### In progress
 
-- Finalize the approved Line 2 persistent world with stable-width direction cards and an inline per-character typing feedback field.
+- No active implementation; awaiting production review of the Line 2 continuous-world replacement and typing feedback.
 
 ### Next
 
-- Implement and deploy the approved Line 2 continuous-world replacement, then review it before extending the presentation to other lines.
+- Review the deployed Line 2 continuous world before extending the presentation to other lines.
 - Connect the leaderboard read model to the UI after a Firebase project/config is supplied.
 - Re-run official station-order verification before freezing production data.
 
 ## Verification
 
+- Line 2 continuous-world replacement on 2026-07-23: `npm run check` passed ESLint, 143 client tests, 2 server tests, strict TypeScript, and the production build. Focused tests assert 43 persistent station nodes, arc-length station spacing, forward/reverse unwrapping, bounded adaptive camera widths, intermediate motion and rapid retargeting, reduced motion, stable route-derived card width, Korean IME behavior, and grey/correct/wrong/extra typing states. Chrome captures at 360, 768, and 1440 CSS pixels covered the Sindaebang/Guro Digital Complex section and confirmed uninterrupted route context, one-line cards, and an isolated red `덜` in `구로디지덜단지`.
 - Line 2 direction/morphing update on 2026-07-23: `npm run check` passed ESLint, 140 client tests, 2 server tests, strict TypeScript, and the production build. Motion tests cover intermediate frames, rapid retargeting, persistent SVG identity, final camera settlement, and reduced motion. Real Chrome captures at 360, 768, and 1440 CSS pixels confirmed a readable numbered previous/current/next panel without horizontal overflow.
 - Line 2 tracking prototype on 2026-07-23: focused Vitest coverage passed metadata, four-station context, immediate Sindorim-to-Mullae camera advance, and first-input-to-arrival timing. `npm run check` passed ESLint, 137 client tests, 2 server tests, strict TypeScript, and the production build. Real SVG captures at 360, 768, and 1440 CSS pixels confirmed centred tracking and readable Korean/English/number labels.
 
@@ -182,6 +184,7 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ## Mistakes
 
+- 2026-07-23 | Final 360px QA showed the current direction card much narrower than its paired typing field | The mobile panel retained a three-equal-column grid even after desktop adopted a stable route-derived centre width | Centre the full-width current card and expose only partial previous/next cards on mobile | When two controls are specified as a visual pair, responsive QA must compare their rendered outer bounds, not merely confirm each fits independently.
 - 2026-07-23 | Line 2 labels overlapped near Sindaebang, sparse sections showed too few stations, station windows disappeared abruptly, and long direction-card names wrapped | Kept a fixed previous/current/next-two SVG window, placed stations by cubic parameter rather than measured path length, and used fixed card widths | Replace the window with one persistent 43-station SVG world, path-length placement, adaptive camera density, collision-aware labels, and single-line content-sized cards | Never simulate continuous map travel by swapping station subsets; persistent world elements and one shared path-length coordinate are required.
 
 - 2026-07-23 | Proposed applying elapsed gameplay time to every line after the user had limited the trial to Line 2 | Separated the timing feature from the tracking-map scope without authorization | Restricted tracking, metadata, and elapsed time to ordered Seoul Line 2 play | When a user approves a line-specific prototype, keep every bundled feature inside that prototype unless they explicitly broaden one.
