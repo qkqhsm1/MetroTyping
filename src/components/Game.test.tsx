@@ -253,3 +253,13 @@ test('timed random play shows the solo station sign and the typing field but no 
   expect(container.querySelector('.typing-field')).not.toBeNull()
   expect(container.querySelectorAll('.direction-panel [data-position]')).toHaveLength(1)
 })
+
+test('random play accepts a correct answer through the typing field and moves to the next station',()=>{
+  const {container}=render(<Game lineId="seoul-2" stations={['신도림','강남','시청']} color="#00A84D" durationSeconds={60} onExit={()=>{}} />)
+  const feedback=()=>container.querySelector('.typing-feedback')?.textContent
+  fireEvent.change(screen.getByRole('textbox'),{target:{value:'신도림'}})
+  expect(feedback()).toContain('신도림')
+  fireEvent.keyDown(screen.getByRole('textbox'),{key:'Enter',isComposing:false})
+  expect(screen.getByRole('textbox')).toHaveValue('')
+  expect(container.querySelector('.direction-panel [data-position="current"]')?.textContent).toContain('강남')
+})
