@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 import RouteMap from './RouteMap'
 import Line2TrackingMap from './Line2TrackingMap'
 import { YAMANOTE_LABELS } from '../data/lines'
+import { LINE_2_BY_NAME } from '../data/line2'
 import { playSound } from '../audio/sounds'
 
 function countJaso(value:string) {
@@ -14,6 +15,10 @@ function countJaso(value:string) {
 const formatElapsed=(milliseconds:number)=>{
   const tenths=Math.floor(milliseconds/100),minutes=Math.floor(tenths/600),seconds=Math.floor(tenths/10)%60
   return `${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}.${tenths%10}`
+}
+function Line2DirectionStation({name,position}:{name?:string;position:'previous'|'current'|'next'}) {
+  const station=name?LINE_2_BY_NAME.get(name):undefined
+  return <div className="line2-direction-station" data-position={position}>{station&&<><span className="line2-direction-number">{station.number}</span><span className="line2-direction-names"><b role="heading" aria-level={position==='current'?1:2}>{station.korean}</b><small>{station.english}</small></span></>}</div>
 }
 
 export default function Game({ lineId,stations,color,sound=true,durationSeconds,showAllStations=true,onExit }:{ lineId?:string; stations:string[]; color:string; sound?:boolean; durationSeconds?:number; showAllStations?:boolean; onExit:()=>void }) {
@@ -58,10 +63,11 @@ export default function Game({ lineId,stations,color,sound=true,durationSeconds,
   const normalizedValue=value.normalize('NFC')
   const correctPrefix=Array.from(target).findIndex((character,position)=>normalizedValue[position]!==character)
   const matched=correctPrefix===-1?Math.min(normalizedValue.length,target.length):correctPrefix
+  const line2Direction=line2Tracking?{previous:stations[index-1],current:stations[index],next:stations[index+1]}:undefined
   return <section className="game" style={{'--line':color} as React.CSSProperties}>
     <div className="game-top"><button className="back" onClick={onExit}>← 운행 종료</button><div className="game-metrics">{line2Tracking&&<div className="line2-live-time"><span>PLAY TIME</span><b>{formatElapsed(elapsedMilliseconds)}</b></div>}<div className="speed-meter" role="status" aria-label={`실시간 타수 ${speed} 타/분`}><span>실시간 타수</span><b>{speed}</b><small>타/분</small></div><div className="route-progress">{timed?<><b>{remaining}초</b> · {index}개</>:<><b>{index+1}</b> / {stations.length}</>}</div></div></div>
     {timed?<div className="random-stage"><span>RANDOM STATION · 60 SEC</span><b>노선 전체에서 무작위 출제</b><small>종착역 없이 제한 시간 동안 계속됩니다.</small></div>:<div className="map-stage route-segment" key={line2Tracking?'line-2':segmentStart}>{line2Tracking?<Line2TrackingMap stations={stations} targetIndex={index} color={color} />:<RouteMap lineId={lineId ?? 'seoul-2'} stations={visibleStations} geometryStations={stations} routeStationCount={stations.length} segmentStart={segmentStart} shapeSeed={shapeSeed} color={color} progress={(completedIndex-segmentStart)/Math.max(1,visibleStations.length-1)} targetIndex={index-segmentStart} showAllLabels={showAllStations} trainVisible={trainVisible} trainEntering={trainEntering} />}<div className="current-station" role="status">{line2Tracking?`다음 ${target}`:index===0?`출발 준비 · ${target}`:`현재 ${currentStation}`}</div></div>}
-    <div className="target"><p className="eyebrow">TYPE STATION · 역명 입력</p>{japanese&&<p className="japanese"><b>{japanese.kanji}</b><span>{japanese.kana}</span></p>}<h1 data-long={target.length>6} aria-label={target}>{Array.from(target).map((character,position)=><span className={position<matched?'matched':normalizedValue[position]&&normalizedValue[position]!==character?'miss':''} key={`${index}-${position}`}>{character}</span>)}</h1></div>
+    {line2Direction?<div className="target line2-direction-wrap"><p className="eyebrow">TRAVEL DIRECTION · 진행 방향</p><div className="line2-direction-panel" aria-label={`현재 입력 역 ${target}`}><Line2DirectionStation name={line2Direction.previous} position="previous" /><Line2DirectionStation name={line2Direction.current} position="current" /><Line2DirectionStation name={line2Direction.next} position="next" /></div></div>:<div className="target"><p className="eyebrow">TYPE STATION · 역명 입력</p>{japanese&&<p className="japanese"><b>{japanese.kanji}</b><span>{japanese.kana}</span></p>}<h1 data-long={target.length>6} aria-label={target}>{Array.from(target).map((character,position)=><span className={position<matched?'matched':normalizedValue[position]&&normalizedValue[position]!==character?'miss':''} key={`${index}-${position}`}>{character}</span>)}</h1></div>}
     <input ref={input} value={value} onChange={event=>{const next=event.target.value;const added=Math.max(0,countJaso(next)-countJaso(value));if(added){const timestamp=Date.now();playSound('key',sound);setStartedAt(start=>start??timestamp);setTypedJaso(count=>count+added);setNow(timestamp)}setValue(next)}} onKeyDown={submit} placeholder="역명을 입력하고 Enter" aria-label="역명 입력" autoComplete="off" />
   </section>
 }

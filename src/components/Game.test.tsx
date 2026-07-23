@@ -89,6 +89,22 @@ test('moves the Line 2 tracking camera to Mullae immediately after Sindorim is c
   expect(screen.getByRole('heading',{name:'문래'})).toBeInTheDocument()
 })
 
+test('shows numbered previous, current, and next Line 2 stations in travel order', () => {
+  const { container }=render(<Game lineId="seoul-2" stations={['신도림','문래','영등포구청']} color="#00A84D" onExit={()=>{}} />)
+  const panel=()=>container.querySelector('.line2-direction-panel')!
+  expect(panel().querySelector('[data-position="previous"]')).toBeEmptyDOMElement()
+  expect(panel().querySelector('[data-position="current"]')).toHaveTextContent('234신도림Sindorim')
+  expect(panel().querySelector('[data-position="next"]')).toHaveTextContent('235문래Mullae')
+
+  const input=screen.getByRole('textbox')
+  fireEvent.change(input,{target:{value:'신도림'}})
+  fireEvent.keyDown(input,{key:'Enter',isComposing:false})
+
+  expect(panel().querySelector('[data-position="previous"]')).toHaveTextContent('234신도림Sindorim')
+  expect(panel().querySelector('[data-position="current"]')).toHaveTextContent('235문래Mullae')
+  expect(panel().querySelector('[data-position="next"]')).toHaveTextContent('236영등포구청Yeongdeungpo-gu Office')
+})
+
 test('measures Line 2 gameplay time from the first typed character through arrival', () => {
   vi.useFakeTimers()
   render(<Game lineId="seoul-2" stations={['신도림','문래']} color="#00A84D" onExit={()=>{}} />)
