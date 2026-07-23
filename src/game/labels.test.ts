@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { computeLabels, type LabelBox } from './labels'
+import { computeLabels, trainBox, type LabelBox } from './labels'
 import { pointAt, type Point } from './geometry'
 
 const boxFor = (label: ReturnType<typeof computeLabels>[number], station: string): LabelBox => {
@@ -45,6 +45,17 @@ describe('computeLabels', () => {
         const hit = x.x < y.x + y.width && x.x + x.width > y.x && x.y < y.y + y.height && x.y + x.height > y.y
         expect(hit).toBe(false)
       }
+  })
+
+  it('keeps labels clear of the train box when it covers a station', () => {
+    const p = pointAt(verticalThenBend, 2 / (stations.length - 1))
+    const train = trainBox(p.x, p.y)
+    const labels = computeLabels(verticalThenBend, stations, train)
+    labels.forEach((label, index) => {
+      const box = boxFor(label, stations[index]!)
+      const hit = box.x < train.x + train.width && box.x + box.width > train.x && box.y < train.y + train.height && box.y + box.height > train.y
+      expect(hit).toBe(false)
+    })
   })
 
   it('anchors each label to its station point', () => {

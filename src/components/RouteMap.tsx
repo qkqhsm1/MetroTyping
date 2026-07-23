@@ -1,7 +1,7 @@
 import { pointAt } from '../game/geometry'
 import { getFocusedRouteGeometry, getRouteGeometry } from '../game/routeGeometry'
 import { randomizeRoute } from '../game/randomRoute'
-import { computeLabels } from '../game/labels'
+import { computeLabels, trainBox } from '../game/labels'
 
 export default function RouteMap({ lineId,progress,color,stations,geometryStations=stations,routeStationCount,segmentStart=0,shapeSeed,showAllLabels=true,targetIndex,trainVisible=true,trainEntering=false }:{ lineId:string; progress:number; color:string; stations:string[]; geometryStations?:string[]; routeStationCount?:number; segmentStart?:number; shapeSeed?:number; showAllLabels?:boolean; targetIndex?:number; trainVisible?:boolean; trainEntering?:boolean }) {
   const sourceGeometry=routeStationCount===undefined?getRouteGeometry(lineId,geometryStations):getFocusedRouteGeometry(lineId,geometryStations,routeStationCount,segmentStart,stations.length)
@@ -10,7 +10,7 @@ export default function RouteMap({ lineId,progress,color,stations,geometryStatio
   if (!route) throw new Error(`Missing route geometry: ${lineId}`)
   const train = pointAt(route, progress)
   const points = route.map(point => point.join(',')).join(' ')
-  const labels=computeLabels(route,stations)
+  const labels=computeLabels(route,stations,trainVisible?trainBox(train.x,train.y):undefined)
   return <svg className="route-map" viewBox="0 0 600 360" role="img" aria-label="전체 노선도">
     <polyline data-route="" data-geometry={geometry.key} data-global-start={geometry.globalStart?.join(',')} data-global-end={geometry.globalEnd?.join(',')} points={points} fill="none" stroke="#deddd7" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round" />
     {geometry.context&&<polyline data-context="" data-directed-closure={geometry.directedClosure||undefined} points={geometry.context.map(point=>point.join(',')).join(' ')} fill="none" stroke="#deddd7" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round" />}

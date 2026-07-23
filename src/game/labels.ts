@@ -41,7 +41,13 @@ const routeHitsBox = (route: readonly Point[], box: LabelBox) => {
   return false
 }
 
-export function computeLabels(route: readonly Point[], stations: readonly string[]): StationLabel[] {
+// The moving train pill covers its station; treat it as an obstacle so nearby
+// labels step aside instead of hiding under it. Approximated as an axis-aligned
+// box around the train point, large enough to cover the rotated body.
+export const trainBox = (x: number, y: number): LabelBox => ({ x: x - 30, y: y - 22, width: 60, height: 44 })
+
+export function computeLabels(route: readonly Point[], stations: readonly string[], avoid?: LabelBox): StationLabel[] {
+  const obstacles: LabelBox[] = avoid ? [avoid] : []
   const boxes: LabelBox[] = []
   return stations.map((station, index) => {
     const p = pointAt(route, index / Math.max(1, stations.length - 1))
@@ -54,10 +60,12 @@ export function computeLabels(route: readonly Point[], stations: readonly string
       { position: 'left', x: p.x - 16, y: p.y + 4, anchor: 'end', box: { x: p.x - width - 16, y: p.y - 7, width, height } },
       { position: 'right', x: p.x + 16, y: p.y + 4, anchor: 'start', box: { x: p.x + 16, y: p.y - 7, width, height } },
     ] as const
-    const clearOfLabels = (c: (typeof candidates)[number]) => inBounds(c.box) && !boxes.some(box => overlaps(c.box, box))
+    const clearOfLabels = (c: (typeof candidates)[number]) =>
+      inBounds(c.box) && !boxes.some(box => overlaps(c.box, box)) && !obstacles.some(box => overlaps(c.box, box))
     const label =
       candidates.find(c => clearOfLabels(c) && !routeHitsBox(route, c.box)) ??
       candidates.find(clearOfLabels) ??
+      candidates.find(c => inBounds(c.box) && !boxes.some(box => overlaps(c.box, box))) ??
       candidates[0]
     boxes.push(label.box)
     return { point: p, split, position: label.position, x: label.x, y: label.y, anchor: label.anchor }
