@@ -85,19 +85,20 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 - Fixed target-label ambiguity: when the target (당산) sat just above another station (영등포구청), the lower station's "above" label landed nearer the target's node than its own, so it read as the target's name. Added an "own-node closest" constraint to label placement — a label's box center must be nearest its own station node, not a neighbour — plus neighbour-node obstacle boxes. Verified across 8 seeds of the 당산-target window and a full re-audit (Lines 1/3/6/7, Yamanote) with no regressions. `npm run check` passed 114 client tests, 2 server tests, lint, strict TypeScript, and the build.
 
 - Resolved the recurring "which ring is the target" confusion in vertical windows. Root cause across every reported case: the confusing label was always the *current* station (under the train, adjacent to the target). Since the current station is already named in the "현재 X" pill and marked by the train, its map label is redundant — now hidden. The target ring keeps its own label and nothing crowds it. Reproduced the 문래-target / 신도림-current window across 6 seeds to confirm, and updated 8 label-count/text assertions plus added an explicit hide-behavior test. `npm run check` passed 115 client tests, 2 server tests, lint, strict TypeScript, and the build.
+- Corrected official-map gameplay orientation across every supported non-loop topology. Re-anchored the reversed Line 1 north/Sinchang legs, Line 4, Line 7, Suin–Bundang, and AREX geometry; travel direction now traverses those fixed coordinates while seeded randomization changes only interior bends. Representative direction tests cover Seoul 1/3–9, both Line 5 branches, Suin–Bundang, Incheon 1/2, and AREX, with focused regressions for Oido→Handae-ap, Handae-ap→Incheon, and Gajaeul→Geomdan Oryu.
 
 ### In progress
 
-- Correct gameplay route orientation across all supported lines: preserve official-map station positions and travel direction while randomizing only intermediate curve shape.
+- No release work is in progress.
 
 ### Next
 
-- Implement and visually verify the approved official-orientation rule after design review.
 - Connect the leaderboard read model to the UI after a Firebase project/config is supplied.
 - Re-run official station-order verification before freezing production data.
 
 ## Verification
 
+- Official-orientation gate on 2026-07-23: RED reproduced eight reversed/equal-direction cases in Line 1, Line 4, Line 7, Suin–Bundang, and AREX; GREEN passed 60 focused RouteMap/random-route tests. Headless Chrome captures of the real SVG at 360, 768, and 1440 CSS pixels confirmed Oido and Seoknam start left, Handae-ap→Incheon starts right and moves left, Gajaeul→Geomdan Oryu moves upward, and seeded bends remain varied. Final `npm run check` passed ESLint, 133 client tests, 2 server tests, strict TypeScript, and the Vite build (`index-BFo-p2js.js`).
 - Gameplay map-readability pass on 2026-07-23 shipped six commits, each gated by `npm run check` (ESLint, client tests, 2 server tests, strict TypeScript, Vite production build) and each deployed by a successful GitHub Pages run whose bundle hash was confirmed live on `https://qkqhsm1.github.io/MetroTyping/`:
   - `a6f2259` Line 2 control path + `.route-map` height cap — 109 tests — Pages run `29978191122`.
   - `0e7bbc0` label placement extracted to `labels.ts` with route-polyline rejection, larger normalization — 112 tests — Pages run `29978658135`.
@@ -173,6 +174,8 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 - Automated gameplay coverage confirms the train remains at Sindorim while Mullae is the next target, then advances to Mullae only after the correct submission.
 
 ## Mistakes
+
+- 2026-07-23 | Full check failed at TypeScript after all runtime tests passed | A table-driven test destructured `serviceId` from a discriminated union where most cases omitted that property | Guard property access with `'serviceId' in directionCase` | Run the strict TypeScript gate after focused Vitest checks whenever adding heterogeneous `as const` test tables.
 
 - 2026-07-22 | Work appeared to stop after the user asked to keep it running | Interpreted continuation as keeping the Vite server alive instead of resuming the four-step implementation plan | Recovered the pushed commit, dirty RED tests, and written plan, then resumed all remaining tasks | When a continuation request follows an active plan, inspect Workflow, git state, and the plan before treating it as process uptime.
 - 2026-07-22 | Full gate rejected the first per-run shape seed | `Math.random()` initialized a ref during render and the ref was read to render SVG geometry, violating React purity rules | Derived the stable instance seed from React `useId()` instead | Generate render-affecting identity through React-managed stable values, not impure render-time calls or refs.

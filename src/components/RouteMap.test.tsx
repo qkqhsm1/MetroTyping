@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react'
 import { expect, test } from 'vitest'
 import type { Point } from '../game/geometry'
+import { hasSelfIntersection } from '../game/randomRoute'
 import { getFullLoopRoute, getRoute } from '../game/routes'
 import RouteMap from './RouteMap'
 
@@ -75,6 +76,53 @@ test('places the first visible Incheon-origin station to the left of the next st
   expect(Number(stations[0]!.getAttribute('cx'))).toBeLessThan(Number(stations.at(-1)!.getAttribute('cx')))
 })
 
+const officialDirectionCases = [
+  {name:'Line 1 Incheon to Guro',lineId:'seoul-1',from:'인천',to:'구로',axis:0,order:'less'},
+  {name:'Line 1 Yeoncheon to Guro',lineId:'seoul-1',from:'연천',to:'구로',axis:0,order:'greater'},
+  {name:'Line 1 Sinchang to Guro',lineId:'seoul-1',from:'신창',to:'구로',axis:0,order:'less'},
+  {name:'Line 3 Daehwa to Ogeum',lineId:'seoul-3',from:'대화',to:'오금',axis:0,order:'less'},
+  {name:'Line 4 Oido to Jinjeop',lineId:'seoul-4',from:'오이도',to:'진접',axis:0,order:'less'},
+  {name:'Line 5 Banghwa to Hanam',lineId:'seoul-5',from:'방화',to:'하남검단산',axis:0,order:'less'},
+  {name:'Line 5 Banghwa to Macheon',lineId:'seoul-5',from:'방화',to:'마천',axis:0,order:'less'},
+  {name:'Line 6 Eungam to Sinnae',lineId:'seoul-6',from:'응암',to:'신내',axis:0,order:'less'},
+  {name:'Line 7 Seoknam to Jangam',lineId:'seoul-7',from:'석남',to:'장암',axis:0,order:'less'},
+  {name:'Line 8 Byeollae to Moran',lineId:'seoul-8',from:'별내',to:'모란',axis:1,order:'less'},
+  {name:'Line 9 Gaehwa to VHS Medical Center',lineId:'seoul-9',from:'개화',to:'중앙보훈병원',axis:0,order:'less',serviceId:'local'},
+  {name:'Suin-Bundang Incheon to Cheongnyangni',lineId:'suin-bundang',from:'인천',to:'청량리',axis:0,order:'less'},
+  {name:'Incheon 1 north to south',lineId:'incheon-1',from:'검단호수공원',to:'송도달빛축제공원',axis:1,order:'less'},
+  {name:'Incheon 2 north to south',lineId:'incheon-2',from:'검단오류',to:'운연',axis:1,order:'less'},
+  {name:'AREX airport to Seoul',lineId:'arex',from:'인천공항2터미널',to:'서울역',axis:0,order:'less'},
+] as const
+
+test.each(officialDirectionCases)('$name preserves official map orientation with a randomized curve', directionCase => {
+  const {lineId,from,to,axis,order}=directionCase
+  const serviceId='serviceId' in directionCase?directionCase.serviceId:undefined
+  const stations=getRoute(lineId,from,to,'forward',serviceId).stationIds
+  const {container}=render(<RouteMap lineId={lineId} stations={stations} geometryStations={stations} routeStationCount={stations.length} color="#333" progress={0} shapeSeed={17} trainVisible={false} />)
+  const route=parsePoints(container.querySelector('polyline[data-route]')!.getAttribute('points')!)
+  const nodes=[...container.querySelectorAll('circle:not(.target-ring)')]
+  const start=Number(nodes[0]!.getAttribute(axis===0?'cx':'cy'))
+  const end=Number(nodes.at(-1)!.getAttribute(axis===0?'cx':'cy'))
+  expect(order==='less'?start<end:start>end).toBe(true)
+  expect(route[0]![axis]).toBeCloseTo(start)
+  expect(route.at(-1)![axis]).toBeCloseTo(end)
+  expect(hasSelfIntersection(route)).toBe(false)
+})
+
+test.each([
+  {name:'Suin-Bundang Oido to Handae-ap',lineId:'suin-bundang',from:'오이도',to:'한대앞',axis:0,order:'less'},
+  {name:'Suin-Bundang Handae-ap to Incheon',lineId:'suin-bundang',from:'한대앞',to:'인천',axis:0,order:'greater'},
+  {name:'Incheon 2 Gajaeul to Geomdan Oryu',lineId:'incheon-2',from:'가재울',to:'검단오류',axis:1,order:'greater'},
+] as const)('$name keeps local official direction in the first focused window', ({lineId,from,to,axis,order}) => {
+  const full=getRoute(lineId,from,to).stationIds
+  const visible=full.slice(0,8)
+  const {container}=render(<RouteMap lineId={lineId} stations={visible} geometryStations={full} routeStationCount={full.length} segmentStart={0} color="#333" progress={0} shapeSeed={17} trainVisible={false} />)
+  const nodes=[...container.querySelectorAll('circle:not(.target-ring)')]
+  const start=Number(nodes[0]!.getAttribute(axis===0?'cx':'cy'))
+  const end=Number(nodes.at(-1)!.getAttribute(axis===0?'cx':'cy'))
+  expect(order==='less'?start<end:start>end).toBe(true)
+})
+
 test('anchors the front of the train at the current station', () => {
   const { container } = render(<RouteMap lineId="seoul-2" stations={['신도림','문래']} color="#00A84D" progress={0} />)
   expect(container.querySelector('.train-body')).toHaveAttribute('transform', 'translate(-22 0)')
@@ -118,12 +166,12 @@ test.each(['seoul-3', 'suin-bundang'])('%s uses distinct focused geometry with s
 })
 
 const topologyCases:Array<{key:string;lineId:string;stations:string[];endpoints:[Point,Point];anchors:Point[];context?:string}> = [
-  { key:'seoul-4', lineId:'seoul-4', stations:['진접','오이도'], endpoints:[[70,35],[530,250]], anchors:[[70,35],[530,250]] },
+  { key:'seoul-4', lineId:'seoul-4', stations:['진접','오이도'], endpoints:[[530,35],[70,250]], anchors:[[530,35],[70,250]] },
   { key:'seoul-5-hanam', lineId:'seoul-5', stations:['강동','길동','하남검단산'], endpoints:[[45,145],[555,65]], anchors:[[45,145],[300.840553,105],[555,65]] },
   { key:'seoul-5-macheon', lineId:'seoul-5', stations:['강동','둔촌동','마천'], endpoints:[[45,145],[555,250]], anchors:[[45,145],[324.345943,105],[555,250]] },
   { key:'seoul-6-trunk', lineId:'seoul-6', stations:['응암','새절','신내'], endpoints:[[45,235],[555,55]], anchors:[[45,235],[292.660318,125],[555,55]] },
   { key:'seoul-6-loop', lineId:'seoul-6', stations:['응암','역촌','불광','독바위','연신내','구산'], endpoints:[[300,250],[365,210]], anchors:[[300,250],[158.003203,221.503603],[109.932436,102.920412],[224.387228,36.757448],[358.804666,81.802722],[365,210]], context:'365,210 300,250' },
-  { key:'seoul-7', lineId:'seoul-7', stations:['장암','석남'], endpoints:[[65,35],[535,250]], anchors:[[65,35],[535,250]] },
+  { key:'seoul-7', lineId:'seoul-7', stations:['장암','석남'], endpoints:[[535,35],[65,250]], anchors:[[535,35],[65,250]] },
   { key:'seoul-8', lineId:'seoul-8', stations:['별내','모란'], endpoints:[[80,35],[520,255]], anchors:[[80,35],[520,255]] },
   { key:'seoul-9', lineId:'seoul-9', stations:['개화','중앙보훈병원'], endpoints:[[45,225],[555,45]], anchors:[[45,225],[555,45]] },
 ]
