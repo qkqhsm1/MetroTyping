@@ -169,3 +169,39 @@ git push origin main
 - [ ] **Step 5: Verify production**
 
 Wait for the matching Pages run to succeed. Confirm `/MetroTyping/` and referenced JS/CSS assets return HTTP 200 with HTML, JavaScript, and CSS MIME types, and confirm the live JS contains the persistent-world and typing-feedback selectors.
+
+### Task 5: Station-sign input and route-normal halo
+
+**Files:**
+- Modify: `src/components/Line2TypingField.tsx`
+- Modify: `src/components/Line2TypingField.test.tsx`
+- Modify: `src/components/Game.tsx`
+- Modify: `src/components/Line2TrackingMap.tsx`
+- Modify: `src/components/Line2TrackingMap.test.tsx`
+- Modify: `src/styles.css`
+- Modify: `MDs/Workflow.md`
+
+- [ ] **Step 1: Write failing station-sign tests**
+
+Pass the current station number into `Line2TypingField`. Assert the shell contains one pale number circle, its combined number/name group is centred, and only name spans receive `remaining`, `correct`, or `wrong`.
+
+- [ ] **Step 2: Verify RED**
+
+Run `npm test -- --run src/components/Line2TypingField.test.tsx src/components/Game.test.tsx`.
+Expected: FAIL because the typing field does not accept or render a station number.
+
+- [ ] **Step 3: Implement the matching sign**
+
+Add `number:string` to `Line2TypingField` and render `.line2-typing-number` beside the feedback layer inside a centred `.line2-typing-content`. Keep the native input over only the name region so IME, caret, selection, and Enter handling remain unchanged.
+
+- [ ] **Step 4: Write failing halo-normal test**
+
+Render a current station, read `data-halo-normal`, and assert its vector dot-product with the station tangent is within `0.001` of zero. Assert the CSS endpoints are symmetric `-amplitude` and `+amplitude`.
+
+- [ ] **Step 5: Implement route-normal motion**
+
+Use `line2PointAt` angle to compute `normalX=-sin(angle)` and `normalY=cos(angle)`. Put the halo in a translated SVG group with CSS variables for symmetric 14-unit endpoints. Animate translation only; remove scale and viewport-relative transform-origin behavior. Disable it under reduced motion.
+
+- [ ] **Step 6: Verify, inspect, and deploy**
+
+Run `npm run check`, inspect 360/768/1440 real-game captures, update `MDs/Workflow.md`, commit scoped files, push `main`, and verify the Pages run plus live JavaScript/CSS selectors.
