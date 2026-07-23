@@ -19,7 +19,7 @@ export default function RouteMap({ lineId,progress,color,stations,geometryStatio
       const {point,split,position,x,y,anchor}=labels[index]!
       const showLabel=showAllLabels||index===0||index===stations.length-1||index===Math.round(progress*(stations.length-1))
       const isTarget=index===targetIndex
-      return <g key={`${station}-${index}`} data-target={isTarget||undefined}>{isTarget&&<circle className="target-ring" cx={point.x} cy={point.y} r="14" fill="none" stroke={color} strokeWidth="3" />}<circle cx={point.x} cy={point.y} r={isTarget?9:7} fill="white" stroke={index/(stations.length-1)<=progress||isTarget?color:'#b9bab5'} strokeWidth="5" />{showLabel&&<text className={isTarget?'target-label':undefined} data-label-position={position} x={x} y={y} textAnchor={anchor}><tspan x={x}>{station.slice(0,split)}</tspan>{split<station.length&&<tspan x={x} dy="10">{station.slice(split)}</tspan>}</text>}</g>
+      return <g key={`${station}-${index}`} data-target={isTarget||undefined}>{isTarget&&<circle className="target-ring" cx={point.x} cy={point.y} r="14" fill="none" stroke={color} strokeWidth="3" />}<circle cx={point.x} cy={point.y} r={isTarget?9:7} fill="white" stroke={index/(stations.length-1)<=progress||isTarget?color:'#b9bab5'} strokeWidth="5" />{showLabel&&<text className={isTarget?'target-label':undefined} data-label-position={position} x={x} y={y} textAnchor={anchor}><tspan x={x}>{station.slice(0,split)}</tspan>{split<station.length&&<tspan x={x} dy={isTarget?13:11}>{station.slice(split)}</tspan>}</text>}</g>
     })}
     {trainVisible&&<g className={`train${trainEntering?' train-entering':''}`} style={{transform:`translate(${train.x}px,${train.y}px) rotate(${train.angle}deg)`}}>
       <g className="train-entrance-shell">
