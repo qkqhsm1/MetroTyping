@@ -91,6 +91,8 @@ test('both directions of a line 2 loop run anchor their path at the same point',
   const clockwise=resolveTopology('seoul-2',getFullLoopRoute('seoul-2','신도림','clockwise').stationIds)
   const counter=resolveTopology('seoul-2',getFullLoopRoute('seoul-2','신도림','counterclockwise').stationIds)
   expect(counter.path[0]).toEqual(clockwise.path[0])
+  // Anchoring alone would also pass if the reversed branch returned the path untouched.
+  expect(counter.path[1]).toEqual(clockwise.path.at(-1))
   expect(counter.path.length).toBe(clockwise.path.length)
   const sorted=(path:readonly Point[])=>[...path].map(point=>point.join(',')).sort()
   expect(sorted(counter.path)).toEqual(sorted(clockwise.path))
