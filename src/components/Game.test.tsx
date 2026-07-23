@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
 import Game from './Game'
+import { getRoute } from '../game/routes'
 import { playSound } from '../audio/sounds'
 
 vi.mock('../audio/sounds',()=>({playSound:vi.fn()}))
@@ -82,17 +83,17 @@ test('finishes a timed random game exactly when the clock reaches zero', () => {
 })
 
 test('asks for the departure station first, then advances to the next station', () => {
-  render(<Game stations={['신도림', '문래', '영등포구청']} color="#00A84D" onExit={() => {}} />)
-  expect(screen.getByText('출발 준비 · 신도림')).toBeInTheDocument()
+  const {container}=render(<Game stations={['신도림', '문래', '영등포구청']} color="#00A84D" onExit={() => {}} />)
+  expect(screen.getByText('다음 신도림')).toBeInTheDocument()
   expect(screen.getByRole('heading', { name: '신도림' })).toBeInTheDocument()
 
   const input = screen.getByRole('textbox')
   fireEvent.change(input, { target: { value: '신도림' } })
   fireEvent.keyDown(input, { key: 'Enter', isComposing: false })
 
-  expect(screen.getByText('현재 신도림')).toBeInTheDocument()
+  expect(screen.getByText('다음 문래')).toBeInTheDocument()
   expect(screen.getByRole('heading', { name: '문래' })).toBeInTheDocument()
-  expect(document.querySelector('[data-target="true"]')?.textContent).toContain('문래')
+  expect(container.querySelector('.direction-panel [data-position="current"]')?.textContent).toContain('문래')
 })
 
 test('moves the Line 2 tracking camera to Mullae immediately after Sindorim is correct', () => {
@@ -149,35 +150,19 @@ test('measures Line 2 gameplay time from the first typed character through arriv
   expect(screen.getByText('00:01.2')).toBeInTheDocument()
 })
 
-test('reveals the train after departure without blocking the next answer', () => {
-  vi.useFakeTimers()
-  const { container,unmount }=render(<Game stations={['신도림','문래','영등포구청']} color="#00A84D" onExit={() => {}} />)
+test('keeps the train on the map and never blocks the next answer', () => {
+  const { container }=render(<Game stations={['신도림','문래','영등포구청']} color="#00A84D" onExit={() => {}} />)
   const input=screen.getByRole('textbox')
 
-  expect(container.querySelector('.train')).not.toBeInTheDocument()
+  expect(container.querySelector('.train')).toBeInTheDocument()
   fireEvent.change(input,{target:{value:'신도림'}})
   fireEvent.keyDown(input,{key:'Enter',isComposing:false})
-  expect(container.querySelector('.train')).toHaveClass('train-entering')
+  expect(screen.getByRole('heading',{name:'문래'})).toBeInTheDocument()
 
   fireEvent.change(input,{target:{value:'문래'}})
   fireEvent.keyDown(input,{key:'Enter',isComposing:false})
   expect(screen.getByRole('heading',{name:'영등포구청'})).toBeInTheDocument()
   expect(container.querySelector('.train')).toBeInTheDocument()
-  act(()=>vi.advanceTimersByTime(259))
-  expect(container.querySelector('.train')).toHaveClass('train-entering')
-  act(()=>vi.advanceTimersByTime(1))
-  expect(container.querySelector('.train')).not.toHaveClass('train-entering')
-  unmount()
-
-  const error=vi.spyOn(console,'error').mockImplementation(()=>{})
-  const pending=render(<Game stations={['신도림','문래']} color="#00A84D" onExit={() => {}} />)
-  fireEvent.change(screen.getByRole('textbox'),{target:{value:'신도림'}})
-  fireEvent.keyDown(screen.getByRole('textbox'),{key:'Enter',isComposing:false})
-  const pendingTimers=vi.getTimerCount()
-  pending.unmount()
-  expect(vi.getTimerCount()).toBeLessThan(pendingTimers)
-  expect(error).not.toHaveBeenCalled()
-  error.mockRestore()
 })
 
 test('starts Korean keystrokes per minute at the first printable key', () => {
@@ -192,42 +177,38 @@ test('starts Korean keystrokes per minute at the first printable key', () => {
   expect(screen.getByRole('status', { name: '실시간 타수 30 타/분' })).toBeInTheDocument()
 })
 
-test('shows a readable eight-station segment and swaps segments without blocking input', () => {
-  const stations=Array.from({length:12},(_,index)=>`역${index}`)
-  const { container }=render(<Game stations={stations} color="#0052A4" onExit={() => {}} />)
-  expect([...container.querySelectorAll('.route-map text')].map(node=>node.textContent)).toEqual(stations.slice(0,8))
-  const firstWindow=container.querySelector('polyline[data-route]')?.getAttribute('data-global-start')
-  const firstShape=container.querySelector('polyline[data-route]')?.getAttribute('points')
+test('runs a long ordered route through one persistent world without blocking input', () => {
+  const stations=getRoute('seoul-1','인천','연천').stationIds
+  const { container }=render(<Game lineId="seoul-1" stations={stations} color="#0052A4" onExit={() => {}} />)
+  expect(container.querySelector('.tracking-map')).toBeInTheDocument()
 
   const input=screen.getByRole('textbox')
   fireEvent.change(input,{target:{value:'typing'}})
-  expect(container.querySelector('polyline[data-route]')).toHaveAttribute('points',firstShape)
+  expect(input).toHaveValue('typing')
+  expect(screen.getByRole('heading',{name:stations[0]})).toBeInTheDocument()
   fireEvent.change(input,{target:{value:''}})
   stations.slice(0,8).forEach(station=>{
     fireEvent.change(input,{target:{value:station}})
     fireEvent.keyDown(input,{key:'Enter',isComposing:false})
   })
 
-  expect([...container.querySelectorAll('.route-map text')].map(node=>node.textContent)).toEqual(stations.slice(8)) // 역7 is the current station, hidden under the train
-  expect(container.querySelector('polyline[data-route]')).not.toHaveAttribute('data-global-start',firstWindow)
-  expect(container.querySelector('polyline[data-route]')).not.toHaveAttribute('points',firstShape)
-  expect(screen.getByRole('heading',{name:'역8'})).toBeInTheDocument()
+  expect(container.querySelector('.tracking-map')).toBeInTheDocument()
+  expect(screen.getByRole('heading',{name:stations[8]})).toBeInTheDocument()
 })
 
 test.each([
-  {name:'forward Hanam after 길동 leaves',stations:['강동','길동','A','B','C','D','E','F','G','H'],answers:8,key:'seoul-5-hanam'},
-  {name:'forward Macheon after 둔촌동 leaves',stations:['강동','둔촌동','A','B','C','D','E','F','G','H'],answers:8,key:'seoul-5-macheon'},
-  {name:'reverse Hanam before 길동 enters',stations:['하남검단산','A','B','C','D','E','F','G','길동','강동'],answers:0,key:'seoul-5-hanam'},
-  {name:'reverse Macheon before 둔촌동 enters',stations:['마천','A','B','C','D','E','F','G','둔촌동','강동'],answers:0,key:'seoul-5-macheon'},
-])('keeps Line 5 geometry stable for $name the visible segment', ({stations,answers,key}) => {
+  {name:'forward Hanam',from:'방화',to:'하남검단산'},
+  {name:'forward Macheon',from:'방화',to:'마천'},
+  {name:'reverse Hanam',from:'하남검단산',to:'방화'},
+  {name:'reverse Macheon',from:'마천',to:'방화'},
+])('renders the Line 5 tracking world and advances for $name', ({from,to}) => {
+  const stations=getRoute('seoul-5',from,to).stationIds
   const {container}=render(<Game lineId="seoul-5" stations={stations} color="#996CAC" onExit={()=>{}} />)
+  expect(container.querySelector('.tracking-map')).toBeInTheDocument()
   const input=screen.getByRole('textbox')
-  stations.slice(0,answers).forEach(station=>{
-    fireEvent.change(input,{target:{value:station}})
-    fireEvent.keyDown(input,{key:'Enter',isComposing:false})
-  })
-  expect(container.querySelector('polyline[data-route]')).toHaveAttribute('data-geometry',key)
-  expect(container.querySelectorAll('.route-map text')).toHaveLength(Math.min(8,stations.length-7*(answers>0?1:0))-(answers>0?1:0)) // train hides the current station label once it appears
+  fireEvent.change(input,{target:{value:stations[0]}})
+  fireEvent.keyDown(input,{key:'Enter',isComposing:false})
+  expect(screen.getByRole('heading',{name:stations[1]})).toBeInTheDocument()
 })
 
 test('shows the final Korean typing speed on the result screen', () => {
@@ -241,4 +222,25 @@ test('shows the final Korean typing speed on the result screen', () => {
   fireEvent.keyDown(input,{key:'Enter',isComposing:false})
 
   expect(screen.getByRole('status',{name:'최종 타수 130 타/분'})).toBeInTheDocument()
+})
+
+test.each([
+  ['seoul-1','인천','연천'],
+  ['seoul-5','방화','마천'],
+  ['seoul-9','김포공항','중앙보훈병원'],
+  ['incheon-1','검단호수공원','송도달빛축제공원'],
+  ['yamanote','도쿄','신주쿠'],
+])('%s ordered play uses the tracking world and the platform sign',(lineId,from,to)=>{
+  const stations=getRoute(lineId,from,to).stationIds
+  const {container}=render(<Game lineId={lineId} stations={stations} color="#0052A4" onExit={()=>{}} />)
+  expect(container.querySelector('.tracking-map')).not.toBeNull()
+  expect(container.querySelector('.direction-panel[data-layout="balanced"]')).not.toBeNull()
+  expect(container.querySelector('.typing-field')).not.toBeNull()
+  expect(container.querySelector('.route-segment .train')).not.toBeNull()
+})
+
+test('ordered play shows a live play time that starts on the first jaso',()=>{
+  const stations=getRoute('seoul-4','진접','오이도').stationIds
+  const {container}=render(<Game lineId="seoul-4" stations={stations} color="#00A5DE" onExit={()=>{}} />)
+  expect(container.querySelector('.live-time')?.textContent).toContain('00:00.0')
 })

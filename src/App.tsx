@@ -48,7 +48,7 @@ export default function App() {
   if (playing && line) {
     const dateKey=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul'}).format(new Date())
     const route=mode==='random' ? dailyStations(line.id,dateKey,serviceId) : routeOverride??getRoute(line.id,from,to,line.loop?direction:'forward',serviceId).stationIds
-    return <main className="shell"><Game lineId={line.id} stations={route} color={line.color} sound={sound} durationSeconds={mode==='random'?60:undefined} showAllStations={mode==='route'} onExit={()=>{setPlaying(false);setRouteOverride(null)}} /></main>
+    return <main className="shell"><Game lineId={line.id} stations={route} color={line.color} sound={sound} durationSeconds={mode==='random'?60:undefined} onExit={()=>{setPlaying(false);setRouteOverride(null)}} /></main>
   }
   return (
     <main className="shell">
