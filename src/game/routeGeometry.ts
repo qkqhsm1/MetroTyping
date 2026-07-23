@@ -3,7 +3,7 @@ import { getLine } from '../data/lines'
 
 export type RouteGeometry={key:string;path:Point[];context?:Point[];directedClosure?:boolean;globalStart?:Point;globalEnd?:Point}
 
-const baseRoutes:Record<string,Point[]>={
+export const baseRoutes:Record<string,Point[]>={
   // 신도림(서쪽 끝)에서 위로 올라가 당산 부근에서 오른쪽으로 꺾이는 실제 지리 방향을 보존
   'seoul-2':[[70,255],[90,190],[450,35],[530,90],[530,210],[460,255]],
   'seoul-3':[[45,45],[180,45],[230,95],[230,205],[285,255],[455,255],[555,155]],
@@ -15,7 +15,7 @@ const baseRoutes:Record<string,Point[]>={
   yamanote:[[70,255],[90,190],[450,35],[530,90],[530,210],[460,255]],
 }
 
-const line1Legs:Point[][]=[
+export const line1Legs:Point[][]=[
   [[450,35],[410,90],[360,140],[300,180]], // Yeoncheon -> Guro
   [[300,180],[210,180],[125,220],[35,220]], // Guro -> Incheon
   [[300,180],[230,235],[160,325]], // Guro -> Sinchang
@@ -39,7 +39,7 @@ const line1Geometry=(stations:string[]):RouteGeometry=>{
 // public/assets/seoul-supported-lines.svg. They preserve recognizable bends,
 // endpoints, junction choice, and loop direction; they are schematic, not
 // geospatial coordinates. Named comments record the reference topology.
-const topologyRoutes:Record<string,Omit<RouteGeometry,'key'>>={
+export const topologyRoutes:Record<string,Omit<RouteGeometry,'key'>>={
   'seoul-4':{path:[[530,35],[430,35],[365,95],[365,180],[270,250],[70,250]]}, // 진접 → 오이도
   'seoul-5-trunk':{path:[[45,145],[145,145],[230,105],[360,105],[455,145],[555,145]]}, // 방화 → 강동
   'seoul-5-hanam':{path:[[45,145],[145,145],[230,105],[360,105],[430,65],[555,65]],context:[[360,105],[430,200],[555,250]]}, // 강동 → 길동 → 하남검단산; sibling 마천 branch
