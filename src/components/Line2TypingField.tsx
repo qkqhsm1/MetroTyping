@@ -8,11 +8,10 @@ export default function Line2TypingField({target,number,value,inputRef,onChange,
       <span className="line2-typing-number" aria-hidden="true">{number}</span>
       <div className="line2-typing-name">
         <div className="line2-typing-feedback" aria-hidden="true">
-          {targetCharacters.map((character,index)=>{
-            const entered=typed[index]
-            return <span className={entered===undefined?'remaining':entered===character?'correct':'wrong'} key={index}>{entered??character}</span>
-          })}
+          {targetCharacters.slice(0,typed.length).map((character,index)=><span className={typed[index]===character?'correct':'wrong'} key={index}>{typed[index]}</span>)}
           {typed.slice(targetCharacters.length).map((character,index)=><span className="wrong" key={`extra-${index}`}>{character}</span>)}
+          <span className="line2-typing-caret" />
+          {targetCharacters.slice(typed.length).map((character,index)=><span className="remaining" key={`remaining-${index}`}>{character}</span>)}
         </div>
       </div>
     </div>

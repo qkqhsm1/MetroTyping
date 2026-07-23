@@ -94,6 +94,7 @@ test('shows numbered previous, current, and next Line 2 stations in travel order
   const game=container.querySelector<HTMLElement>('.game')!,stableInteractionWidth=game.style.getPropertyValue('--line2-interaction-width')
   const firstTargetWidth=game.style.getPropertyValue('--line2-target-width')
   const panel=()=>container.querySelector('.line2-direction-panel')!
+  expect(panel()).toHaveAttribute('data-travel-side','next')
   expect(panel().querySelector('[data-position="previous"]')).toBeEmptyDOMElement()
   expect(panel().querySelector('[data-position="current"]')).toHaveTextContent('234신도림Sindorim')
   expect(panel().querySelector('[data-position="next"]')).toHaveTextContent('235문래Mullae')

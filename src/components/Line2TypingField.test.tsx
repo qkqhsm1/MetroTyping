@@ -26,3 +26,13 @@ test('shows remaining target, correct characters, an isolated typo, and extra in
   expect([...extra.container.querySelectorAll('.wrong')].map(node=>node.textContent).join('')).toBe('X')
   expect(screen.getByRole('textbox')).toHaveValue('구로디지털단지X')
 })
+
+test('places the visible caret immediately after the entered characters', () => {
+  const {container}=renderField('구로')
+  const feedback=container.querySelector('.line2-typing-feedback')!
+  const caret=feedback.querySelector('.line2-typing-caret')!
+
+  expect(caret).toBeTruthy()
+  expect(caret.previousElementSibling).toHaveClass('correct')
+  expect(caret.nextElementSibling).toHaveClass('remaining')
+})

@@ -32,6 +32,7 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### Done
 
+- Connected the Line 2 previous/current/next signs with a green route band, inverted the adjacent signs to green with white type/number rings, and placed a white arrow toward the next station. Replaced the misplaced transparent-input caret with a visible feedback-flow caret immediately after entered characters.
 - Completed the Line 2 station-sign input: the target number remains pale, typed matches become bold black, errors become red, and the decorative current/input shells morph to each station name while the centered native input surface stays fixed for rapid typing. The map halo now oscillates only along the local route normal, and mobile keeps partial previous/next cards visible.
 - Replaced the Line 2 station window with one persistent 43-station SVG world. Stations and train now share an official-path arc-length lookup; the camera adapts to local geometry and retargets rapid answers without remounting stations. Added stable single-line direction cards and a same-width native IME input with grey target, bold correct, and red incorrect character feedback.
 - Added the approved Line 2 direction panel and continuous tracker: previous/current/next stations show numbered circles, Korean and English labels; the current target dominates; the panel slides in travel order; the persistent SVG train and camera interpolate for 220 ms with the train leading slightly; rapid answers retarget from the rendered frame; reduced motion settles immediately.
@@ -94,7 +95,7 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### In progress
 
-- Implement the approved Line 2 platform-sign direction band and visible-feedback caret.
+- Final verification and deployment of the Line 2 platform-sign direction band and visible-feedback caret.
 
 ### Next
 
@@ -104,6 +105,7 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ## Verification
 
+- Line 2 platform-sign/caret update on 2026-07-23: RED tests reproduced the missing feedback-flow caret and absent travel-side marker; focused GREEN passed 19 component tests. `npm run check` passed ESLint, 145 client tests, 2 server tests, strict TypeScript, and the production build (`index-DPZ_c7IX.js`, `index-CYZt6uv6.css`). Chrome captures at 360, 768, and 1440 CSS pixels confirmed the connected green band, white next arrow, inverted adjacent signs, partial mobile side signs, and the caret between the black entered prefix and grey remaining suffix.
 - Line 2 station-sign/halo update on 2026-07-23: `npm run check` passed ESLint, 144 client tests, 2 server tests, strict TypeScript, and the production build (`index-DPB1ekck.js`, `index-D9R2GYso.css`). Real Chrome captures at 360, 768, and 1440 CSS pixels confirmed centered sign-shaped input, fixed interaction geometry, matching current/input decorative widths, partially visible adjacent cards on mobile, and route-normal halo displacement.
 - Line 2 continuous-world replacement on 2026-07-23: `npm run check` passed ESLint, 143 client tests, 2 server tests, strict TypeScript, and the production build. Focused tests assert 43 persistent station nodes, arc-length station spacing, forward/reverse unwrapping, bounded adaptive camera widths, intermediate motion and rapid retargeting, reduced motion, stable route-derived card width, Korean IME behavior, and grey/correct/wrong/extra typing states. Chrome captures at 360, 768, and 1440 CSS pixels covered the Sindaebang/Guro Digital Complex section and confirmed uninterrupted route context, one-line cards, and an isolated red `덜` in `구로디지덜단지`.
 - Line 2 direction/morphing update on 2026-07-23: `npm run check` passed ESLint, 140 client tests, 2 server tests, strict TypeScript, and the production build. Motion tests cover intermediate frames, rapid retargeting, persistent SVG identity, final camera settlement, and reduced motion. Real Chrome captures at 360, 768, and 1440 CSS pixels confirmed a readable numbered previous/current/next panel without horizontal overflow.
@@ -186,6 +188,7 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ## Mistakes
 
+- 2026-07-23 | The native caret crossed the middle of the visible station name instead of following the entered prefix | The transparent native input centered its own invisible text independently from the separately centered feedback layer | Hid the native caret and rendered one caret inside the feedback character flow between entered and remaining runs | When input text is visually mirrored, the visible caret must belong to the same layout flow as the mirrored glyphs.
 - 2026-07-23 | The first 360px station-sign capture reduced previous/next cards to arrow slivers, and the halo disappeared under the train | Desktop-sized side columns and a 14px halo offset left too little visible separation at mobile scale | Reduced only the mobile interaction width and side columns together, then increased the route-normal halo excursion and re-captured the real game | Responsive direction QA must verify that adjacent station identity and animated indicators remain perceptible, not merely that the center card fits.
 - 2026-07-23 | Final 360px QA showed the current direction card much narrower than its paired typing field | The mobile panel retained a three-equal-column grid even after desktop adopted a stable route-derived centre width | Centre the full-width current card and expose only partial previous/next cards on mobile | When two controls are specified as a visual pair, responsive QA must compare their rendered outer bounds, not merely confirm each fits independently.
 - 2026-07-23 | Line 2 labels overlapped near Sindaebang, sparse sections showed too few stations, station windows disappeared abruptly, and long direction-card names wrapped | Kept a fixed previous/current/next-two SVG window, placed stations by cubic parameter rather than measured path length, and used fixed card widths | Replace the window with one persistent 43-station SVG world, path-length placement, adaptive camera density, collision-aware labels, and single-line content-sized cards | Never simulate continuous map travel by swapping station subsets; persistent world elements and one shared path-length coordinate are required.
