@@ -32,6 +32,8 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### Done
 
+- Added the Seoul Line 2-only official-vector tracking prototype: the target station is camera-centred, a correct answer immediately snaps the train/camera to the next target, context is previous one/current/next two, all 43 stations have English names and numbers, and gameplay time runs from first typed character through arrival.
+
 - Completed the approved randomized gameplay-route plan: each Game instance derives a stable seed, each seven-step/eight-station window gets a different non-self-intersecting path, labels select non-overlapping in-bounds positions in a 600×360 viewBox, and Line 1 composes explicit Yeoncheon, Incheon, and Sinchang legs at Guro.
 - Added stable per-eight-station route shape seeds: typing within a segment preserves its SVG path, while moving to the next segment generates a new deterministic non-self-intersecting path.
 - Expanded gameplay route SVGs to a 600×360 safe area and pushes labels away from top/bottom route points, keeping every label inside the viewBox with at least 30 SVG units of route clearance.
@@ -89,15 +91,17 @@ Build a polished Korean subway typing game with Seoul Lines 1–9 plus the exist
 
 ### In progress
 
-- Design and implement a Line 2-only official-vector tracking map: target-centred camera, four-station context, English names, station numbers, and elapsed gameplay time.
+- Verify and deploy the completed Line 2-only official-vector tracking prototype.
 
 ### Next
 
-- Implement the approved Line 2 tracking-map design, review it in production, then decide whether to extend it to other lines.
+- Review the Line 2 tracking prototype in production, then decide whether to extend it to other lines.
 - Connect the leaderboard read model to the UI after a Firebase project/config is supplied.
 - Re-run official station-order verification before freezing production data.
 
 ## Verification
+
+- Line 2 tracking prototype on 2026-07-23: focused Vitest coverage passed metadata, four-station context, immediate Sindorim-to-Mullae camera advance, and first-input-to-arrival timing. `npm run check` passed ESLint, 137 client tests, 2 server tests, strict TypeScript, and the production build. Real SVG captures at 360, 768, and 1440 CSS pixels confirmed centred tracking and readable Korean/English/number labels.
 
 - Official-orientation gate on 2026-07-23: RED reproduced eight reversed/equal-direction cases in Line 1, Line 4, Line 7, Suin–Bundang, and AREX; GREEN passed 60 focused RouteMap/random-route tests. Headless Chrome captures of the real SVG at 360, 768, and 1440 CSS pixels confirmed Oido and Seoknam start left, Handae-ap→Incheon starts right and moves left, Gajaeul→Geomdan Oryu moves upward, and seeded bends remain varied. Final `npm run check` passed ESLint, 133 client tests, 2 server tests, strict TypeScript, and the Vite build (`index-BFo-p2js.js`).
 - Gameplay map-readability pass on 2026-07-23 shipped six commits, each gated by `npm run check` (ESLint, client tests, 2 server tests, strict TypeScript, Vite production build) and each deployed by a successful GitHub Pages run whose bundle hash was confirmed live on `https://qkqhsm1.github.io/MetroTyping/`:

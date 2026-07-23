@@ -79,6 +79,28 @@ test('asks for the departure station first, then advances to the next station', 
   expect(document.querySelector('[data-target="true"]')?.textContent).toContain('문래')
 })
 
+test('moves the Line 2 tracking camera to Mullae immediately after Sindorim is correct', () => {
+  const { container }=render(<Game lineId="seoul-2" stations={['신도림','문래','영등포구청','당산']} color="#00A84D" onExit={()=>{}} />)
+  const input=screen.getByRole('textbox')
+  expect(container.querySelector('.line2-tracking-map')).toHaveAttribute('data-camera-station','신도림')
+  fireEvent.change(input,{target:{value:'신도림'}})
+  fireEvent.keyDown(input,{key:'Enter',isComposing:false})
+  expect(container.querySelector('.line2-tracking-map')).toHaveAttribute('data-camera-station','문래')
+  expect(screen.getByRole('heading',{name:'문래'})).toBeInTheDocument()
+})
+
+test('measures Line 2 gameplay time from the first typed character through arrival', () => {
+  vi.useFakeTimers()
+  render(<Game lineId="seoul-2" stations={['신도림','문래']} color="#00A84D" onExit={()=>{}} />)
+  const input=screen.getByRole('textbox')
+  fireEvent.change(input,{target:{value:'신도림'}})
+  fireEvent.keyDown(input,{key:'Enter',isComposing:false})
+  act(()=>vi.advanceTimersByTime(1_230))
+  fireEvent.change(input,{target:{value:'문래'}})
+  fireEvent.keyDown(input,{key:'Enter',isComposing:false})
+  expect(screen.getByText('00:01.2')).toBeInTheDocument()
+})
+
 test('reveals the train after departure without blocking the next answer', () => {
   vi.useFakeTimers()
   const { container,unmount }=render(<Game stations={['신도림','문래','영등포구청']} color="#00A84D" onExit={() => {}} />)
