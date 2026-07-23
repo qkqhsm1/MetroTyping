@@ -1,7 +1,8 @@
 import { useEffect, useId, useRef, useState, type ChangeEvent,type KeyboardEvent } from 'react'
 import RouteMap from './RouteMap'
 import TrackingMap from './TrackingMap'
-import Line2TypingField from './Line2TypingField'
+import StationTypingField from './StationTypingField'
+import DirectionSign from './DirectionSign'
 import { YAMANOTE_LABELS } from '../data/lines'
 import { stationInfo } from '../data/stationInfo'
 import { playSound } from '../audio/sounds'
@@ -17,10 +18,6 @@ const formatElapsed=(milliseconds:number)=>{
   const tenths=Math.floor(milliseconds/100),minutes=Math.floor(tenths/600),seconds=Math.floor(tenths/10)%60
   return `${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}.${tenths%10}`
 }
-function Line2DirectionStation({name,position}:{name?:string;position:'previous'|'current'|'next'}) {
-  const station=name?stationInfo('seoul-2',name):undefined
-  return <div className="line2-direction-station" data-position={position}>{station&&<><span className="line2-direction-number">{station.number}</span><span className="line2-direction-names"><b data-long={station.korean.length>6||undefined} role="heading" aria-level={position==='current'?1:2}>{station.korean}</b><small data-long={station.english.length>20||undefined}>{station.english}</small></span></>}</div>
-}
 
 export default function Game({ lineId,stations,color,sound=true,durationSeconds,showAllStations=true,onExit }:{ lineId?:string; stations:string[]; color:string; sound?:boolean; durationSeconds?:number; showAllStations?:boolean; onExit:()=>void }) {
   const [index,setIndex]=useState(0), [value,setValue]=useState(''), [errors,setErrors]=useState(0)
@@ -30,7 +27,7 @@ export default function Game({ lineId,stations,color,sound=true,durationSeconds,
   const [now,setNow]=useState(Date.now)
   const [trainVisible,setTrainVisible]=useState(false), [trainEntering,setTrainEntering]=useState(false)
   const timed=durationSeconds!==undefined
-  const line2Tracking=lineId==='seoul-2'&&!timed
+  const trackingRun=lineId==='seoul-2'&&!timed
   const input=useRef<HTMLInputElement>(null), entranceTimer=useRef<number|undefined>(undefined), finished=remaining===0||(!timed&&index>=stations.length)
   const runSeed=[...useId()].reduce((seed,character)=>Math.imul(seed,31)+character.charCodeAt(0)|0,0)
   useEffect(()=>()=>window.clearTimeout(entranceTimer.current),[])
@@ -42,9 +39,9 @@ export default function Game({ lineId,stations,color,sound=true,durationSeconds,
   },[remaining])
   useEffect(()=>{
     if(finished||startedAt===undefined)return
-    const timer=window.setInterval(()=>setNow(Date.now()),line2Tracking?100:1000)
+    const timer=window.setInterval(()=>setNow(Date.now()),trackingRun?100:1000)
     return()=>window.clearInterval(timer)
-  },[finished,line2Tracking,startedAt])
+  },[finished,trackingRun,startedAt])
   const submit=(event:KeyboardEvent<HTMLInputElement>)=>{
     if(event.key!=='Enter'||event.nativeEvent.isComposing) return
     if(value.normalize('NFC').trim()===stations[index%stations.length]){const timestamp=Date.now();playSound(!timed&&index===stations.length-1?'complete':'correct',sound);setValue('');if(!timed&&index===stations.length-1)setCompletedAt(timestamp);setNow(timestamp);setIndex(current=>current+1);if(!timed&&index===0){setTrainVisible(true);setTrainEntering(true);entranceTimer.current=window.setTimeout(()=>setTrainEntering(false),260)}}else{playSound('error',sound);setErrors(current=>current+1)}
@@ -57,7 +54,7 @@ export default function Game({ lineId,stations,color,sound=true,durationSeconds,
   const elapsed=startedAt===undefined?0:(now-startedAt)/60000
   const elapsedMilliseconds=startedAt===undefined?0:(completedAt??now)-startedAt
   const speed=elapsed<=0?0:Math.round(typedJaso/elapsed)
-  if(finished&&line2Tracking) return <section className="result" style={{'--line':color} as React.CSSProperties}><p className="eyebrow">ARRIVED · SEOUL LINE 2</p><h1>운행 완료</h1><div className="line2-final-time"><span>총 플레이 시간</span><b>{formatElapsed(elapsedMilliseconds)}</b></div><div className="final-speed" role="status" aria-label={`최종 타수 ${speed} 타/분`}><span>최종 타수</span><b>{speed}</b><small>타/분</small></div><p>오타 {errors}회 · {index}개 역 통과</p><button className="primary" onClick={onExit}>다른 노선 운행</button></section>
+  if(finished&&trackingRun) return <section className="result" style={{'--line':color} as React.CSSProperties}><p className="eyebrow">ARRIVED · SEOUL LINE 2</p><h1>운행 완료</h1><div className="final-time"><span>총 플레이 시간</span><b>{formatElapsed(elapsedMilliseconds)}</b></div><div className="final-speed" role="status" aria-label={`최종 타수 ${speed} 타/분`}><span>최종 타수</span><b>{speed}</b><small>타/분</small></div><p>오타 {errors}회 · {index}개 역 통과</p><button className="primary" onClick={onExit}>다른 노선 운행</button></section>
   if(finished) return <section className="result" style={{'--line':color} as React.CSSProperties}><p className="eyebrow">{timed?'TIME UP':'ARRIVED'}</p><h1>{timed?'랜덤 도전 완료':'운행 완료'}</h1><div className="final-speed" role="status" aria-label={`최종 타수 ${speed} 타/분`}><span>최종 타수</span><b>{speed}</b><small>타/분</small></div><p>오타 {errors}회 · {index}개 역 통과</p><button className="primary" onClick={onExit}>다른 노선 운행</button></section>
   const target=stations[index%stations.length]!
   const completedIndex=Math.max(0,index-1)
@@ -69,14 +66,13 @@ export default function Game({ lineId,stations,color,sound=true,durationSeconds,
   const normalizedValue=value.normalize('NFC')
   const correctPrefix=Array.from(target).findIndex((character,position)=>normalizedValue[position]!==character)
   const matched=correctPrefix===-1?Math.min(normalizedValue.length,target.length):correctPrefix
-  const line2Direction=line2Tracking?{previous:stations[index-1],current:stations[index],next:stations[index+1]}:undefined
-  const line2Width=(name:string)=>Math.max(270,Math.min(680,170+name.length*50))
-  const line2InteractionWidth=line2Tracking?Math.max(...stations.map(line2Width)):0,line2TargetWidth=line2Tracking?line2Width(target):0
-  const gameStyle={'--line':color,'--line2-interaction-width':`${line2InteractionWidth}px`,'--line2-target-width':`${line2TargetWidth}px`} as React.CSSProperties
+  const signWidth=(name:string)=>Math.max(270,Math.min(680,170+name.length*50))
+  const interactionWidth=trackingRun?Math.max(...stations.map(signWidth)):0,targetWidth=trackingRun?signWidth(target):0
+  const gameStyle={'--line':color,'--sign-interaction-width':`${interactionWidth}px`,'--sign-target-width':`${targetWidth}px`} as React.CSSProperties
   return <section className="game" style={gameStyle}>
-    <div className="game-top"><button className="back" onClick={onExit}>← 운행 종료</button><div className="game-metrics">{line2Tracking&&<div className="line2-live-time"><span>PLAY TIME</span><b>{formatElapsed(elapsedMilliseconds)}</b></div>}<div className="speed-meter" role="status" aria-label={`실시간 타수 ${speed} 타/분`}><span>실시간 타수</span><b>{speed}</b><small>타/분</small></div><div className="route-progress">{timed?<><b>{remaining}초</b> · {index}개</>:<><b>{index+1}</b> / {stations.length}</>}</div></div></div>
-    {timed?<div className="random-stage"><span>RANDOM STATION · 60 SEC</span><b>노선 전체에서 무작위 출제</b><small>종착역 없이 제한 시간 동안 계속됩니다.</small></div>:<div className="map-stage route-segment" key={line2Tracking?'line-2':segmentStart}>{line2Tracking?<TrackingMap lineId={lineId??'seoul-2'} stations={stations} targetIndex={index} color={color} />:<RouteMap lineId={lineId ?? 'seoul-2'} stations={visibleStations} geometryStations={stations} routeStationCount={stations.length} segmentStart={segmentStart} shapeSeed={shapeSeed} color={color} progress={(completedIndex-segmentStart)/Math.max(1,visibleStations.length-1)} targetIndex={index-segmentStart} showAllLabels={showAllStations} trainVisible={trainVisible} trainEntering={trainEntering} />}<div className="current-station" role="status">{line2Tracking?`다음 ${target}`:index===0?`출발 준비 · ${target}`:`현재 ${currentStation}`}</div></div>}
-    {line2Direction?<div className="target line2-direction-wrap"><p className="eyebrow">TRAVEL DIRECTION · 진행 방향</p><div className="line2-direction-panel" data-travel-side="next" data-layout="balanced" key={index} aria-label={`현재 입력 역 ${target}`} aria-live="polite"><Line2DirectionStation name={line2Direction.previous} position="previous" /><Line2DirectionStation name={line2Direction.current} position="current" /><Line2DirectionStation name={line2Direction.next} position="next" /></div></div>:<div className="target"><p className="eyebrow">TYPE STATION · 역명 입력</p>{japanese&&<p className="japanese"><b>{japanese.kanji}</b><span>{japanese.kana}</span></p>}<h1 data-long={target.length>6} aria-label={target}>{Array.from(target).map((character,position)=><span className={position<matched?'matched':normalizedValue[position]&&normalizedValue[position]!==character?'miss':''} key={`${index}-${position}`}>{character}</span>)}</h1></div>}
-    {line2Tracking?<Line2TypingField target={target} number={stationInfo('seoul-2',target).number} value={value} errorAttempt={errors} inputRef={input} onChange={changeInput} onKeyDown={submit} />:<input ref={input} value={value} onChange={changeInput} onKeyDown={submit} placeholder="역명을 입력하고 Enter" aria-label="역명 입력" autoComplete="off" />}
+    <div className="game-top"><button className="back" onClick={onExit}>← 운행 종료</button><div className="game-metrics">{trackingRun&&<div className="live-time"><span>PLAY TIME</span><b>{formatElapsed(elapsedMilliseconds)}</b></div>}<div className="speed-meter" role="status" aria-label={`실시간 타수 ${speed} 타/분`}><span>실시간 타수</span><b>{speed}</b><small>타/분</small></div><div className="route-progress">{timed?<><b>{remaining}초</b> · {index}개</>:<><b>{index+1}</b> / {stations.length}</>}</div></div></div>
+    {timed?<div className="random-stage"><span>RANDOM STATION · 60 SEC</span><b>노선 전체에서 무작위 출제</b><small>종착역 없이 제한 시간 동안 계속됩니다.</small></div>:<div className="map-stage route-segment" key={trackingRun?'line-2':segmentStart}>{trackingRun?<TrackingMap lineId={lineId??'seoul-2'} stations={stations} targetIndex={index} color={color} />:<RouteMap lineId={lineId ?? 'seoul-2'} stations={visibleStations} geometryStations={stations} routeStationCount={stations.length} segmentStart={segmentStart} shapeSeed={shapeSeed} color={color} progress={(completedIndex-segmentStart)/Math.max(1,visibleStations.length-1)} targetIndex={index-segmentStart} showAllLabels={showAllStations} trainVisible={trainVisible} trainEntering={trainEntering} />}<div className="current-station" role="status">{trackingRun?`다음 ${target}`:index===0?`출발 준비 · ${target}`:`현재 ${currentStation}`}</div></div>}
+    {trackingRun?<DirectionSign lineId={lineId??'seoul-2'} previous={stations[index-1]} current={target} next={stations[index+1]} />:<div className="target"><p className="eyebrow">TYPE STATION · 역명 입력</p>{japanese&&<p className="japanese"><b>{japanese.kanji}</b><span>{japanese.kana}</span></p>}<h1 data-long={target.length>6} aria-label={target}>{Array.from(target).map((character,position)=><span className={position<matched?'matched':normalizedValue[position]&&normalizedValue[position]!==character?'miss':''} key={`${index}-${position}`}>{character}</span>)}</h1></div>}
+    {trackingRun?<StationTypingField target={target} number={stationInfo('seoul-2',target).number} value={value} errorAttempt={errors} inputRef={input} onChange={changeInput} onKeyDown={submit} />:<input ref={input} value={value} onChange={changeInput} onKeyDown={submit} placeholder="역명을 입력하고 Enter" aria-label="역명 입력" autoComplete="off" />}
   </section>
 }

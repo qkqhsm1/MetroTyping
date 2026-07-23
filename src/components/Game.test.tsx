@@ -43,12 +43,12 @@ test('restarts the Line 2 sign shake on every incorrect Enter without replacing 
   fireEvent.change(input,{target:{value:'신도림X'}})
 
   fireEvent.keyDown(input,{key:'Enter',isComposing:false})
-  expect(container.querySelector('.line2-typing-visual')).toHaveAttribute('data-error-attempt','1')
+  expect(container.querySelector('.typing-visual')).toHaveAttribute('data-error-attempt','1')
   expect(screen.getByRole('textbox')).toBe(input)
   expect(input).toHaveValue('신도림X')
 
   fireEvent.keyDown(input,{key:'Enter',isComposing:false})
-  expect(container.querySelector('.line2-typing-visual')).toHaveAttribute('data-error-attempt','2')
+  expect(container.querySelector('.typing-visual')).toHaveAttribute('data-error-attempt','2')
   expect(screen.getByRole('textbox')).toBe(input)
   expect(input).toHaveValue('신도림X')
 })
@@ -107,9 +107,9 @@ test('moves the Line 2 tracking camera to Mullae immediately after Sindorim is c
 
 test('shows numbered previous, current, and next Line 2 stations in travel order', () => {
   const { container }=render(<Game lineId="seoul-2" stations={['신도림','문래','영등포구청']} color="#00A84D" onExit={()=>{}} />)
-  const game=container.querySelector<HTMLElement>('.game')!,stableInteractionWidth=game.style.getPropertyValue('--line2-interaction-width')
-  const firstTargetWidth=game.style.getPropertyValue('--line2-target-width')
-  const panel=()=>container.querySelector('.line2-direction-panel')!
+  const game=container.querySelector<HTMLElement>('.game')!,stableInteractionWidth=game.style.getPropertyValue('--sign-interaction-width')
+  const firstTargetWidth=game.style.getPropertyValue('--sign-target-width')
+  const panel=()=>container.querySelector('.direction-panel')!
   expect(panel()).toHaveAttribute('data-travel-side','next')
   expect(panel()).toHaveAttribute('data-layout','balanced')
   expect(panel().querySelector('[data-position="previous"]')).toBeEmptyDOMElement()
@@ -123,17 +123,17 @@ test('shows numbered previous, current, and next Line 2 stations in travel order
   expect(panel().querySelector('[data-position="previous"]')).toHaveTextContent('234신도림Sindorim')
   expect(panel().querySelector('[data-position="current"]')).toHaveTextContent('235문래Mullae')
   expect(panel().querySelector('[data-position="next"]')).toHaveTextContent('236영등포구청Yeongdeungpo-gu Office')
-  expect(container.querySelector('.line2-typing-field')).toBeInTheDocument()
+  expect(container.querySelector('.typing-field')).toBeInTheDocument()
   fireEvent.change(input,{target:{value:'문래'}})
   fireEvent.keyDown(input,{key:'Enter',isComposing:false})
-  expect(game.style.getPropertyValue('--line2-interaction-width')).toBe(stableInteractionWidth)
-  expect(game.style.getPropertyValue('--line2-target-width')).not.toBe(firstTargetWidth)
+  expect(game.style.getPropertyValue('--sign-interaction-width')).toBe(stableInteractionWidth)
+  expect(game.style.getPropertyValue('--sign-target-width')).not.toBe(firstTargetWidth)
 })
 
 test('sizes a two-character Line 2 sign from its Korean name, not its long English name', () => {
   const {container}=render(<Game lineId="seoul-2" stations={['교대','서초']} color="#00A84D" onExit={()=>{}} />)
 
-  expect(container.querySelector<HTMLElement>('.game')!.style.getPropertyValue('--line2-target-width')).toBe('270px')
+  expect(container.querySelector<HTMLElement>('.game')!.style.getPropertyValue('--sign-target-width')).toBe('270px')
   expect(container.querySelector('[data-position="current"] small')).toHaveAttribute('data-long','true')
 })
 

@@ -1,14 +1,14 @@
 import { render,screen } from '@testing-library/react'
 import { createRef } from 'react'
 import { expect,test,vi } from 'vitest'
-import Line2TypingField from './Line2TypingField'
+import StationTypingField from './StationTypingField'
 
-const renderField=(value:string)=>render(<Line2TypingField target="구로디지털단지" number="232" value={value} errorAttempt={0} inputRef={createRef<HTMLInputElement>()} onChange={vi.fn()} onKeyDown={vi.fn()} />)
+const renderField=(value:string)=>render(<StationTypingField target="구로디지털단지" number="232" value={value} errorAttempt={0} inputRef={createRef<HTMLInputElement>()} onChange={vi.fn()} onKeyDown={vi.fn()} />)
 
 test('shows remaining target, correct characters, an isolated typo, and extra input distinctly', () => {
   const empty=renderField('')
-  expect(empty.container.querySelector('.line2-typing-number')).toHaveTextContent('232')
-  expect(empty.container.querySelector('.line2-typing-number')).not.toHaveClass('remaining','correct','wrong')
+  expect(empty.container.querySelector('.typing-number')).toHaveTextContent('232')
+  expect(empty.container.querySelector('.typing-number')).not.toHaveClass('remaining','correct','wrong')
   expect(empty.container.querySelectorAll('.remaining')).toHaveLength(7)
   empty.unmount()
 
@@ -29,8 +29,8 @@ test('shows remaining target, correct characters, an isolated typo, and extra in
 
 test('places the visible caret immediately after the entered characters', () => {
   const {container}=renderField('구로')
-  const feedback=container.querySelector('.line2-typing-feedback')!
-  const caret=feedback.querySelector('.line2-typing-caret')!
+  const feedback=container.querySelector('.typing-feedback')!
+  const caret=feedback.querySelector('.typing-caret')!
 
   expect(feedback).toHaveAttribute('data-motion','input-only')
   expect(caret).toBeTruthy()
