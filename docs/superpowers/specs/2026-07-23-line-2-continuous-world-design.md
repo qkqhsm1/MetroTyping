@@ -28,11 +28,11 @@ The current-target halo moves back and forth through the station centre only alo
 
 ## Direction panel
 
-Keep the previous/current/next direction panel. At game start, measure the longest Korean and English station names in the selected route and choose one bounded centre-card width. Keep that outer width unchanged through arrival so target changes never make the layout pulse.
+Keep the previous/current/next direction panel. Measure a bounded visual width for each station from its Korean and English names. Morph the current card's decorative shell from its rendered width to the newest station width during the same 320–520 ms travel transition.
 
 - Korean and English station names always remain on one line.
-- Long stations such as `동대문역사문화공원` determine the stable centre-card width.
-- Shorter names stay centred in the same card.
+- Long stations such as `동대문역사문화공원` receive a wider shell.
+- Shorter names receive a narrower shell while remaining on the same fixed centre axis.
 - When viewport width is insufficient, clamp the card to available width and reduce text size within readable limits.
 - Station-number circles retain a fixed circular shape.
 - On mobile, keep the current card centred and allow partial previous/next cards to indicate continuation instead of wrapping names.
@@ -40,7 +40,9 @@ Keep the previous/current/next direction panel. At game start, measure the longe
 
 ## Typing field
 
-Place the typing field directly below the current station card and give it the same stable outer width and rounded station-sign shell. Repeat the current station's number inside a fixed pale-grey outlined circle so the typing surface visibly matches the card above. Centre the combined number/name group inside the shell.
+Place the typing field directly below the current station card. Its rounded decorative shell morphs to the same per-station target width as the card above. Repeat the current station's number inside a fixed pale-grey outlined circle so the typing surface visibly matches the card above.
+
+Keep the actual native input, caret, feedback text, and combined number/name centre anchored inside one route-maximum interaction surface. Shell width changes must not move the caret, text baseline, focus box, or hit area. Animate only the decorative shells from their current rendered width to the latest target width; rapid answers retarget without queueing or blocking input.
 
 Keep the native input as the focus, selection, keyboard, and Korean IME owner. Render a pointer-inert visual text layer aligned with the input:
 
@@ -62,7 +64,7 @@ Do not submit while IME composition is active. The visual layer may reflect the 
 - Assert dense and sparse sections choose different bounded camera widths.
 - Assert a rapid second answer retargets from an intermediate frame.
 - Assert long Korean and English names render as single-line content.
-- Assert the centre card and typing field keep the same route-derived width across short and long targets.
+- Assert the centre card and typing shell share each station's target width while the native input, caret surface, and text centre retain the same route-maximum bounds across targets.
 - Assert empty, correct-prefix, isolated-wrong-character, remaining-target, and extra-character visual states.
 - Assert Korean IME composition still blocks Enter submission.
 - Assert the typing sign includes the current station number while only name characters receive answer-state colours.

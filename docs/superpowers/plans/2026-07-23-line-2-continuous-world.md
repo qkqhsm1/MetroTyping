@@ -205,3 +205,7 @@ Use `line2PointAt` angle to compute `normalX=-sin(angle)` and `normalY=cos(angle
 - [ ] **Step 6: Verify, inspect, and deploy**
 
 Run `npm run check`, inspect 360/768/1440 real-game captures, update `MDs/Workflow.md`, commit scoped files, push `main`, and verify the Pages run plus live JavaScript/CSS selectors.
+
+- [ ] **Step 7: Decouple per-station shell morphing from input geometry**
+
+Compute `line2TargetWidth` from the current Korean/English labels and `line2InteractionWidth` from the route maximum. Keep the direction centre axis and native input surface at `line2InteractionWidth`; render separate `.line2-card-shell` and `.line2-typing-shell` decorations at `line2TargetWidth`. Transition their width over the travel interval and let rapid target changes retarget CSS from the rendered width. Test that short/long targets change shell widths while input outer bounds and text centre remain identical.
