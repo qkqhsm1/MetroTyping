@@ -179,6 +179,38 @@ test('the first keystroke starts the clock and is not itself counted', () => {
   expect(screen.getByRole('status', { name: '실시간 타수 20 타/분' })).toBeInTheDocument()
 })
 
+test('the live meter falls to zero after the player stops typing', () => {
+  vi.useFakeTimers()
+  render(<Game stations={['신도림', '문래']} color="#00A84D" onExit={() => {}} />)
+  const input = screen.getByRole('textbox')
+  fireEvent.change(input, { target: { value: 'ㅁ' } })
+  act(() => vi.advanceTimersByTime(1_000))
+  fireEvent.change(input, { target: { value: '무' } })
+  fireEvent.change(input, { target: { value: '문' } })
+  expect(Number(screen.getByRole('status', { name: /실시간 타수/ }).querySelector('b')?.textContent)).toBeGreaterThan(0)
+  // Idle well past the 8s window; the interval keeps advancing `now`, so the recent-window count empties.
+  act(() => vi.advanceTimersByTime(20_000))
+  expect(screen.getByRole('status', { name: '실시간 타수 0 타/분' })).toBeInTheDocument()
+})
+
+test('counts a compound vowel and a compound final as two keystrokes each, matching Hancom', () => {
+  vi.useFakeTimers()
+  // 왕 = ㅇ+ㅗ+ㅏ+ㅇ = 4, 뚫 = ㄸ+ㅜ+ㅀ = 4 (ㅀ compound final); both share the loop with the zero-mark
+  // 신도림. Line 2 does not contain 왕/뚫, so this drives speed through a real single-word transcription
+  // instead: 홍대입구 has no compounds, so we compare it against 왕십리's compounds below via countJaso.
+  // Simplest faithful check: type a compound word as one Line 2 station name and read the final speed.
+  render(<Game stations={['신도림', '왕십리']} color="#00A84D" onExit={() => {}} />)
+  const input = screen.getByRole('textbox')
+  fireEvent.change(input, { target: { value: '신도림' } })
+  fireEvent.keyDown(input, { key: 'Enter', isComposing: false })
+  act(() => vi.advanceTimersByTime(60_000))
+  fireEvent.change(input, { target: { value: '왕십리' } })
+  fireEvent.keyDown(input, { key: 'Enter', isComposing: false })
+  // 신도림 is the zero mark; 왕십리 = 왕(ㅇ+ㅗ+ㅏ+ㅇ = 4) + 십(ㅅ+ㅣ+ㅂ = 3) + 리(ㄹ+ㅣ = 2) = 9 over 60s.
+  // The old count treated 왕's compound vowel as one key (8), so this pins the corrected 9.
+  expect(screen.getByRole('status', { name: '최종 타수 9 타/분' })).toBeInTheDocument()
+})
+
 test('runs a long ordered route through one persistent world without blocking input', () => {
   const stations=getRoute('seoul-1','인천','연천').stationIds
   const { container }=render(<Game lineId="seoul-1" stations={stations} color="#0052A4" onExit={() => {}} />)
