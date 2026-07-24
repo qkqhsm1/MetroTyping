@@ -96,7 +96,9 @@ export function getLineWorld(lineId:string,stations:string[]):LineWorld{
     if(delta<-total/2)delta+=total
     return [...result,result[index-1]!+delta]
   },[])
-  const offset=topology.sequence.indexOf(stations[0]!)
+  // The offset is the seat where the whole run matches, not merely where its first name appears: a
+  // closed one-way loop names its junction twice.
+  const offset=Math.max(0,topology.sequence.findIndex((name,start)=>name===stations[0]&&stations.every((station,index)=>topology.sequence[start+index]===station)))
   const stationDistances=topology.loop?unwrapped(stations):stations.map((_,index)=>(offset+index)*STATION_SPACING)
   const backwards=stationDistances.length>1&&stationDistances[1]!<stationDistances[0]!
 

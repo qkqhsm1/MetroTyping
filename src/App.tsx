@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { LINES } from './data/lines'
 import { dailyStations, getQuickRoutePairs, getRoute, getStations, type QuickRoute } from './game/routes'
+import { getLineWorld } from './game/lineWorld'
 import Game from './components/Game'
 import MapExplorer from './components/MapExplorer'
 import ProfilePanel from './components/ProfilePanel'
@@ -38,7 +39,10 @@ export default function App() {
   const tryStartRoute=()=>{
     try {
       setRouteOverride(null)
-      getRoute(line!.id,from,to,line!.loop?direction:'forward',serviceId)
+      // The world is built here too, so a pair the router can reach but the map cannot draw — riding
+      // the one-way Eungam loop out onto the Line 6 trunk — reports the setup error instead of
+      // throwing during render, where there is no boundary to catch it.
+      getLineWorld(line!.id,getRoute(line!.id,from,to,line!.loop?direction:'forward',serviceId).stationIds)
       setSetupError('')
       setPlaying(true)
     } catch {

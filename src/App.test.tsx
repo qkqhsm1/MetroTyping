@@ -155,3 +155,29 @@ test('keeps setup usable when custom route calculation fails', () => {
   expect(screen.getByRole('combobox', { name: '출발역' })).toBeInTheDocument()
   failure.mockRestore()
 })
+
+test('refuses a Line 6 trip that rides the Eungam loop out onto the trunk instead of crashing', () => {
+  render(<App />)
+  fireEvent.click(screen.getByRole('button', { name: '서울 6호선 선택' }))
+  fireEvent.click(screen.getByRole('combobox', { name: '출발역' }))
+  fireEvent.click(screen.getByRole('option', { name: '구산' }))
+  fireEvent.click(screen.getByRole('combobox', { name: '도착역' }))
+  fireEvent.click(screen.getByRole('option', { name: '신내' }))
+  fireEvent.click(screen.getByRole('button', { name: '운행 시작 →' }))
+
+  expect(screen.getByRole('alert')).toHaveTextContent('선택한 구간을 운행할 수 없습니다.')
+  expect(screen.getByRole('heading', { name: '서울 6호선' })).toBeInTheDocument()
+})
+
+test('starts a Line 6 trip that closes the Eungam loop back onto 응암', () => {
+  render(<App />)
+  fireEvent.click(screen.getByRole('button', { name: '서울 6호선 선택' }))
+  fireEvent.click(screen.getByRole('combobox', { name: '출발역' }))
+  fireEvent.click(screen.getByRole('option', { name: '구산' }))
+  fireEvent.click(screen.getByRole('combobox', { name: '도착역' }))
+  fireEvent.click(screen.getByRole('option', { name: '응암' }))
+  fireEvent.click(screen.getByRole('button', { name: '운행 시작 →' }))
+
+  expect(screen.queryByRole('alert')).toBeNull()
+  expect(screen.getByRole('heading', { name: '구산' })).toBeInTheDocument()
+})

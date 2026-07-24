@@ -36,10 +36,16 @@ function candidatesFor(lineId:string):Candidate[]{
       {key:'seoul-5-trunk',sequence:trunk,path:topologyRoutes['seoul-5-trunk']!.path},
     ]
   }
-  if(lineId==='seoul-6')return [
-    {key:'seoul-6-loop',sequence:line.oneWaySequences![0]!.slice(0,-1),path:topologyRoutes['seoul-6-loop']!.path},
-    {key:'seoul-6-trunk',sequence:line.sequences[0]!,path:topologyRoutes['seoul-6-trunk']!.path},
-  ]
+  if(lineId==='seoul-6'){
+    // The Eungam loop is one-way and closes back onto 응암, so its world carries 응암 at both ends and
+    // its ring is closed. Without the closing edge a legitimate trip such as 구산 → 응암 resolves to
+    // nothing at all.
+    const loop=line.oneWaySequences![0]!,ring=topologyRoutes['seoul-6-loop']!.path
+    return [
+      {key:'seoul-6-loop',sequence:loop,path:[...ring,ring[0]!]},
+      {key:'seoul-6-trunk',sequence:line.sequences[0]!,path:topologyRoutes['seoul-6-trunk']!.path},
+    ]
+  }
   if(lineId==='seoul-9')return (line.services??[]).map(service=>({
     key:`seoul-9-${service.id}`,sequence:[...service.sequence],path:topologyRoutes['seoul-9']!.path,
   }))
@@ -48,10 +54,10 @@ function candidatesFor(lineId:string):Candidate[]{
   return line.sequences.map((sequence,index)=>({key:index?`${lineId}-${index}`:lineId,sequence,path}))
 }
 
-const fits=(sequence:string[],stations:string[])=>{
-  const start=sequence.indexOf(stations[0]!)
-  return start>=0&&stations.every((station,offset)=>sequence[start+offset]===station)
-}
+// Every occurrence is tried, not just the first: a closed one-way loop names its junction twice, so
+// matching only the first occurrence would reject a run that starts at the second one.
+const fits=(sequence:string[],stations:string[])=>
+  sequence.some((station,start)=>station===stations[0]&&stations.every((name,offset)=>sequence[start+offset]===name))
 const rotate=(sequence:string[],start:number)=>sequence.map((_,offset)=>sequence[(start+offset)%sequence.length]!)
 
 export function resolveTopology(lineId:string,stations:string[]):Topology{
