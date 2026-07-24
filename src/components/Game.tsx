@@ -7,7 +7,7 @@ import { YAMANOTE_LABELS, getLine } from '../data/lines'
 import { stationInfo } from '../data/stationInfo'
 import { playSound } from '../audio/sounds'
 import { boardJourney,advance,beginTransfer,flipDirection,isDeadEnd,type Journey,type Position } from '../game/journey'
-import { onwardStations,transferOptionsAt } from '../game/transfers'
+import { nextLineAt,onwardStations,transferOptionsAt } from '../game/transfers'
 
 // Keystrokes per syllable, the 자소 unit Hancom Typing uses: 한 = ㅎ+ㅏ+ㄴ = 3, 값 = ㄱ+ㅏ+ㅂ+ㅅ = 4.
 // A compound vowel (ㅘㅙㅚㅝㅞㅟㅢ) and a compound final (ㄳㄵㄶㄺㄻㄼㄽㄾㄿㅀㅄ) each take two keys.
@@ -62,12 +62,9 @@ export default function Game({ lineId,stations=[],color,sound=true,durationSecon
   const [jasoLog,setJasoLog]=useState<number[]>([])
   const roaming=journey!==undefined
   const [trip,setTrip]=useState<Journey|null>(()=>journey?boardJourney(journey.line,journey.station,journey.toward):null)
-  // The leg's fixed line map, and whether the player is still at its start (has not typed the boarding
-  // station yet). While at the start, Shift may still flip the direction; the first correct answer ends
-  // it. `startLeg` swaps in a new leg (board/transfer/flip) as one atomic move.
+  // The leg's fixed line map, rebuilt whenever a leg begins (board/transfer/reverse) as one atomic move.
   const [legPath,setLegPath]=useState<string[]>(()=>trip?buildLegPath(trip.position):[])
-  const [legStart,setLegStart]=useState(true)
-  const startLeg=(next:Journey)=>{setTrip(next);setLegPath(buildLegPath(next.position));setLegStart(true);setValue('')}
+  const startLeg=(next:Journey)=>{setTrip(next);setLegPath(buildLegPath(next.position));setValue('')}
   const [menuOpen,setMenuOpen]=useState(false)
   const holdStart=useRef<number|undefined>(undefined),holdRaf=useRef<number|undefined>(undefined)
   const [holdProgress,setHoldProgress]=useState(0)
@@ -94,8 +91,8 @@ export default function Game({ lineId,stations=[],color,sound=true,durationSecon
     if(roaming&&trip){
       if(event.key!=='Enter'||event.nativeEvent.isComposing)return
       const moved=advance(trip,value)
-      // Keep the same leg map and just step the index; the direction is now committed, so leave leg-start.
-      if(moved){playSound('correct',sound);setValue('');setTrip(moved);setLegStart(false);setStartedAt(start=>start??Date.now());setNow(Date.now())}
+      // Keep the same leg map and just step the index.
+      if(moved){playSound('correct',sound);setValue('');setTrip(moved);setStartedAt(start=>start??Date.now());setNow(Date.now())}
       else{playSound('error',sound);setErrors(current=>current+1)}
       return
     }
@@ -114,8 +111,10 @@ export default function Game({ lineId,stations=[],color,sound=true,durationSecon
       if(choice){startLeg(beginTransfer(trip,choice));setMenuOpen(false)}
       cancelHold();event.preventDefault();return
     }
-    // Before you have moved off a fresh leg, Shift flips the travel direction.
-    if(event.key==='Shift'&&legStart){event.preventDefault();if(onwardStations(trip.position.line,trip.position.station).length>1)startLeg(flipDirection(trip));return}
+    // Ctrl reverses the travel direction at any station with two ways, so you can head back the way you
+    // came when you miss your stop — not only right after a transfer. (Ctrl, not Shift — some station
+    // names like 총신대입구(이수) need Shift to type their parentheses.)
+    if(event.key==='Control'){event.preventDefault();if(!trip.position.arrived&&onwardStations(trip.position.line,trip.position.station).length>1)startLeg(flipDirection(trip));return}
     if(event.key==='Tab'){
       event.preventDefault()
       if(!options.length)return
@@ -134,8 +133,8 @@ export default function Game({ lineId,stations=[],color,sound=true,durationSecon
     const pending=holdStart.current!==undefined
     const held=pending?performance.now()-holdStart.current!:0
     cancelHold()
-    const options=transferOptionsAt(trip.position.station,trip.position.line)
-    if(pending&&held<1500&&options.length){startLeg(beginTransfer(trip,options[0]!));setMenuOpen(false)}
+    const next=nextLineAt(trip.position.station,trip.position.line)
+    if(pending&&held<1500&&next){startLeg(beginTransfer(trip,next));setMenuOpen(false)}
   }
   const changeInput=(event:ChangeEvent<HTMLInputElement>)=>{
     const next=event.target.value,added=Math.max(0,countJaso(next)-countJaso(value))
@@ -162,15 +161,15 @@ export default function Game({ lineId,stations=[],color,sound=true,durationSecon
   if(roaming&&trip){
     const here=trip.position.station,arrived=trip.position.arrived===true
     const roamNumber=roamTarget?stationInfo(trip.position.line,roamTarget).number:''
-    // Fresh leg with both ways open: the way behind (previous) is the one Shift flips you to.
-    const flippable=legStart&&!arrived&&onwardStations(trip.position.line,here).length>1
+    // Any mid-line station with two ways can be reversed: the way behind (previous) is where Ctrl heads.
+    const flippable=!arrived&&onwardStations(trip.position.line,here).length>1
     const pill=arrived?`${here} 도착 · 환승 또는 종료`:`다음 ${here}`
     const roamStyle={'--line':roamColor,'--sign-interaction-width':`${Math.max(...roamStations.map(signWidth))}px`,'--sign-target-width':`${signWidth(here)}px`} as React.CSSProperties
     return <section className="game" style={roamStyle}>
       <div className="game-top"><button className="back" onClick={onExit}>← 운행 종료</button><div className="game-metrics"><div className="live-time"><span>PLAY TIME</span><b>{formatElapsed(elapsedMilliseconds)}</b></div><div className="speed-meter" role="status" aria-label={`실시간 타수 ${liveSpeed} 타/분`}><span>실시간 타수</span><b>{liveSpeed}</b><small>타/분</small></div><div className="route-progress"><b>{trip.typed.length}</b>개 역 · 환승 {trip.transfers}회</div></div></div>
       <div className="map-stage route-segment"><TrackingMap lineId={trip.position.line} stations={roamStations} targetIndex={roamIndex} color={roamColor} /><div className="current-station" role="status">{pill}</div></div>
       <TransferSign currentLine={trip.position.line} station={here} menuOpen={menuOpen} holdProgress={holdProgress} />
-      <DirectionSign lineId={trip.position.line} previous={roamStations[roamIndex-1]} current={here} next={roamStations[roamIndex+1]} shiftSide={flippable?'previous':undefined} />
+      <DirectionSign lineId={trip.position.line} previous={roamStations[roamIndex-1]} current={here} next={roamStations[roamIndex+1]} ctrlSide={flippable?'previous':undefined} />
       <StationTypingField target={roamTarget} number={roamNumber} value={value} errorAttempt={errors} inputRef={input} onChange={changeInput} onKeyDown={roamKeyDown} onKeyUp={roamKeyUp} />
     </section>
   }

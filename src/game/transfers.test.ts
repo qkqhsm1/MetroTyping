@@ -1,5 +1,5 @@
 import { expect,test } from 'vitest'
-import { LINE_PRIORITY,onwardStations,transferOptionsAt } from './transfers'
+import { LINE_PRIORITY,nextLineAt,onwardStations,transferOptionsAt } from './transfers'
 
 test('priority lists numbered lines first, then the rest, and excludes yamanote',()=>{
   expect(LINE_PRIORITY).toEqual(['seoul-1','seoul-2','seoul-3','seoul-4','seoul-5','seoul-6','seoul-7','seoul-8','seoul-9','arex','suin-bundang','incheon-1','incheon-2'])
@@ -15,6 +15,16 @@ test('transfer options exclude the current line and sort by priority',()=>{
 test('a non-transfer station has no options',()=>{
   expect(transferOptionsAt('신도림','seoul-2')).toEqual(['seoul-1'])
   expect(transferOptionsAt('강남','seoul-2')).toEqual([])
+})
+
+test('quick Tab rotates through every line and wraps back to the one you came from',()=>{
+  // 왕십리 is served by Lines 2, 5 and 수인·분당. Tapping Tab cycles them all instead of bouncing 2↔5,
+  // so 수인·분당 is reachable again after you transfer away from it.
+  expect(nextLineAt('왕십리','suin-bundang')).toBe('seoul-2')
+  expect(nextLineAt('왕십리','seoul-2')).toBe('seoul-5')
+  expect(nextLineAt('왕십리','seoul-5')).toBe('suin-bundang')
+  // A station on a single line has nowhere to rotate to.
+  expect(nextLineAt('강남','seoul-2')).toBeUndefined()
 })
 
 test('onward stations give both neighbours mid-line and one at a terminus',()=>{

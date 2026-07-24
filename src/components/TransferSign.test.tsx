@@ -14,10 +14,17 @@ test('renders nothing at a non-transfer station',()=>{
   expect(container.firstChild).toBeNull()
 })
 
-test('collapsed shows the current line then the priority option',()=>{
+test('collapsed shows the current line then the line a quick Tab lands on',()=>{
   const {container}=render(<TransferSign currentLine="seoul-5" station="김포공항" menuOpen={false} holdProgress={0} />)
   const badges=[...container.querySelectorAll('.transfer-badge')].map(node=>node.textContent)
   expect(badges).toEqual(['5','9'])
+})
+
+test('the collapsed badge follows the rotation, so it can point back to the line you came from',()=>{
+  // At 왕십리 on Line 5, the next line in the rotation is 수인·분당 (not the top-priority Line 2).
+  const {container}=render(<TransferSign currentLine="seoul-5" station="왕십리" menuOpen={false} holdProgress={0} />)
+  const badges=[...container.querySelectorAll('.transfer-badge')].map(node=>node.textContent)
+  expect(badges).toEqual(['5','수인'])
 })
 
 test('the open menu lists every option numbered by priority',()=>{

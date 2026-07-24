@@ -52,6 +52,38 @@ test('the train renders inside the same svg coordinate system',()=>{
   expect(container.querySelector('svg .tracking-train')).not.toBeNull()
 })
 
+const nodeCentre=(container:HTMLElement,index:number)=>{
+  const circle=[...container.querySelectorAll('g[data-station]')][index]!.querySelector('circle')!
+  return {x:Number(circle.getAttribute('cx')),y:Number(circle.getAttribute('cy'))}
+}
+
+test('a heading chevron points from the current stop toward the next one',()=>{
+  const {container}=renderLine('seoul-3','대화','오금',3)
+  const chevron=container.querySelector('.route-heading')
+  expect(chevron).not.toBeNull()
+  const radians=Number(chevron!.getAttribute('data-heading-angle'))*Math.PI/180
+  const heading={x:Math.cos(radians),y:Math.sin(radians)}
+  const current=nodeCentre(container,3),next=nodeCentre(container,4)
+  const toward={x:next.x-current.x,y:next.y-current.y}
+  // The chevron faces the same way as the step to the next stop.
+  expect(heading.x*toward.x+heading.y*toward.y).toBeGreaterThan(0)
+})
+
+test('the heading chevron flips to face the next stop even when the run travels backwards',()=>{
+  const {container}=render(<TrackingMap lineId="seoul-2" stations={backwards} targetIndex={1} color="#00A84D" />)
+  const radians=Number(container.querySelector('.route-heading')!.getAttribute('data-heading-angle'))*Math.PI/180
+  const heading={x:Math.cos(radians),y:Math.sin(radians)}
+  const current=nodeCentre(container,1),next=nodeCentre(container,2)
+  const toward={x:next.x-current.x,y:next.y-current.y}
+  expect(heading.x*toward.x+heading.y*toward.y).toBeGreaterThan(0)
+})
+
+test('no heading chevron at a terminus with no next stop',()=>{
+  const {stations}=renderLine('seoul-3','대화','오금')
+  const {container:atEnd}=render(<TrackingMap lineId="seoul-3" stations={stations} targetIndex={stations.length-1} color="#0052A4" />)
+  expect(atEnd.querySelector('.route-heading')).toBeNull()
+})
+
 afterEach(()=>{vi.restoreAllMocks();vi.unstubAllGlobals()})
 
 // 신도림 → 대림 runs the loop backwards, so the run's distances decrease as the player advances.

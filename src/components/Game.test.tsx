@@ -341,8 +341,8 @@ test('quick Tab transfers to the priority line and you type the station you stan
   expect(container.querySelector('.tracking-map[data-line="seoul-9"]')).not.toBeNull()
   // You still type the station you stand at, 김포공항 — not a neighbour.
   expect(container.querySelector('.direction-panel [data-position="current"]')?.textContent).toContain('김포공항')
-  // The way behind carries a Shift badge, so the other direction is one keypress away.
-  expect(container.querySelector('.direction-station[data-shift] .direction-shift')).not.toBeNull()
+  // The way behind carries a Ctrl badge, so the other direction is one keypress away.
+  expect(container.querySelector('.direction-station[data-ctrl] .direction-ctrl')).not.toBeNull()
 })
 
 test('after a transfer the default heads the longer way; typing the station advances it',()=>{
@@ -356,13 +356,13 @@ test('after a transfer the default heads the longer way; typing the station adva
   expect(container.querySelector('.direction-panel [data-position="current"]')?.textContent).toContain('공항시장')
 })
 
-test('Shift after a transfer flips the direction before you move',()=>{
+test('Ctrl after a transfer flips the direction before you move',()=>{
   const {container}=render(<Game journey={{line:'seoul-5',station:'김포공항',toward:'송정'}} color="#996CAC" onExit={()=>{}} />)
   const input=screen.getByRole('textbox')
   fireEvent.keyDown(input,{key:'Tab'})
   fireEvent.keyUp(input,{key:'Tab'})
   // Flip toward the short way, then typing 김포공항 steps onto 개화 instead of 공항시장.
-  fireEvent.keyDown(input,{key:'Shift'})
+  fireEvent.keyDown(input,{key:'Control'})
   fireEvent.change(input,{target:{value:'김포공항'}})
   fireEvent.keyDown(input,{key:'Enter',isComposing:false})
   expect(container.querySelector('.direction-panel [data-position="current"]')?.textContent).toContain('개화')
