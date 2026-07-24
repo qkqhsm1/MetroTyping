@@ -102,6 +102,10 @@ export default function TrackingMap({lineId,stations,targetIndex,color}:{lineId:
     const placed:Box[]=[]
     return world.stationNames.map((name,index)=>{
       const info=stationInfo(lineId,name),point=nodes[index]!
+      // The current station is named in the direction sign below and marked by the train and halo, so
+      // its map label is redundant — and, being wide, it was the one drifting under a neighbour and
+      // making the target ambiguous. Its node stays an obstacle for the others; only its text is gone.
+      if(index===targetIndex)return {name,info,point,labelX:point.x,labelY:point.y,anchor:'middle' as const,index,hidden:true}
       const radians=point.angle*Math.PI/180
       const width=labelWidth(info.korean,info.english,info.english.length>18)
       const preferred=index%2===0?1:-1
@@ -121,7 +125,7 @@ export default function TrackingMap({lineId,stations,targetIndex,color}:{lineId:
         const box={left,right:left+width,top:y-LABEL_BLOCK/2,bottom:y+LABEL_BLOCK/2}
         // The two lines hang below their anchor, so it is raised to centre the block on the offset
         // point; otherwise every label above the track leans back into it.
-        const candidate={name,info,point,labelX:x,labelY:y-LABEL_BLOCK/2+LABEL_KOREAN*.75,anchor,index,box}
+        const candidate={name,info,point,labelX:x,labelY:y-LABEL_BLOCK/2+LABEL_KOREAN*.75,anchor,index,box,hidden:false}
         fallback??=candidate
         if(!placed.some(other=>overlaps(box,other))&&!nodes.some(node=>hitsNode(box,node))&&ownsBox(box,nodes,index)){
           placed.push(box)
@@ -131,17 +135,17 @@ export default function TrackingMap({lineId,stations,targetIndex,color}:{lineId:
       placed.push(fallback!.box)
       return fallback!
     })
-  },[lineId,world])
+  },[lineId,world,targetIndex])
   return <svg ref={surface} className="route-map tracking-map" data-camera-station={current} data-camera-width={rendered.width} data-train-distance={rendered.train} data-motion-state={rendered.moving?'moving':'settled'} viewBox={`${camera.x-rendered.width/2} ${camera.y-height/2} ${rendered.width} ${height}`} role="img" aria-label={`${lineId} 추적 노선도`}>
     <path d={world.pathD} fill="none" stroke="#deddd7" strokeWidth="22" strokeLinecap="round" />
     <path d={world.pathD} fill="none" stroke={color} strokeWidth="13" strokeLinecap="round" />
     <circle className="target-ring tracking-target-halo" data-halo-normal={`${normal.x},${normal.y}`} data-route-tangent={`${tangent.x},${tangent.y}`} style={haloStyle} cx={currentPoint.x} cy={currentPoint.y} r="20" fill="white" stroke={color} strokeWidth="4" />
-    {labels.map(({name,info,point,labelX,labelY,anchor,index})=>
+    {labels.map(({name,info,point,labelX,labelY,anchor,index,hidden})=>
       // Paired by index, never by name: a full loop lap legitimately visits the same name twice.
       <g key={index} data-station={name} data-current={index===targetIndex||undefined}>
         <circle cx={point.x} cy={point.y} r="13" fill="white" stroke={color} strokeWidth="4" />
         <text className="node-number" data-long={info.number.length>3||undefined} x={point.x} y={point.y} textAnchor="middle" dominantBaseline="middle">{info.number}</text>
-        <text className="station-label" x={labelX} y={labelY} textAnchor={anchor}><tspan className="station-ko" x={labelX}>{info.korean}</tspan><tspan className="station-en" data-long={info.english.length>18||undefined} x={labelX} dy={LABEL_ENGLISH+3}>{info.english}</tspan></text>
+        {!hidden&&<text className="station-label" x={labelX} y={labelY} textAnchor={anchor}><tspan className="station-ko" x={labelX}>{info.korean}</tspan><tspan className="station-en" data-long={info.english.length>18||undefined} x={labelX} dy={LABEL_ENGLISH+3}>{info.english}</tspan></text>}
       </g>)}
     <g className="train tracking-train" transform={`translate(${train.x} ${train.y}) rotate(${train.angle})`}>
       <rect x="-23" y="-14" width="46" height="28" rx="9" fill="white" stroke="#111" strokeWidth="3" />
