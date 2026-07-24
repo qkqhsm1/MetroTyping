@@ -27,9 +27,10 @@ player can go no further on any line, or when they stop manually.
   per-line special cases.
 - Direction after a transfer is set by which neighbour the player types first,
   the same rule the setup direction buttons express before typing begins.
-- The run ends automatically only when no onward station exists on the current
-  line or via any transfer. On a loop line that never happens, so a manual
-  운행 종료 ends it.
+- The run ends automatically only at a true dead end: the current station is a
+  terminus on the current line **and** has no transfer option. A terminus that a
+  transfer line continues from (인천 → Suin·Bundang) is not a dead end — the
+  player transfers on or ends manually. A loop line never dead-ends.
 - The Tab / number keys are intercepted only at a transfer station and never
   reach the typing input; Korean IME composition is untouched.
 
@@ -76,13 +77,17 @@ export function resolveDirection(line: string, station: string, typedNeighbour: 
 // Switch line at the current station; direction becomes undecided until the next station is typed.
 export function transfer(journey: Journey, toLine: string): Journey
 
-// True when the current line cannot advance and no transfer offers an onward station.
+// True only when the station is a terminus on the current line AND no other line serves it, so the
+// player can neither continue nor transfer onward. A terminus with a transfer (인천) is not a dead end.
 export function isDeadEnd(position: Position): boolean
 ```
 
 Boarding starts with a decided direction, chosen by the setup buttons. Every
 transfer reopens it: the sign then accepts either neighbour and the first
-correct one calls `resolveDirection`.
+correct one calls `resolveDirection`. While direction is undecided there is no
+single next target, so the typing field shows an empty target (no grey overlay)
+and the sign presents both onward neighbours as the two choices; typing either
+one resolves the direction and the normal single-target render resumes.
 
 ### 3. `TransferSign` component (the `[current]→[next]` badge)
 
@@ -157,9 +162,10 @@ speed, and play time (first jaso to final arrival, as the other modes measure).
   junction.
 - `journey.ts`: boarding resolves direction from the first typed neighbour and
   the opposite neighbour is equally valid; `advance` moves one station;
-  `transfer` switches line and re-opens direction; `isDeadEnd` is true at 인천
-  (Line 1 + Suin·Bundang both terminate) and false at 오금 (Line 3 terminus but
-  Line 5 continues); a loop line is never a dead end.
+  `transfer` switches line and re-opens direction; `isDeadEnd` is true at 연천
+  (Line 1 terminus, no transfer) and false at 인천 (Line 1 terminus but
+  Suin·Bundang continues) and at 오금 (Line 3 terminus, Line 5 continues); a loop
+  line is never a dead end.
 - `TransferSign`: renders only at a transfer station, shows the priority badge
   collapsed, expands to a numbered list, badge labels per line.
 - `Game.tsx`: a transfer recolours the map and swaps the world; Tab is ignored
