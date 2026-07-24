@@ -6,8 +6,8 @@ import { STATION_SPACING,getLineWorld } from '../game/lineWorld'
 // trades stations on screen for labels worth reading. The query is the 640px breakpoint styles.css
 // already uses.
 const COMPACT_QUERY='(max-width: 640px)'
-const DESKTOP_CAMERA={min:360,max:620}
-const COMPACT_CAMERA={min:230,max:340}
+const DESKTOP_CAMERA={min:540,max:860}
+const COMPACT_CAMERA={min:340,max:520}
 const DEFAULT_ASPECT=.625
 
 const easeOut=(progress:number)=>1-(1-progress)**3
@@ -65,8 +65,18 @@ export default function TrackingMap({lineId,stations,targetIndex,color}:{lineId:
   const motionRef=useRef(motion),frame=useRef<number|undefined>(undefined)
   const reducedMotion=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
   useEffect(()=>{motionRef.current=motion},[motion])
+  // A transfer swaps in a whole new line, so distances measured on the old map mean nothing on the
+  // new one. Snap to the new target rather than gliding the train across the fresh map — that glide is
+  // what read as a sudden spin through every corner in between.
+  const worldKey=`${lineId}|${world.key}`
+  const worldRef=useRef(worldKey)
   useEffect(()=>{
     window.cancelAnimationFrame(frame.current!)
+    if(worldRef.current!==worldKey){
+      worldRef.current=worldKey
+      const snap={train:targetDistance,camera:targetDistance,width:targetWidth,moving:false}
+      motionRef.current=snap;setMotion(snap);return
+    }
     if(reducedMotion)return
     const from=motionRef.current,start={value:undefined as number|undefined}
     // Distances are one STATION_SPACING apart whichever way the run travels, so this stays a station
@@ -88,7 +98,7 @@ export default function TrackingMap({lineId,stations,targetIndex,color}:{lineId:
     }
     if(from.train!==targetDistance||from.camera!==targetDistance||from.width!==targetWidth)frame.current=window.requestAnimationFrame(tick)
     return()=>window.cancelAnimationFrame(frame.current!)
-  },[reducedMotion,targetDistance,targetWidth])
+  },[reducedMotion,targetDistance,targetWidth,worldKey])
   const rendered=reducedMotion?{train:targetDistance,camera:targetDistance,width:targetWidth,moving:false}:motion
   const current=world.stationNames[targetIndex]!,train=world.pointAt(rendered.train),camera=world.pointAt(rendered.camera),height=rendered.width*aspect
   const currentPoint=world.pointAt(targetDistance),currentRadians=currentPoint.angle*Math.PI/180

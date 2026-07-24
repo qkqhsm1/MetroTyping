@@ -43,12 +43,15 @@ export function advance(journey:Journey,input:string):Journey|null{
 
 export function beginTransfer(journey:Journey,toLine:string):Journey{
   // You are already standing at the station; on the new line the direction reopens.
-  return {
-    ...journey,
-    position:{line:toLine,station:journey.position.station,undecided:true},
-    lines:journey.lines.at(-1)===toLine?journey.lines:[...journey.lines,toLine],
-    transfers:journey.transfers+1,
-  }
+  const here=journey.position.station,onward=onwardStations(toLine,here)
+  const lines=journey.lines.at(-1)===toLine?journey.lines:[...journey.lines,toLine]
+  const transfers=journey.transfers+1
+  // A terminus on the new line has one onward neighbour, so the direction is forced: step straight
+  // onto it rather than opening an undecided fork the camera would then crop against the dead end.
+  const position:Position=onward.length===1
+    ?{line:toLine,station:onward[0]!,from:here}
+    :{line:toLine,station:here,undecided:true}
+  return {...journey,position,lines,transfers}
 }
 
 // A dead end is a terminus you have arrived at with no line to switch to. A transfer option always

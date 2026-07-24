@@ -68,9 +68,14 @@ export default function Game({ lineId,stations=[],color,sound=true,durationSecon
   const roamStations=useMemo(()=>roaming&&trip?buildRoamPath(trip.position):[],[roaming,trip])
   const roamOptions=roaming&&trip?nextTargets(trip.position):[]
   const roamUndecided=roaming&&trip?trip.position.undecided===true:false
-  // You always type the station you stand at, so a decided run's single target is that station; an
-  // undecided fork or an arrival has no single target and the field stays empty.
-  const roamTarget=roaming&&trip&&!roamUndecided&&roamOptions.length===1?roamOptions[0]!:''
+  // You always type the station you stand at, so a decided run's single target is that station. At an
+  // undecided fork you type a neighbour to pick the way, so the target tracks whichever one your typing
+  // is heading toward, letting the field colour the letters against it.
+  const roamTarget=roaming&&trip
+    ?(roamUndecided
+      ?(roamOptions.find(name=>name.startsWith(value.normalize('NFC')))??roamOptions[0]??'')
+      :(roamOptions.length===1?roamOptions[0]!:''))
+    :''
   const roamIndex=roaming&&trip?Math.max(0,roamStations.indexOf(trip.position.station)):0
   const roamColor=roaming&&trip?getLine(trip.position.line).color:color
   const roamFinished=roaming&&trip?isDeadEnd(trip.position):false
@@ -104,13 +109,6 @@ export default function Game({ lineId,stations=[],color,sound=true,durationSecon
     if(menuOpen&&/^[1-9]$/.test(event.key)){
       const choice=options[Number(event.key)-1]
       if(choice){setTrip(beginTransfer(trip,choice));setMenuOpen(false)}
-      event.preventDefault();return
-    }
-    // Just transferred: a number key picks which way to leave the station, the same clear choice as the
-    // setup direction buttons, so the player is never left guessing which neighbour to type.
-    if(trip.position.undecided&&/^[1-9]$/.test(event.key)){
-      const pick=nextTargets(trip.position)[Number(event.key)-1]
-      if(pick){setTrip(advance(trip,pick)!);setValue('')}
       event.preventDefault();return
     }
     if(event.key==='Tab'){
@@ -164,9 +162,7 @@ export default function Game({ lineId,stations=[],color,sound=true,durationSecon
       <div className="map-stage route-segment"><TrackingMap lineId={trip.position.line} stations={roamStations} targetIndex={roamIndex} color={roamColor} /><div className="current-station" role="status">{pill}</div></div>
       <TransferSign currentLine={trip.position.line} station={here} menuOpen={menuOpen} holdProgress={holdProgress} />
       <DirectionSign lineId={trip.position.line} previous={roamUndecided?roamStations[roamIndex-1]:trip.position.from} current={here} next={roamStations[roamIndex+1]} />
-      {roamUndecided
-        ? <div className="transfer-direction" onKeyDown={roamKeyDown}><p className="eyebrow">환승 · 진행할 방향을 고르세요</p><div className="transfer-direction-choices">{roamOptions.map((neighbour,choice)=><button key={neighbour} type="button" autoFocus={choice===0} onClick={()=>{setTrip(advance(trip,neighbour)!);setValue('')}}><span className="transfer-key">{choice+1}</span>{neighbour} 방향</button>)}</div></div>
-        : <StationTypingField target={roamTarget} number={roamNumber} value={value} errorAttempt={errors} inputRef={input} onChange={changeInput} onKeyDown={roamKeyDown} onKeyUp={roamKeyUp} />}
+      <StationTypingField target={roamTarget} number={roamNumber} value={value} errorAttempt={errors} inputRef={input} onChange={changeInput} onKeyDown={roamKeyDown} onKeyUp={roamKeyUp} />
     </section>
   }
   const target=stations[index%stations.length]!

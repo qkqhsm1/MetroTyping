@@ -41,6 +41,19 @@ test('after a transfer either neighbour is valid and the first typed sets direct
   expect(transferred.transfers).toBe(1)
 })
 
+test('transferring onto a line where the station is a terminus forces the one open direction',()=>{
+  // 인천 is the Suin·Bundang terminus, so its only onward neighbour is 신포; the fork is skipped and
+  // the run heads straight down the line with a full onward world instead of a cropped window.
+  const boarded=boardJourney('seoul-1','동인천','인천')
+  const atIncheon:typeof boarded={...boarded,position:{line:'seoul-1',station:'인천',from:'동인천'}}
+  const transferred=beginTransfer(atIncheon,'suin-bundang')
+  expect(transferred.position.line).toBe('suin-bundang')
+  expect(transferred.position.undecided).toBeUndefined()
+  expect(transferred.position.station).toBe('신포')
+  expect(transferred.position.from).toBe('인천')
+  expect(nextTargets(transferred.position)).toEqual(['신포'])
+})
+
 test('typing a terminus marks an arrival with nothing left to type',()=>{
   // 오금 is the Line 3 terminus. Riding to it and typing it leaves no onward on Line 3.
   let journey=boardJourney('seoul-3','경찰병원','오금')
