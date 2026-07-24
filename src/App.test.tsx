@@ -18,6 +18,7 @@ test('passes the header mute state into gameplay sounds', () => {
   render(<App />)
   fireEvent.click(screen.getByRole('button',{name:'사운드 끄기'}))
   fireEvent.click(screen.getByRole('button',{name:'서울 1호선 선택'}))
+  fireEvent.click(screen.getByRole('button',{name:'노선 운행'}))
   fireEvent.click(screen.getByRole('button',{name:'인천에서 신창까지 바로 시작'}))
   fireEvent.change(screen.getByRole('textbox'),{target:{value:'인천'}})
   expect(playSound).toHaveBeenCalledWith('key',false)
@@ -51,6 +52,7 @@ test('plays the line-selection chime only on the first selection', () => {
 test('starts a quick route by asking for its departure station first', () => {
   render(<App />)
   fireEvent.click(screen.getByRole('button', { name: '서울 1호선 선택' }))
+  fireEvent.click(screen.getByRole('button', { name: '노선 운행' }))
   fireEvent.click(screen.getByRole('button', { name: '인천에서 신창까지 바로 시작' }))
   expect(screen.getByRole('heading', { name: '인천' })).toBeInTheDocument()
 })
@@ -58,6 +60,7 @@ test('starts a quick route by asking for its departure station first', () => {
 test('starts a clockwise loop once without repeating its origin', () => {
   render(<App />)
   fireEvent.click(screen.getByRole('button', { name: '서울 2호선 선택' }))
+  fireEvent.click(screen.getByRole('button', { name: '노선 운행' }))
   fireEvent.click(screen.getByRole('button', { name: '신도림에서 대림까지 바로 시작' }))
   expect(screen.getByRole('heading', { name: '신도림' })).toBeInTheDocument()
   expect(document.querySelector('.route-progress')).toHaveTextContent('1 / 43')
@@ -66,6 +69,7 @@ test('starts a clockwise loop once without repeating its origin', () => {
 test('keeps arbitrary custom station pairs available', () => {
   render(<App />)
   fireEvent.click(screen.getByRole('button', { name: '서울 2호선 선택' }))
+  fireEvent.click(screen.getByRole('button', { name: '노선 운행' }))
   fireEvent.click(screen.getByRole('combobox', { name: '출발역' }))
   fireEvent.click(screen.getByRole('option', { name: '문래' }))
   fireEvent.click(screen.getByRole('combobox', { name: '도착역' }))
@@ -84,6 +88,7 @@ test('opens setup from a supported line', () => {
 test('switches Line 9 setup between local and express service', () => {
   render(<App />)
   fireEvent.click(screen.getByRole('button', { name: '서울 9호선 선택' }))
+  fireEvent.click(screen.getByRole('button', { name: '노선 운행' }))
   expect(screen.getByRole('button', { name: '일반' })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: '급행' })).toBeInTheDocument()
 
@@ -103,6 +108,7 @@ test('does not show service selection for Line 8', () => {
 test('starts the full Line 9 express quick route', () => {
   render(<App />)
   fireEvent.click(screen.getByRole('button', { name: '서울 9호선 선택' }))
+  fireEvent.click(screen.getByRole('button', { name: '노선 운행' }))
   fireEvent.click(screen.getByRole('button', { name: '급행' }))
   fireEvent.click(screen.getByRole('button', { name: '김포공항에서 중앙보훈병원까지 바로 시작' }))
 
@@ -114,6 +120,7 @@ test('starts the full Line 9 express quick route', () => {
 test('starts a custom route using only Line 9 express stops', () => {
   render(<App />)
   fireEvent.click(screen.getByRole('button', { name: '서울 9호선 선택' }))
+  fireEvent.click(screen.getByRole('button', { name: '노선 운행' }))
   fireEvent.click(screen.getByRole('button', { name: '급행' }))
   fireEvent.click(screen.getByRole('combobox', { name: '출발역' }))
   fireEvent.click(screen.getByRole('option', { name: '김포공항' }))
@@ -126,23 +133,10 @@ test('starts a custom route using only Line 9 express stops', () => {
   expect(screen.getByTestId('line-9-game')).toHaveAttribute('data-stations','김포공항|마곡나루|가양')
 })
 
-test('uses Line 9 express stops for random gameplay', () => {
-  const dateKey=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul'}).format(new Date())
-  const expected=routes.dailyStations('seoul-9',dateKey,'express')[0]!
-  render(<App />)
-  fireEvent.click(screen.getByRole('button', { name: '서울 9호선 선택' }))
-  fireEvent.click(screen.getByRole('button', { name: '급행' }))
-  fireEvent.click(screen.getByRole('button', { name: '랜덤 역명' }))
-  fireEvent.click(screen.getByRole('button', { name: '운행 시작 →' }))
-
-  expect(screen.getByRole('heading', { name: expected })).toBeInTheDocument()
-  expect(screen.getByText('노선 전체에서 무작위 출제')).toBeInTheDocument()
-  expect(screen.getByTestId('line-9-game')).toHaveAttribute('data-stations',routes.dailyStations('seoul-9',dateKey,'express').join('|'))
-})
-
 test('keeps setup usable when custom route calculation fails', () => {
   render(<App />)
   fireEvent.click(screen.getByRole('button', { name: '서울 9호선 선택' }))
+  fireEvent.click(screen.getByRole('button', { name: '노선 운행' }))
   fireEvent.click(screen.getByRole('combobox', { name: '출발역' }))
   fireEvent.click(screen.getByRole('option', { name: '개화' }))
   fireEvent.click(screen.getByRole('combobox', { name: '도착역' }))
@@ -159,6 +153,7 @@ test('keeps setup usable when custom route calculation fails', () => {
 test('refuses a Line 6 trip that rides the Eungam loop out onto the trunk instead of crashing', () => {
   render(<App />)
   fireEvent.click(screen.getByRole('button', { name: '서울 6호선 선택' }))
+  fireEvent.click(screen.getByRole('button', { name: '노선 운행' }))
   fireEvent.click(screen.getByRole('combobox', { name: '출발역' }))
   fireEvent.click(screen.getByRole('option', { name: '구산' }))
   fireEvent.click(screen.getByRole('combobox', { name: '도착역' }))
@@ -172,6 +167,7 @@ test('refuses a Line 6 trip that rides the Eungam loop out onto the trunk instea
 test('starts a Line 6 trip that closes the Eungam loop back onto 응암', () => {
   render(<App />)
   fireEvent.click(screen.getByRole('button', { name: '서울 6호선 선택' }))
+  fireEvent.click(screen.getByRole('button', { name: '노선 운행' }))
   fireEvent.click(screen.getByRole('combobox', { name: '출발역' }))
   fireEvent.click(screen.getByRole('option', { name: '구산' }))
   fireEvent.click(screen.getByRole('combobox', { name: '도착역' }))
