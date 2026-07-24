@@ -330,3 +330,29 @@ test('quick Tab transfers to the priority line at a transfer station',()=>{
   expect(container.querySelector('.typing-field input')).toHaveValue('')
   expect(container.querySelector('.typing-name .remaining')).toBeNull()
 })
+
+test('the hold menu picks a transfer line by number key and Esc closes it',()=>{
+  let frame:FrameRequestCallback|undefined
+  vi.spyOn(window,'requestAnimationFrame').mockImplementation(callback=>{frame=callback;return 1})
+  vi.spyOn(window,'cancelAnimationFrame').mockImplementation(()=>{})
+  let clock=0
+  vi.spyOn(performance,'now').mockImplementation(()=>clock)
+  const {container}=render(<Game journey={{line:'seoul-5',station:'김포공항',toward:'송정'}} color="#996CAC" onExit={()=>{}} />)
+  const input=screen.getByRole('textbox')
+  // Hold Tab past the 1.5s threshold: the raf tick opens the menu.
+  fireEvent.keyDown(input,{key:'Tab'})
+  clock=1600
+  act(()=>frame?.(1600))
+  expect(container.querySelector('.transfer-sign[data-open="true"]')).not.toBeNull()
+  // Options at 김포공항 from seoul-5 are [seoul-9, arex]; Esc closes without transferring.
+  fireEvent.keyDown(input,{key:'Escape'})
+  expect(container.querySelector('.transfer-sign[data-open="true"]')).toBeNull()
+  expect(container.querySelector('.tracking-map')?.getAttribute('data-line')).toBe('seoul-5')
+  // Re-open and press 2 to transfer to the second option, 공항철도.
+  fireEvent.keyUp(input,{key:'Tab'})
+  fireEvent.keyDown(input,{key:'Tab'})
+  clock=3300
+  act(()=>frame?.(3300))
+  fireEvent.keyDown(input,{key:'2'})
+  expect(container.querySelector('.tracking-map')?.getAttribute('data-line')).toBe('arex')
+})
