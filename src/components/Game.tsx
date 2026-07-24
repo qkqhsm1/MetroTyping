@@ -71,6 +71,9 @@ export default function Game({ lineId,stations=[],color,sound=true,durationSecon
   const [legPath,setLegPath]=useState<string[]>(()=>trip?buildLegPath(trip.position):[])
   const startLeg=(next:Journey)=>{setTrip(next);setLegPath(buildLegPath(next.position));setValue('')}
   const [menuOpen,setMenuOpen]=useState(false)
+  // Set when you press Enter at a terminus that still offers a transfer, choosing to end the journey there
+  // rather than ride on. A true dead end ends on its own.
+  const [ended,setEnded]=useState(false)
   const holdStart=useRef<number|undefined>(undefined),holdRaf=useRef<number|undefined>(undefined)
   const [holdProgress,setHoldProgress]=useState(0)
   const cancelHold=()=>{window.cancelAnimationFrame(holdRaf.current!);holdStart.current=undefined;setHoldProgress(0)}
@@ -79,7 +82,7 @@ export default function Game({ lineId,stations=[],color,sound=true,durationSecon
   const roamTarget=roaming&&trip&&!trip.position.arrived?trip.position.station:''
   const roamIndex=roaming&&trip?Math.max(0,roamStations.indexOf(trip.position.station)):0
   const roamColor=roaming&&trip?getLine(trip.position.line).color:color
-  const roamFinished=roaming&&trip?isDeadEnd(trip.position):false
+  const roamFinished=roaming&&trip?(ended||isDeadEnd(trip.position)):false
   const finished=roaming?roamFinished:(remaining===0||(!timed&&index>=stations.length))
   useEffect(()=>input.current?.focus(),[index,trip?.position.station,trip?.position.line])
   useEffect(()=>{
@@ -95,6 +98,8 @@ export default function Game({ lineId,stations=[],color,sound=true,durationSecon
   const submit=(event:KeyboardEvent<HTMLElement>)=>{
     if(roaming&&trip){
       if(event.key!=='Enter'||event.nativeEvent.isComposing)return
+      // At a terminus there is nothing left to type, so Enter ends the journey (Tab still transfers on).
+      if(trip.position.arrived){playSound('complete',sound);setEnded(true);return}
       const moved=advance(trip,value)
       // Keep the same leg map and just step the index.
       if(moved){playSound('correct',sound);setValue('');setTrip(moved);setStartedAt(start=>start??Date.now());setNow(Date.now())}
@@ -168,7 +173,7 @@ export default function Game({ lineId,stations=[],color,sound=true,durationSecon
     const roamNumber=roamTarget?stationInfo(trip.position.line,roamTarget).number:''
     // Any mid-line station with two ways can be reversed: the way behind (previous) is where Ctrl heads.
     const flippable=!arrived&&onwardStations(trip.position.line,here).length>1
-    const pill=arrived?`${here} 도착 · 환승 또는 종료`:`다음 ${here}`
+    const pill=arrived?`${here} 도착 · 환승 Tab · 종료 Enter`:`다음 ${here}`
     const roamStyle={'--line':roamColor,'--sign-interaction-width':`${Math.max(...roamStations.map(signWidth))}px`,'--sign-target-width':`${signWidth(here)}px`} as React.CSSProperties
     return <section className="game" style={roamStyle}>
       <div className="game-top"><button className="back" onClick={onExit}>← 운행 종료</button><div className="game-metrics"><div className="live-time"><span>PLAY TIME</span><b>{formatElapsed(elapsedMilliseconds)}</b></div><div className="speed-meter" role="status" aria-label={`실시간 타수 ${liveSpeed} 타/분`}><span>실시간 타수</span><b>{liveSpeed}</b><small>타/분</small></div><div className="route-progress"><b>{trip.typed.length}</b>개 역 · 환승 {trip.transfers}회</div></div></div>

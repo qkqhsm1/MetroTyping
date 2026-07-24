@@ -335,6 +335,17 @@ test('a mid-line leg shows the whole line, including the stops behind you',()=>{
   expect(container.querySelector('.direction-panel [data-position="current"]')?.textContent).toContain('창동')
 })
 
+test('Enter at a terminus that still offers a transfer ends the journey',()=>{
+  render(<Game journey={{line:'seoul-3',station:'경찰병원',toward:'오금'}} color="#EF7C1C" onExit={()=>{}} />)
+  const input=screen.getByRole('textbox')
+  fireEvent.change(input,{target:{value:'경찰병원'}});fireEvent.keyDown(input,{key:'Enter',isComposing:false})
+  fireEvent.change(input,{target:{value:'오금'}});fireEvent.keyDown(input,{key:'Enter',isComposing:false})
+  // Arrived at 오금 (Line 3 terminus, transfers to Line 5 so it is not a dead end). Enter ends it here.
+  expect(screen.queryByText('환승 여행 완료')).toBeNull()
+  fireEvent.keyDown(input,{key:'Enter',isComposing:false})
+  expect(screen.getByText('환승 여행 완료')).not.toBeNull()
+})
+
 test('Tab at a transfer station switches the line and recolours; ignored elsewhere',()=>{
   const {container}=render(<Game journey={{line:'seoul-1',station:'구로',toward:'가산디지털단지'}} color="#0052A4" onExit={()=>{}} />)
   const input=screen.getByRole('textbox')
