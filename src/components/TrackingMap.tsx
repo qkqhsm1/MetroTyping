@@ -136,7 +136,7 @@ export default function TrackingMap({lineId,stations,targetIndex,color}:{lineId:
       return fallback!
     })
   },[lineId,world,targetIndex])
-  return <svg ref={surface} className="route-map tracking-map" data-camera-station={current} data-camera-width={rendered.width} data-train-distance={rendered.train} data-motion-state={rendered.moving?'moving':'settled'} viewBox={`${camera.x-rendered.width/2} ${camera.y-height/2} ${rendered.width} ${height}`} role="img" aria-label={`${lineId} 추적 노선도`}>
+  return <svg ref={surface} className="route-map tracking-map" data-line={lineId} data-camera-station={current} data-camera-width={rendered.width} data-train-distance={rendered.train} data-motion-state={rendered.moving?'moving':'settled'} viewBox={`${camera.x-rendered.width/2} ${camera.y-height/2} ${rendered.width} ${height}`} role="img" aria-label={`${lineId} 추적 노선도`}>
     <path d={world.pathD} fill="none" stroke="#deddd7" strokeWidth="22" strokeLinecap="round" />
     <path d={world.pathD} fill="none" stroke={color} strokeWidth="13" strokeLinecap="round" />
     <circle className="target-ring tracking-target-halo" data-halo-normal={`${normal.x},${normal.y}`} data-route-tangent={`${tangent.x},${tangent.y}`} style={haloStyle} cx={currentPoint.x} cy={currentPoint.y} r="20" fill="white" stroke={color} strokeWidth="4" />

@@ -1,6 +1,6 @@
 import type { ChangeEventHandler,KeyboardEventHandler,RefObject } from 'react'
 
-export default function StationTypingField({target,number,value,errorAttempt,inputRef,onChange,onKeyDown}:{target:string;number:string;value:string;errorAttempt:number;inputRef:RefObject<HTMLInputElement|null>;onChange:ChangeEventHandler<HTMLInputElement>;onKeyDown:KeyboardEventHandler<HTMLInputElement>}) {
+export default function StationTypingField({target,number,value,errorAttempt,inputRef,onChange,onKeyDown,onKeyUp}:{target:string;number:string;value:string;errorAttempt:number;inputRef:RefObject<HTMLInputElement|null>;onChange:ChangeEventHandler<HTMLInputElement>;onKeyDown:KeyboardEventHandler<HTMLInputElement>;onKeyUp?:KeyboardEventHandler<HTMLInputElement>}) {
   const targetCharacters=Array.from(target),typed=Array.from(value.normalize('NFC'))
   return <div className="typing-field">
     <div className="typing-visual" data-error-attempt={errorAttempt} key={errorAttempt}>
@@ -17,6 +17,6 @@ export default function StationTypingField({target,number,value,errorAttempt,inp
         </div>
       </div>
     </div>
-    <input ref={inputRef} value={value} onChange={onChange} onKeyDown={onKeyDown} aria-label="역명 입력" autoComplete="off" spellCheck={false} />
+    <input ref={inputRef} value={value} onChange={onChange} onKeyDown={onKeyDown} onKeyUp={onKeyUp} aria-label="역명 입력" autoComplete="off" spellCheck={false} />
   </div>
 }

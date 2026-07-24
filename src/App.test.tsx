@@ -9,7 +9,7 @@ vi.mock('./audio/sounds',()=>({playSound:vi.fn()}))
 vi.mock('./components/Game',async importOriginal=>{
   const {default:Game}=await importOriginal<typeof import('./components/Game')>()
   return {default:(props:ComponentProps<typeof Game>)=>props.lineId==='seoul-9'
-    ? <section data-testid="line-9-game" data-stations={props.stations.join('|')}><h1>{props.stations[0]}</h1><div className="route-progress">1 / {props.stations.length}</div>{props.durationSeconds&&<span>노선 전체에서 무작위 출제</span>}</section>
+    ? <section data-testid="line-9-game" data-stations={props.stations!.join('|')}><h1>{props.stations![0]}</h1><div className="route-progress">1 / {props.stations!.length}</div>{props.durationSeconds&&<span>노선 전체에서 무작위 출제</span>}</section>
     : <Game {...props}/>}
 })
 afterEach(()=>vi.mocked(playSound).mockClear())

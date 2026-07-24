@@ -298,3 +298,35 @@ test('random play accepts a correct answer through the typing field and moves to
   expect(screen.getByRole('textbox')).toHaveValue('')
   expect(container.querySelector('.direction-panel [data-position="current"]')?.textContent).toContain('강남')
 })
+
+test('transfer mode renders the boarded line world and advances by typing',()=>{
+  const {container}=render(<Game journey={{line:'seoul-1',station:'소요산',toward:'동두천'}} color="#0052A4" onExit={()=>{}} />)
+  expect(container.querySelector('.tracking-map')).not.toBeNull()
+  expect(screen.getByRole('heading',{name:'동두천'})).toBeInTheDocument()
+  const input=screen.getByRole('textbox')
+  fireEvent.change(input,{target:{value:'동두천'}})
+  fireEvent.keyDown(input,{key:'Enter',isComposing:false})
+  expect(screen.getByRole('heading',{name:'보산'})).toBeInTheDocument()
+})
+
+test('Tab at a transfer station switches the line and recolours; ignored elsewhere',()=>{
+  const {container}=render(<Game journey={{line:'seoul-1',station:'구로',toward:'가산디지털단지'}} color="#0052A4" onExit={()=>{}} />)
+  const input=screen.getByRole('textbox')
+  // 구로 is Line 1 only among supported lines here, so no transfer sign.
+  expect(container.querySelector('.transfer-sign')).toBeNull()
+  fireEvent.keyDown(input,{key:'Tab'})
+  expect(container.querySelector('.tracking-map')).not.toBeNull()
+})
+
+test('quick Tab transfers to the priority line at a transfer station',()=>{
+  const {container}=render(<Game journey={{line:'seoul-5',station:'김포공항',toward:'송정'}} color="#996CAC" onExit={()=>{}} />)
+  expect(container.querySelector('.transfer-sign')).not.toBeNull()
+  const input=screen.getByRole('textbox')
+  fireEvent.keyDown(input,{key:'Tab'})
+  fireEvent.keyUp(input,{key:'Tab'})
+  // Priority option at 김포공항 from seoul-5 is seoul-9; its world colour is #BDB092.
+  expect(container.querySelector('.tracking-map[data-line="seoul-9"]')).not.toBeNull()
+  // After the transfer the direction is undecided: empty typing target, no remaining target glyphs.
+  expect(container.querySelector('.typing-field input')).toHaveValue('')
+  expect(container.querySelector('.typing-name .remaining')).toBeNull()
+})
