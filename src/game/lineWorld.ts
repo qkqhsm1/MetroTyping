@@ -2,7 +2,7 @@ import type { Point } from './geometry'
 import { getLine } from '../data/lines'
 import { resolveTopology } from './lineTopology'
 
-export const STATION_SPACING=110
+export const STATION_SPACING=77
 const CORNER=0.28
 const SAMPLES_PER_SEGMENT=24
 
@@ -108,7 +108,7 @@ export function getLineWorld(lineId:string,stations:string[]):LineWorld{
     const nearby=stationDistances.slice(Math.max(0,index-2),index+3).map(pointAt)
     const xs=nearby.map(point=>point.x),ys=nearby.map(point=>point.y)
     const span=Math.max(Math.max(...xs)-Math.min(...xs),(Math.max(...ys)-Math.min(...ys))*1.55)
-    return Math.max(limits.min,Math.min(limits.max,span*.86+240))
+    return Math.max(limits.min,Math.min(limits.max,span*1.4+185))
   }
 
   // Clipped to the run. Walking the interval rather than filtering world vertices keeps this correct

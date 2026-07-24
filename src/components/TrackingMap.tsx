@@ -23,6 +23,13 @@ type Box={left:number;right:number;top:number;bottom:number}
 const overlaps=(a:Box,b:Box)=>a.left<b.right+4&&b.left<a.right+4&&a.top<b.bottom+2&&b.top<a.bottom+2
 const hitsNode=(box:Box,node:{x:number;y:number})=>
   Math.hypot(node.x-Math.min(Math.max(node.x,box.left),box.right),node.y-Math.min(Math.max(node.y,box.top),box.bottom))<NODE_RADIUS
+// A label has to read as belonging to its own station, so its centre stays nearer that station than
+// any other. Without this a pushed-aside label ends up sitting beside its neighbour instead.
+const ownsBox=(box:Box,nodes:readonly {x:number;y:number}[],index:number)=>{
+  const x=(box.left+box.right)/2,y=(box.top+box.bottom)/2
+  const own=Math.hypot(nodes[index]!.x-x,nodes[index]!.y-y)
+  return nodes.every((node,other)=>other===index||Math.hypot(node.x-x,node.y-y)>=own)
+}
 // Korean glyphs are close to square; Latin averages a little over half its size.
 const labelWidth=(korean:string,english:string,shrunk:boolean)=>
   Math.max([...korean].length*LABEL_KOREAN,english.length*(shrunk?LABEL_ENGLISH*.83:LABEL_ENGLISH)*.55)
@@ -99,7 +106,10 @@ export default function TrackingMap({lineId,stations,targetIndex,color}:{lineId:
       const width=labelWidth(info.korean,info.english,info.english.length>18)
       const preferred=index%2===0?1:-1
       let fallback
-      for(const side of [preferred,-preferred])for(const stretch of [1,1.5,2.1]){
+      // Distance is tried before side, so a label takes the near seat on either side before it is
+      // pushed outward. Reaching far on one side first is what makes a label look like it belongs to
+      // the neighbouring station.
+      for(const stretch of [1,1.3,1.7])for(const side of [preferred,-preferred]){
         const away={x:-Math.sin(radians)*side,y:Math.cos(radians)*side}
         // Only the part of the block facing the track is added: a steep segment pushes labels
         // sideways, where the block's height costs nothing.
@@ -113,7 +123,7 @@ export default function TrackingMap({lineId,stations,targetIndex,color}:{lineId:
         // point; otherwise every label above the track leans back into it.
         const candidate={name,info,point,labelX:x,labelY:y-LABEL_BLOCK/2+LABEL_KOREAN*.75,anchor,index,box}
         fallback??=candidate
-        if(!placed.some(other=>overlaps(box,other))&&!nodes.some(node=>hitsNode(box,node))){
+        if(!placed.some(other=>overlaps(box,other))&&!nodes.some(node=>hitsNode(box,node))&&ownsBox(box,nodes,index)){
           placed.push(box)
           return candidate
         }
