@@ -55,20 +55,25 @@ test.each([['clockwise'],['counterclockwise']])('a loop run unwraps monotonicall
   expect(Math.sign(span)).toBe(direction==='clockwise'?1:-1)
 })
 
-test('camera width stays inside the readable band',()=>{
+test.each([[{min:360,max:620}],[{min:240,max:400}]])('camera width stays inside the caller band %j',limits=>{
   const stations=getRoute('suin-bundang','인천','청량리').stationIds
   const world=getLineWorld('suin-bundang',stations)
   for(let index=0;index<world.stationNames.length;index++){
-    const width=world.cameraWidth(index)
-    expect(width).toBeGreaterThanOrEqual(360)
-    expect(width).toBeLessThanOrEqual(620)
+    const width=world.cameraWidth(index,limits)
+    expect(width).toBeGreaterThanOrEqual(limits.min)
+    expect(width).toBeLessThanOrEqual(limits.max)
   }
+})
+
+test('a narrower band shows fewer stations than a wide one',()=>{
+  const world=getLineWorld('suin-bundang',getRoute('suin-bundang','인천','청량리').stationIds)
+  expect(world.cameraWidth(6,{min:240,max:400})).toBeLessThan(world.cameraWidth(6,{min:360,max:620}))
 })
 
 test('a single-station run does not divide by zero',()=>{
   const world=getLineWorld('arex',['서울역'])
   expect(world.stationDistances).toHaveLength(1)
-  expect(Number.isFinite(world.cameraWidth(0))).toBe(true)
+  expect(Number.isFinite(world.cameraWidth(0,{min:360,max:620}))).toBe(true)
 })
 
 // The spacing tests above hold for any arithmetic distance table; these two pin the geometry itself.

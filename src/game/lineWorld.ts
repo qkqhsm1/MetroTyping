@@ -13,8 +13,11 @@ export type LineWorld={
   stationNames:string[]
   stationDistances:number[]
   pointAt(distance:number):{x:number;y:number;angle:number}
-  cameraWidth(index:number):number
+  cameraWidth(index:number,limits:CameraLimits):number
 }
+// How wide a view the surface can carry. A phone holds far fewer stations than a desktop at a size
+// worth reading, so the caller supplies its own bounds rather than sharing one compromise.
+export type CameraLimits={min:number;max:number}
 type Sample={x:number;y:number;distance:number}
 
 const lerp=(a:Point,b:Point,t:number):Point=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]
@@ -97,11 +100,11 @@ export function getLineWorld(lineId:string,stations:string[]):LineWorld{
     }
   }
 
-  const cameraWidth=(index:number)=>{
+  const cameraWidth=(index:number,limits:CameraLimits)=>{
     const nearby=stationDistances.slice(Math.max(0,index-2),index+3).map(pointAt)
     const xs=nearby.map(point=>point.x),ys=nearby.map(point=>point.y)
     const span=Math.max(Math.max(...xs)-Math.min(...xs),(Math.max(...ys)-Math.min(...ys))*1.55)
-    return Math.max(360,Math.min(620,span*1.45+150))
+    return Math.max(limits.min,Math.min(limits.max,span*1.45+150))
   }
 
   // Clipped to the run. Walking the interval rather than filtering world vertices keeps this correct

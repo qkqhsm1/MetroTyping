@@ -2,6 +2,14 @@ import { useEffect,useMemo,useRef,useState,type CSSProperties } from 'react'
 import { stationInfo } from '../data/stationInfo'
 import { STATION_SPACING,getLineWorld } from '../game/lineWorld'
 
+// A phone and a desktop get their own camera rather than one compromise: the narrower compact band
+// trades stations on screen for labels worth reading. The query is the 640px breakpoint styles.css
+// already uses.
+const COMPACT_QUERY='(max-width: 640px)'
+const DESKTOP_CAMERA={min:360,max:620}
+const COMPACT_CAMERA={min:230,max:340}
+const DEFAULT_ASPECT=.625
+
 const easeOut=(progress:number)=>1-(1-progress)**3
 const smooth=(progress:number)=>progress*progress*(3-2*progress)
 
@@ -21,7 +29,31 @@ const labelWidth=(korean:string,english:string,shrunk:boolean)=>
 
 export default function TrackingMap({lineId,stations,targetIndex,color}:{lineId:string;stations:string[];targetIndex:number;color:string}) {
   const world=useMemo(()=>getLineWorld(lineId,stations),[lineId,stations])
-  const targetDistance=world.stationDistances[targetIndex]!,targetWidth=world.cameraWidth(targetIndex)
+  const [compact,setCompact]=useState(()=>window.matchMedia?.(COMPACT_QUERY).matches??false)
+  useEffect(()=>{
+    const query=window.matchMedia?.(COMPACT_QUERY)
+    if(!query)return
+    const sync=()=>setCompact(query.matches)
+    sync()
+    query.addEventListener('change',sync)
+    return()=>query.removeEventListener('change',sync)
+  },[])
+  // The view is shaped from the element the browser actually laid out, so it fills its box on every
+  // screen instead of letterboxing against a ratio guessed here.
+  const surface=useRef<SVGSVGElement>(null)
+  const [aspect,setAspect]=useState(DEFAULT_ASPECT)
+  useEffect(()=>{
+    const node=surface.current
+    if(!node||typeof ResizeObserver==='undefined')return
+    const observer=new ResizeObserver(entries=>{
+      const box=entries[0]?.contentRect
+      if(box&&box.width>0&&box.height>0)setAspect(box.height/box.width)
+    })
+    observer.observe(node)
+    return()=>observer.disconnect()
+  },[])
+  const view=compact?COMPACT_CAMERA:DESKTOP_CAMERA
+  const targetDistance=world.stationDistances[targetIndex]!,targetWidth=world.cameraWidth(targetIndex,view)
   const [motion,setMotion]=useState(()=>({train:targetDistance,camera:targetDistance,width:targetWidth,moving:false}))
   const motionRef=useRef(motion),frame=useRef<number|undefined>(undefined)
   const reducedMotion=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
@@ -51,7 +83,7 @@ export default function TrackingMap({lineId,stations,targetIndex,color}:{lineId:
     return()=>window.cancelAnimationFrame(frame.current!)
   },[reducedMotion,targetDistance,targetWidth])
   const rendered=reducedMotion?{train:targetDistance,camera:targetDistance,width:targetWidth,moving:false}:motion
-  const current=world.stationNames[targetIndex]!,train=world.pointAt(rendered.train),camera=world.pointAt(rendered.camera),height=rendered.width*.625
+  const current=world.stationNames[targetIndex]!,train=world.pointAt(rendered.train),camera=world.pointAt(rendered.camera),height=rendered.width*aspect
   const currentPoint=world.pointAt(targetDistance),currentRadians=currentPoint.angle*Math.PI/180
   const tangent={x:Math.cos(currentRadians),y:Math.sin(currentRadians)},normal={x:-tangent.y,y:tangent.x}
   const haloStyle={'--halo-from-x':`${-normal.x*22}px`,'--halo-from-y':`${-normal.y*22}px`,'--halo-to-x':`${normal.x*22}px`,'--halo-to-y':`${normal.y*22}px`} as CSSProperties
@@ -90,7 +122,7 @@ export default function TrackingMap({lineId,stations,targetIndex,color}:{lineId:
       return fallback!
     })
   },[lineId,world])
-  return <svg className="route-map tracking-map" data-camera-station={current} data-camera-width={rendered.width} data-train-distance={rendered.train} data-motion-state={rendered.moving?'moving':'settled'} viewBox={`${camera.x-rendered.width/2} ${camera.y-height/2} ${rendered.width} ${height}`} role="img" aria-label={`${lineId} 추적 노선도`}>
+  return <svg ref={surface} className="route-map tracking-map" data-camera-station={current} data-camera-width={rendered.width} data-train-distance={rendered.train} data-motion-state={rendered.moving?'moving':'settled'} viewBox={`${camera.x-rendered.width/2} ${camera.y-height/2} ${rendered.width} ${height}`} role="img" aria-label={`${lineId} 추적 노선도`}>
     <path d={world.pathD} fill="none" stroke="#deddd7" strokeWidth="22" strokeLinecap="round" />
     <path d={world.pathD} fill="none" stroke={color} strokeWidth="13" strokeLinecap="round" />
     <circle className="target-ring tracking-target-halo" data-halo-normal={`${normal.x},${normal.y}`} data-route-tangent={`${tangent.x},${tangent.y}`} style={haloStyle} cx={currentPoint.x} cy={currentPoint.y} r="20" fill="white" stroke={color} strokeWidth="4" />
