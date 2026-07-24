@@ -346,6 +346,18 @@ test('Enter at a terminus that still offers a transfer ends the journey',()=>{
   expect(screen.getByText('환승 여행 완료')).not.toBeNull()
 })
 
+test('a loop leg centres the boarding station so the ring seam falls off-screen, not behind the train',()=>{
+  const {container}=render(<Game journey={{line:'seoul-2',station:'신대방',toward:'구로디지털단지'}} color="#00A84D" onExit={()=>{}} />)
+  const order=[...container.querySelectorAll('.tracking-map g[data-station]')].map(node=>node.getAttribute('data-station'))
+  const here=order.indexOf('신대방')
+  // Both ring neighbours are drawn right next to the boarding station — the track is continuous here.
+  expect(order[here-1]==='신림'||order[here+1]==='신림').toBe(true)
+  expect(order[here-1]==='구로디지털단지'||order[here+1]==='구로디지털단지').toBe(true)
+  // And the station sits away from either array end, where the undrawn seam lives.
+  expect(here).toBeGreaterThan(5)
+  expect(here).toBeLessThan(order.length-5)
+})
+
 test('Tab at a transfer station switches the line and recolours; ignored elsewhere',()=>{
   const {container}=render(<Game journey={{line:'seoul-1',station:'구로',toward:'가산디지털단지'}} color="#0052A4" onExit={()=>{}} />)
   const input=screen.getByRole('textbox')

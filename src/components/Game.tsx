@@ -50,8 +50,16 @@ const buildLegPath=(position:Position):string[]=>{
   const {line,station,from}=position
   const forward=onwardStations(line,station).find(name=>name!==from)
   if(!forward)return [station]
-  try{return resolveTopology(line,[station,forward]).sequence}
-  catch{return [station,...walkAway(line,station,forward,80)]}
+  try{
+    const sequence=resolveTopology(line,[station,forward]).sequence
+    if(!getLine(line).loop)return sequence
+    // A ring has one unavoidable seam where the unrolled loop's two ends meet and the track is not drawn.
+    // resolveTopology starts the ring at the boarding station, which puts that seam right behind the train.
+    // Rotate the boarding station to the middle so the seam falls on the far side of the ring, off-screen,
+    // instead of cutting the track one stop behind you.
+    const half=Math.floor(sequence.length/2)
+    return [...sequence.slice(half),...sequence.slice(0,half)]
+  }catch{return [station,...walkAway(line,station,forward,80)]}
 }
 
 export default function Game({ lineId,stations=[],color,sound=true,durationSeconds,journey,onExit }:{ lineId?:string; stations?:string[]; color:string; sound?:boolean; durationSeconds?:number; journey?:{line:string;station:string;toward:string}; onExit:()=>void }) {
