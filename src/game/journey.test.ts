@@ -1,5 +1,5 @@
 import { expect,test } from 'vitest'
-import { advance,beginTransfer,boardJourney,isDeadEnd,nextTargets } from './journey'
+import { advance,beginTransfer,boardJourney,flipDirection,isDeadEnd,nextTargets } from './journey'
 
 test('boarding stands at the departure and types it first, then heads toward the chosen neighbour',()=>{
   const journey=boardJourney('seoul-1','소요산','동두천')
@@ -25,33 +25,33 @@ test('boarding a terminus rides inward from it',()=>{
   expect(moved.position.station).toBe('전곡')
 })
 
-test('after a transfer either neighbour is valid and the first typed sets direction',()=>{
+test('a transfer stays at the station, heads the longer way by default, and Shift flips it',()=>{
   const boarded=boardJourney('seoul-5','방화','개화산')
   const atGimpo:typeof boarded={...boarded,position:{line:'seoul-5',station:'김포공항',from:'송정'}}
   const transferred=beginTransfer(atGimpo,'seoul-9')
   expect(transferred.position.line).toBe('seoul-9')
-  expect(transferred.position.undecided).toBe(true)
-  // 김포공항 on Line 9 sits between 개화 and 공항시장; either resolves direction.
-  expect(nextTargets(transferred.position).sort()).toEqual(['개화','공항시장'])
-  expect(advance(transferred,'개화')!.position.station).toBe('개화')
-  const toward공항시장=advance(transferred,'공항시장')!
-  expect(toward공항시장.position.station).toBe('공항시장')
-  expect(toward공항시장.position.from).toBe('김포공항')
+  // You type the station you stand at, not a neighbour, so the direction is already decided.
+  expect(nextTargets(transferred.position)).toEqual(['김포공항'])
+  // 김포공항 on Line 9 sits between 개화 (a terminus one stop away) and the long run through 공항시장; the
+  // default heads the longer way, so typing 김포공항 steps onto 공항시장.
+  expect(advance(transferred,'김포공항')!.position.station).toBe('공항시장')
+  // Shift before moving flips to the short way: now typing 김포공항 steps onto 개화.
+  expect(advance(flipDirection(transferred),'김포공항')!.position.station).toBe('개화')
   expect(transferred.lines).toEqual(['seoul-5','seoul-9'])
   expect(transferred.transfers).toBe(1)
 })
 
 test('transferring onto a line where the station is a terminus forces the one open direction',()=>{
-  // 인천 is the Suin·Bundang terminus, so its only onward neighbour is 신포; the fork is skipped and
-  // the run heads straight down the line with a full onward world instead of a cropped window.
+  // 인천 is the Suin·Bundang terminus, so its only onward neighbour is 신포. You still type 인천 first, then
+  // the forced direction steps onto 신포. There is nothing to flip.
   const boarded=boardJourney('seoul-1','동인천','인천')
   const atIncheon:typeof boarded={...boarded,position:{line:'seoul-1',station:'인천',from:'동인천'}}
   const transferred=beginTransfer(atIncheon,'suin-bundang')
   expect(transferred.position.line).toBe('suin-bundang')
-  expect(transferred.position.undecided).toBeUndefined()
-  expect(transferred.position.station).toBe('신포')
-  expect(transferred.position.from).toBe('인천')
-  expect(nextTargets(transferred.position)).toEqual(['신포'])
+  expect(transferred.position.station).toBe('인천')
+  expect(nextTargets(transferred.position)).toEqual(['인천'])
+  expect(advance(transferred,'인천')!.position.station).toBe('신포')
+  expect(flipDirection(transferred)).toEqual(transferred)
 })
 
 test('typing a terminus marks an arrival with nothing left to type',()=>{

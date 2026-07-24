@@ -331,41 +331,65 @@ test('Tab at a transfer station switches the line and recolours; ignored elsewhe
   expect(container.querySelector('.tracking-map')).not.toBeNull()
 })
 
-test('quick Tab transfers to the priority line at a transfer station',()=>{
+test('quick Tab transfers to the priority line and you type the station you stand at',()=>{
   const {container}=render(<Game journey={{line:'seoul-5',station:'김포공항',toward:'송정'}} color="#996CAC" onExit={()=>{}} />)
   expect(container.querySelector('.transfer-sign')).not.toBeNull()
   const input=screen.getByRole('textbox')
   fireEvent.keyDown(input,{key:'Tab'})
   fireEvent.keyUp(input,{key:'Tab'})
-  // Priority option at 김포공항 from seoul-5 is seoul-9; its world colour is #BDB092.
+  // Priority option at 김포공항 from seoul-5 is seoul-9.
   expect(container.querySelector('.tracking-map[data-line="seoul-9"]')).not.toBeNull()
-  // After the transfer the direction is undecided: you keep typing, and either neighbour sets the way.
-  // 김포공항 on Line 9 offers [개화, 공항시장], both named in the pill.
-  expect(container.querySelector('.typing-field')).not.toBeNull()
-  const pill=container.querySelector('.current-station')?.textContent??''
-  expect(pill).toContain('개화')
-  expect(pill).toContain('공항시장')
+  // You still type the station you stand at, 김포공항 — not a neighbour.
+  expect(container.querySelector('.direction-panel [data-position="current"]')?.textContent).toContain('김포공항')
+  // The way behind carries a Shift badge, so the other direction is one keypress away.
+  expect(container.querySelector('.direction-station[data-shift] .direction-shift')).not.toBeNull()
 })
 
-test('typing a neighbour at an undecided fork sets the direction and keeps the run going',()=>{
+test('after a transfer the default heads the longer way; typing the station advances it',()=>{
   const {container}=render(<Game journey={{line:'seoul-5',station:'김포공항',toward:'송정'}} color="#996CAC" onExit={()=>{}} />)
   const input=screen.getByRole('textbox')
   fireEvent.keyDown(input,{key:'Tab'})
   fireEvent.keyUp(input,{key:'Tab'})
-  // 김포공항 on Line 9 offers [개화, 공항시장]; typing 공항시장 heads that way and the sign follows.
-  fireEvent.change(input,{target:{value:'공항시장'}})
+  // 김포공항 on Line 9: 개화 is a terminus one stop away, so the longer default heads toward 공항시장.
+  fireEvent.change(input,{target:{value:'김포공항'}})
   fireEvent.keyDown(input,{key:'Enter',isComposing:false})
   expect(container.querySelector('.direction-panel [data-position="current"]')?.textContent).toContain('공항시장')
 })
 
-test('either neighbour is accepted at the fork; the other direction works too',()=>{
+test('Shift after a transfer flips the direction before you move',()=>{
   const {container}=render(<Game journey={{line:'seoul-5',station:'김포공항',toward:'송정'}} color="#996CAC" onExit={()=>{}} />)
   const input=screen.getByRole('textbox')
   fireEvent.keyDown(input,{key:'Tab'})
   fireEvent.keyUp(input,{key:'Tab'})
-  fireEvent.change(input,{target:{value:'개화'}})
+  // Flip toward the short way, then typing 김포공항 steps onto 개화 instead of 공항시장.
+  fireEvent.keyDown(input,{key:'Shift'})
+  fireEvent.change(input,{target:{value:'김포공항'}})
   fireEvent.keyDown(input,{key:'Enter',isComposing:false})
   expect(container.querySelector('.direction-panel [data-position="current"]')?.textContent).toContain('개화')
+})
+
+test('after a transfer, advancing keeps the stations you passed on the map',()=>{
+  const {container}=render(<Game journey={{line:'seoul-5',station:'김포공항',toward:'송정'}} color="#996CAC" onExit={()=>{}} />)
+  const input=screen.getByRole('textbox')
+  fireEvent.keyDown(input,{key:'Tab'})
+  fireEvent.keyUp(input,{key:'Tab'})
+  // Type 김포공항 (steps onto 공항시장), then 공항시장 (steps onto 신방화). 김포공항 must remain drawn.
+  fireEvent.change(input,{target:{value:'김포공항'}})
+  fireEvent.keyDown(input,{key:'Enter',isComposing:false})
+  fireEvent.change(input,{target:{value:'공항시장'}})
+  fireEvent.keyDown(input,{key:'Enter',isComposing:false})
+  expect(container.querySelector('.direction-panel [data-position="current"]')?.textContent).toContain('신방화')
+  expect(container.querySelector('.tracking-map [data-station="김포공항"]')).not.toBeNull()
+})
+
+test('Tab plus a number transfers straight to that option',()=>{
+  const {container}=render(<Game journey={{line:'seoul-5',station:'김포공항',toward:'송정'}} color="#996CAC" onExit={()=>{}} />)
+  const input=screen.getByRole('textbox')
+  // Options at 김포공항 from seoul-5 are [seoul-9, arex]; hold Tab and press 2 → arex directly.
+  fireEvent.keyDown(input,{key:'Tab'})
+  fireEvent.keyDown(input,{key:'2'})
+  fireEvent.keyUp(input,{key:'Tab'})
+  expect(container.querySelector('.tracking-map[data-line="arex"]')).not.toBeNull()
 })
 
 test('the hold menu picks a transfer line by number key and Esc closes it',()=>{

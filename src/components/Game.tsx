@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent,type KeyboardEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent,type KeyboardEvent } from 'react'
 import TrackingMap from './TrackingMap'
 import StationTypingField from './StationTypingField'
 import DirectionSign from './DirectionSign'
@@ -6,7 +6,7 @@ import TransferSign from './TransferSign'
 import { YAMANOTE_LABELS, getLine } from '../data/lines'
 import { stationInfo } from '../data/stationInfo'
 import { playSound } from '../audio/sounds'
-import { boardJourney,advance,beginTransfer,isDeadEnd,nextTargets,type Journey,type Position } from '../game/journey'
+import { boardJourney,advance,beginTransfer,flipDirection,isDeadEnd,type Journey,type Position } from '../game/journey'
 import { onwardStations,transferOptionsAt } from '../game/transfers'
 
 // Keystrokes per syllable, the 자소 unit Hancom Typing uses: 한 = ㅎ+ㅏ+ㄴ = 3, 값 = ㄱ+ㅏ+ㅂ+ㅅ = 4.
@@ -38,15 +38,15 @@ const walkAway=(line:string,origin:string,first:string|undefined,count:number):s
   }
   return path
 }
-// The world fed to the transfer-mode map. Decided: the forward run from where the player stands to the
-// terminus, so the map/sign/typing render along it. Undecided (just transferred): a window centred on
-// the station showing a few stops each way, so both travel directions are visible to choose.
-const buildRoamPath=(position:Position):string[]=>{
-  if(position.undecided){
-    const [before,after]=onwardStations(position.line,position.station)
-    return [...walkAway(position.line,position.station,before,4).reverse(),position.station,...walkAway(position.line,position.station,after,4)]
-  }
-  return [position.station,...walkAway(position.line,position.station,onwardStations(position.line,position.station).find(name=>name!==position.from),60)]
+// The fixed world for one transfer-mode leg: the whole line through the boarding station, laid out with
+// the way behind you first, then the boarding station, then the forward run to the terminus. It is built
+// once when a leg begins (board/transfer/flip) and never per answer, so stations you pass stay on the
+// map and the train just advances its index along it — the way ordered play keeps its route.
+const buildLegPath=(position:Position):string[]=>{
+  const {line,station,from}=position
+  const forward=onwardStations(line,station).find(name=>name!==from)
+  const behind=from?walkAway(line,station,from,80).reverse():[]
+  return [...behind,station,...walkAway(line,station,forward,80)]
 }
 
 export default function Game({ lineId,stations=[],color,sound=true,durationSeconds,journey,onExit }:{ lineId?:string; stations?:string[]; color:string; sound?:boolean; durationSeconds?:number; journey?:{line:string;station:string;toward:string}; onExit:()=>void }) {
@@ -62,25 +62,24 @@ export default function Game({ lineId,stations=[],color,sound=true,durationSecon
   const [jasoLog,setJasoLog]=useState<number[]>([])
   const roaming=journey!==undefined
   const [trip,setTrip]=useState<Journey|null>(()=>journey?boardJourney(journey.line,journey.station,journey.toward):null)
+  // The leg's fixed line map, and whether the player is still at its start (has not typed the boarding
+  // station yet). While at the start, Shift may still flip the direction; the first correct answer ends
+  // it. `startLeg` swaps in a new leg (board/transfer/flip) as one atomic move.
+  const [legPath,setLegPath]=useState<string[]>(()=>trip?buildLegPath(trip.position):[])
+  const [legStart,setLegStart]=useState(true)
+  const startLeg=(next:Journey)=>{setTrip(next);setLegPath(buildLegPath(next.position));setLegStart(true);setValue('')}
   const [menuOpen,setMenuOpen]=useState(false)
   const holdStart=useRef<number|undefined>(undefined),holdRaf=useRef<number|undefined>(undefined)
   const [holdProgress,setHoldProgress]=useState(0)
-  const roamStations=useMemo(()=>roaming&&trip?buildRoamPath(trip.position):[],[roaming,trip])
-  const roamOptions=roaming&&trip?nextTargets(trip.position):[]
-  const roamUndecided=roaming&&trip?trip.position.undecided===true:false
-  // You always type the station you stand at, so a decided run's single target is that station. At an
-  // undecided fork you type a neighbour to pick the way, so the target tracks whichever one your typing
-  // is heading toward, letting the field colour the letters against it.
-  const roamTarget=roaming&&trip
-    ?(roamUndecided
-      ?(roamOptions.find(name=>name.startsWith(value.normalize('NFC')))??roamOptions[0]??'')
-      :(roamOptions.length===1?roamOptions[0]!:''))
-    :''
+  const cancelHold=()=>{window.cancelAnimationFrame(holdRaf.current!);holdStart.current=undefined;setHoldProgress(0)}
+  const roamStations=legPath
+  // You always type the station you stand at; an arrival leaves nothing to type.
+  const roamTarget=roaming&&trip&&!trip.position.arrived?trip.position.station:''
   const roamIndex=roaming&&trip?Math.max(0,roamStations.indexOf(trip.position.station)):0
   const roamColor=roaming&&trip?getLine(trip.position.line).color:color
   const roamFinished=roaming&&trip?isDeadEnd(trip.position):false
   const finished=roaming?roamFinished:(remaining===0||(!timed&&index>=stations.length))
-  useEffect(()=>input.current?.focus(),[index,trip?.position.station,trip?.position.undecided])
+  useEffect(()=>input.current?.focus(),[index,trip?.position.station,trip?.position.line])
   useEffect(()=>{
     if(remaining===undefined||remaining===0)return
     const timer=window.setTimeout(()=>setRemaining(remaining-1),1000)
@@ -95,7 +94,8 @@ export default function Game({ lineId,stations=[],color,sound=true,durationSecon
     if(roaming&&trip){
       if(event.key!=='Enter'||event.nativeEvent.isComposing)return
       const moved=advance(trip,value)
-      if(moved){playSound('correct',sound);setValue('');setTrip(moved);setStartedAt(start=>start??Date.now());setNow(Date.now())}
+      // Keep the same leg map and just step the index; the direction is now committed, so leave leg-start.
+      if(moved){playSound('correct',sound);setValue('');setTrip(moved);setLegStart(false);setStartedAt(start=>start??Date.now());setNow(Date.now())}
       else{playSound('error',sound);setErrors(current=>current+1)}
       return
     }
@@ -105,12 +105,17 @@ export default function Game({ lineId,stations=[],color,sound=true,durationSecon
   const roamKeyDown=(event:KeyboardEvent<HTMLElement>)=>{
     if(!roaming||!trip)return submit(event)
     const options=transferOptionsAt(trip.position.station,trip.position.line)
-    if(event.key==='Escape'&&menuOpen){setMenuOpen(false);return}
-    if(menuOpen&&/^[1-9]$/.test(event.key)){
+    if(event.key==='Escape'&&menuOpen){setMenuOpen(false);cancelHold();return}
+    // A number picks a line directly whether the hold menu is open or Tab is still held down (Tab+2 → the
+    // 2nd option straight away). Cancelling the hold stops the Tab keyup from also firing a first-option
+    // transfer.
+    if(/^[1-9]$/.test(event.key)&&(menuOpen||holdStart.current!==undefined)){
       const choice=options[Number(event.key)-1]
-      if(choice){setTrip(beginTransfer(trip,choice));setMenuOpen(false)}
-      event.preventDefault();return
+      if(choice){startLeg(beginTransfer(trip,choice));setMenuOpen(false)}
+      cancelHold();event.preventDefault();return
     }
+    // Before you have moved off a fresh leg, Shift flips the travel direction.
+    if(event.key==='Shift'&&legStart){event.preventDefault();if(onwardStations(trip.position.line,trip.position.station).length>1)startLeg(flipDirection(trip));return}
     if(event.key==='Tab'){
       event.preventDefault()
       if(!options.length)return
@@ -125,10 +130,12 @@ export default function Game({ lineId,stations=[],color,sound=true,durationSecon
   }
   const roamKeyUp=(event:KeyboardEvent<HTMLElement>)=>{
     if(event.key!=='Tab'||!roaming||!trip)return
-    const held=holdStart.current!==undefined?performance.now()-holdStart.current:0
-    window.cancelAnimationFrame(holdRaf.current!);holdStart.current=undefined;setHoldProgress(0)
+    // Only a still-pending hold (not one a number key already consumed) counts as a quick tap.
+    const pending=holdStart.current!==undefined
+    const held=pending?performance.now()-holdStart.current!:0
+    cancelHold()
     const options=transferOptionsAt(trip.position.station,trip.position.line)
-    if(held<1500&&options.length){setTrip(beginTransfer(trip,options[0]!));setMenuOpen(false)}
+    if(pending&&held<1500&&options.length){startLeg(beginTransfer(trip,options[0]!));setMenuOpen(false)}
   }
   const changeInput=(event:ChangeEvent<HTMLInputElement>)=>{
     const next=event.target.value,added=Math.max(0,countJaso(next)-countJaso(value))
@@ -155,13 +162,15 @@ export default function Game({ lineId,stations=[],color,sound=true,durationSecon
   if(roaming&&trip){
     const here=trip.position.station,arrived=trip.position.arrived===true
     const roamNumber=roamTarget?stationInfo(trip.position.line,roamTarget).number:''
-    const pill=roamUndecided?`환승 · ${roamOptions.join(' 또는 ')} 방향`:arrived?`${here} 도착 · 환승 또는 종료`:`다음 ${here}`
+    // Fresh leg with both ways open: the way behind (previous) is the one Shift flips you to.
+    const flippable=legStart&&!arrived&&onwardStations(trip.position.line,here).length>1
+    const pill=arrived?`${here} 도착 · 환승 또는 종료`:`다음 ${here}`
     const roamStyle={'--line':roamColor,'--sign-interaction-width':`${Math.max(...roamStations.map(signWidth))}px`,'--sign-target-width':`${signWidth(here)}px`} as React.CSSProperties
     return <section className="game" style={roamStyle}>
       <div className="game-top"><button className="back" onClick={onExit}>← 운행 종료</button><div className="game-metrics"><div className="live-time"><span>PLAY TIME</span><b>{formatElapsed(elapsedMilliseconds)}</b></div><div className="speed-meter" role="status" aria-label={`실시간 타수 ${liveSpeed} 타/분`}><span>실시간 타수</span><b>{liveSpeed}</b><small>타/분</small></div><div className="route-progress"><b>{trip.typed.length}</b>개 역 · 환승 {trip.transfers}회</div></div></div>
       <div className="map-stage route-segment"><TrackingMap lineId={trip.position.line} stations={roamStations} targetIndex={roamIndex} color={roamColor} /><div className="current-station" role="status">{pill}</div></div>
       <TransferSign currentLine={trip.position.line} station={here} menuOpen={menuOpen} holdProgress={holdProgress} />
-      <DirectionSign lineId={trip.position.line} previous={roamUndecided?roamStations[roamIndex-1]:trip.position.from} current={here} next={roamStations[roamIndex+1]} />
+      <DirectionSign lineId={trip.position.line} previous={roamStations[roamIndex-1]} current={here} next={roamStations[roamIndex+1]} shiftSide={flippable?'previous':undefined} />
       <StationTypingField target={roamTarget} number={roamNumber} value={value} errorAttempt={errors} inputRef={input} onChange={changeInput} onKeyDown={roamKeyDown} onKeyUp={roamKeyUp} />
     </section>
   }
