@@ -1,48 +1,58 @@
 import { onwardStations,transferOptionsAt } from './transfers'
 
-export type Position={line:string;station:string;direction?:string}
-export type Journey={position:Position;visited:string[];lines:string[];transfers:number}
+// `station` is the stop you are standing at right now and must type — the train sits here, the sign
+// shows it, and a transfer happens here. `from` is the stop you came from, so onward is the neighbour
+// that is not `from`. `undecided` is set only just after a transfer, when both neighbours are open and
+// the first one you type picks the way. `arrived` is set when you have typed a terminus and cannot go
+// further on this line.
+export type Position={line:string;station:string;from?:string;undecided?:boolean;arrived?:boolean}
+export type Journey={position:Position;typed:string[];lines:string[];transfers:number}
 
-export function nextStation(position:Position):string|null{
-  return position.direction??null
+// The station(s) a correct answer accepts now: an undecided transfer takes either neighbour; an
+// arrival takes nothing (you must transfer or stop); otherwise you type the stop you are standing at.
+export function nextTargets(position:Position):string[]{
+  if(position.arrived)return []
+  if(position.undecided)return onwardStations(position.line,position.station)
+  return [position.station]
 }
 
-// The station reached by continuing past `station` when we arrived there from `from`: the onward
-// neighbour that is not the one we came from. At a terminus there is none.
-const continueFrom=(line:string,station:string,from:string|undefined):string|undefined=>
-  onwardStations(line,station).find(candidate=>candidate!==from)
+const onwardOf=(line:string,station:string,from:string|undefined):string|undefined=>
+  onwardStations(line,station).find(name=>name!==from)
 
+// You board standing at `station` and type it first; `from` is chosen so that onward is `toward`.
 export function boardJourney(line:string,station:string,toward:string):Journey{
-  return {position:{line,station,direction:toward},visited:[station],lines:[line],transfers:0}
+  const from=onwardStations(line,station).find(name=>name!==toward)
+  return {position:{line,station,from},typed:[],lines:[line],transfers:0}
 }
 
-export function advance(journey:Journey,typed:string):Journey|null{
-  const {line,station,direction}=journey.position
-  const target=typed.normalize('NFC').trim()
-  // With a decided direction only that station is valid; undecided (post-transfer) accepts either
-  // onward neighbour and the typed one becomes the direction.
-  const valid=direction!==undefined?[direction]:onwardStations(line,station)
-  if(!valid.includes(target))return null
-  // We are leaving `station` for `target`, so the next heading is target's onward neighbour that is
-  // not the station we just left — the same whether direction was decided or reopened by a transfer.
-  const next:Position={line,station:target,direction:continueFrom(line,target,station)}
-  return {...journey,position:next,visited:[...journey.visited,target]}
+export function advance(journey:Journey,input:string):Journey|null{
+  const {line,station,from,undecided}=journey.position
+  const target=input.normalize('NFC').trim()
+  if(undecided){
+    // Pick the direction: typing a neighbour steps you onto it, coming from the transfer station.
+    if(!onwardStations(line,station).includes(target))return null
+    return {...journey,position:{line,station:target,from:station},typed:[...journey.typed,target]}
+  }
+  if(target!==station)return null
+  // Typed the stop you were standing at; step onto its onward neighbour, or mark an arrival at a
+  // terminus where there is none.
+  const onward=onwardOf(line,station,from)
+  const position:Position=onward?{line,station:onward,from:station}:{line,station,from,arrived:true}
+  return {...journey,position,typed:[...journey.typed,station]}
 }
 
 export function beginTransfer(journey:Journey,toLine:string):Journey{
+  // You are already standing at the station; on the new line the direction reopens.
   return {
     ...journey,
-    position:{line:toLine,station:journey.position.station,direction:undefined},
+    position:{line:toLine,station:journey.position.station,undecided:true},
     lines:journey.lines.at(-1)===toLine?journey.lines:[...journey.lines,toLine],
     transfers:journey.transfers+1,
   }
 }
 
-// A dead end is a terminus of the current line with no other line to switch to. A transfer option
-// always reopens travel (its neighbour is a fresh direction), so the presence of any option means the
-// journey can continue. A loop line has two neighbours everywhere, so it is never a terminus.
+// A dead end is a terminus you have arrived at with no line to switch to. A transfer option always
+// reopens travel, so any option means the journey can continue.
 export function isDeadEnd(position:Position):boolean{
-  if(position.direction!==undefined)return false
-  const atTerminus=onwardStations(position.line,position.station).length<=1
-  return atTerminus&&transferOptionsAt(position.station,position.line).length===0
+  return position.arrived===true&&transferOptionsAt(position.station,position.line).length===0
 }

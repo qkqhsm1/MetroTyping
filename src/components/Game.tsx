@@ -6,7 +6,7 @@ import TransferSign from './TransferSign'
 import { YAMANOTE_LABELS, getLine } from '../data/lines'
 import { stationInfo } from '../data/stationInfo'
 import { playSound } from '../audio/sounds'
-import { boardJourney,advance,beginTransfer,isDeadEnd,nextStation,type Journey,type Position } from '../game/journey'
+import { boardJourney,advance,beginTransfer,isDeadEnd,nextTargets,type Journey,type Position } from '../game/journey'
 import { onwardStations,transferOptionsAt } from '../game/transfers'
 
 // Keystrokes per syllable, the 자소 unit Hancom Typing uses: 한 = ㅎ+ㅏ+ㄴ = 3, 값 = ㄱ+ㅏ+ㅂ+ㅅ = 4.
@@ -26,18 +26,27 @@ const formatElapsed=(milliseconds:number)=>{
   const tenths=Math.floor(milliseconds/100),minutes=Math.floor(tenths/600),seconds=Math.floor(tenths/10)%60
   return `${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}.${tenths%10}`
 }
-// The world fed to the transfer-mode map is the current line's stations from where the player stands
-// to the terminus, so the unchanged map/sign/typing render along that forward path. The visited check
-// closes a loop line after one lap so the walk always terminates.
-const buildRoamPath=(position:Position):string[]=>{
-  const path=[position.station]
-  let current=position.station,heading=position.direction
-  while(heading&&!path.includes(heading)){
-    path.push(heading)
-    const onward=onwardStations(position.line,heading).find(name=>name!==current)
-    current=heading;heading=onward
+// Up to `count` stations away from `origin` starting at `first`, following the line; stops at a
+// terminus or after one lap on a loop.
+const walkAway=(line:string,origin:string,first:string|undefined,count:number):string[]=>{
+  const path:string[]=[]
+  let previous=origin,current=first
+  while(current&&path.length<count&&!path.includes(current)&&current!==origin){
+    path.push(current)
+    const onward=onwardStations(line,current).find(name=>name!==previous)
+    previous=current;current=onward
   }
   return path
+}
+// The world fed to the transfer-mode map. Decided: the forward run from where the player stands to the
+// terminus, so the map/sign/typing render along it. Undecided (just transferred): a window centred on
+// the station showing a few stops each way, so both travel directions are visible to choose.
+const buildRoamPath=(position:Position):string[]=>{
+  if(position.undecided){
+    const [before,after]=onwardStations(position.line,position.station)
+    return [...walkAway(position.line,position.station,before,4).reverse(),position.station,...walkAway(position.line,position.station,after,4)]
+  }
+  return [position.station,...walkAway(position.line,position.station,onwardStations(position.line,position.station).find(name=>name!==position.from),60)]
 }
 
 export default function Game({ lineId,stations=[],color,sound=true,durationSeconds,journey,onExit }:{ lineId?:string; stations?:string[]; color:string; sound?:boolean; durationSeconds?:number; journey?:{line:string;station:string;toward:string}; onExit:()=>void }) {
@@ -57,9 +66,12 @@ export default function Game({ lineId,stations=[],color,sound=true,durationSecon
   const holdStart=useRef<number|undefined>(undefined),holdRaf=useRef<number|undefined>(undefined)
   const [holdProgress,setHoldProgress]=useState(0)
   const roamStations=useMemo(()=>roaming&&trip?buildRoamPath(trip.position):[],[roaming,trip])
-  const roamTarget=roaming&&trip?nextStation(trip.position):null
-  const roamUndecided=roaming&&roamTarget===null
-  const roamIndex=roamTarget?1:0
+  const roamOptions=roaming&&trip?nextTargets(trip.position):[]
+  const roamUndecided=roaming&&trip?trip.position.undecided===true:false
+  // You always type the station you stand at, so a decided run's single target is that station; an
+  // undecided fork or an arrival has no single target and the field stays empty.
+  const roamTarget=roaming&&trip&&!roamUndecided&&roamOptions.length===1?roamOptions[0]!:''
+  const roamIndex=roaming&&trip?Math.max(0,roamStations.indexOf(trip.position.station)):0
   const roamColor=roaming&&trip?getLine(trip.position.line).color:color
   const roamFinished=roaming&&trip?isDeadEnd(trip.position):false
   const finished=roaming?roamFinished:(remaining===0||(!timed&&index>=stations.length))
@@ -136,16 +148,16 @@ export default function Game({ lineId,stations=[],color,sound=true,durationSecon
   if(finished&&tracking) return <section className="result" style={{'--line':color} as React.CSSProperties}><p className="eyebrow">ARRIVED</p><h1>운행 완료</h1><div className="final-time"><span>총 플레이 시간</span><b>{formatElapsed(elapsedMilliseconds)}</b></div><div className="final-speed" role="status" aria-label={`최종 타수 ${speed} 타/분`}><span>최종 타수</span><b>{speed}</b><small>타/분</small></div><p>오타 {errors}회 · {index}개 역 통과</p><button className="primary" onClick={onExit}>다른 노선 운행</button></section>
   if(finished) return <section className="result" style={{'--line':color} as React.CSSProperties}><p className="eyebrow">{timed?'TIME UP':'ARRIVED'}</p><h1>{timed?'랜덤 도전 완료':'운행 완료'}</h1><div className="final-speed" role="status" aria-label={`최종 타수 ${speed} 타/분`}><span>최종 타수</span><b>{speed}</b><small>타/분</small></div><p>오타 {errors}회 · {index}개 역 통과</p><button className="primary" onClick={onExit}>다른 노선 운행</button></section>
   if(roaming&&trip){
-    const onward=onwardStations(trip.position.line,trip.position.station)
-    const roamCentre=roamTarget??trip.position.station
+    const here=trip.position.station,arrived=trip.position.arrived===true
     const roamNumber=roamTarget?stationInfo(trip.position.line,roamTarget).number:''
-    const roamStyle={'--line':roamColor,'--sign-interaction-width':`${Math.max(...roamStations.map(signWidth))}px`,'--sign-target-width':`${signWidth(roamCentre)}px`} as React.CSSProperties
+    const pill=roamUndecided?`환승 · ${roamOptions.join(' 또는 ')} 방향`:arrived?`${here} 도착 · 환승 또는 종료`:`다음 ${here}`
+    const roamStyle={'--line':roamColor,'--sign-interaction-width':`${Math.max(...roamStations.map(signWidth))}px`,'--sign-target-width':`${signWidth(here)}px`} as React.CSSProperties
     return <section className="game" style={roamStyle}>
-      <div className="game-top"><button className="back" onClick={onExit}>← 운행 종료</button><div className="game-metrics"><div className="live-time"><span>PLAY TIME</span><b>{formatElapsed(elapsedMilliseconds)}</b></div><div className="speed-meter" role="status" aria-label={`실시간 타수 ${liveSpeed} 타/분`}><span>실시간 타수</span><b>{liveSpeed}</b><small>타/분</small></div><div className="route-progress"><b>{trip.visited.length}</b>개 역 · 환승 {trip.transfers}회</div></div></div>
-      <div className="map-stage route-segment"><TrackingMap lineId={trip.position.line} stations={roamStations} targetIndex={roamIndex} color={roamColor} /><div className="current-station" role="status">{roamUndecided?`${trip.position.station} 환승`:`다음 ${roamTarget}`}</div></div>
-      <TransferSign currentLine={trip.position.line} station={trip.position.station} menuOpen={menuOpen} holdProgress={holdProgress} />
-      <DirectionSign lineId={trip.position.line} previous={roamTarget?roamStations[roamIndex-1]:onward[0]} current={roamCentre} next={roamTarget?roamStations[roamIndex+1]:onward[1]} />
-      <StationTypingField target={roamTarget??''} number={roamNumber} value={value} errorAttempt={errors} inputRef={input} onChange={changeInput} onKeyDown={roamKeyDown} onKeyUp={roamKeyUp} />
+      <div className="game-top"><button className="back" onClick={onExit}>← 운행 종료</button><div className="game-metrics"><div className="live-time"><span>PLAY TIME</span><b>{formatElapsed(elapsedMilliseconds)}</b></div><div className="speed-meter" role="status" aria-label={`실시간 타수 ${liveSpeed} 타/분`}><span>실시간 타수</span><b>{liveSpeed}</b><small>타/분</small></div><div className="route-progress"><b>{trip.typed.length}</b>개 역 · 환승 {trip.transfers}회</div></div></div>
+      <div className="map-stage route-segment"><TrackingMap lineId={trip.position.line} stations={roamStations} targetIndex={roamIndex} color={roamColor} /><div className="current-station" role="status">{pill}</div></div>
+      <TransferSign currentLine={trip.position.line} station={here} menuOpen={menuOpen} holdProgress={holdProgress} />
+      <DirectionSign lineId={trip.position.line} previous={roamUndecided?roamStations[roamIndex-1]:trip.position.from} current={here} next={roamStations[roamIndex+1]} />
+      <StationTypingField target={roamTarget} number={roamNumber} value={value} errorAttempt={errors} inputRef={input} onChange={changeInput} onKeyDown={roamKeyDown} onKeyUp={roamKeyUp} />
     </section>
   }
   const target=stations[index%stations.length]!

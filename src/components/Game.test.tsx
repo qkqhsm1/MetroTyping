@@ -303,17 +303,23 @@ test('boarding a no-transfer terminus with a direction plays instead of ending i
   const {container}=render(<Game journey={{line:'seoul-1',station:'연천',toward:'전곡'}} color="#0052A4" onExit={()=>{}} />)
   expect(container.querySelector('.tracking-map')).not.toBeNull()
   expect(screen.queryByText('환승 여행 완료')).toBeNull()
-  expect(screen.getByRole('heading',{name:'전곡'})).toBeInTheDocument()
+  // The departure terminus itself is the first thing you type.
+  expect(container.querySelector('.direction-panel [data-position="current"]')?.textContent).toContain('연천')
 })
 
-test('transfer mode renders the boarded line world and advances by typing',()=>{
+test('transfer mode types the departure first, then advances along the line',()=>{
   const {container}=render(<Game journey={{line:'seoul-1',station:'소요산',toward:'동두천'}} color="#0052A4" onExit={()=>{}} />)
+  const current=()=>container.querySelector('.direction-panel [data-position="current"]')?.textContent
   expect(container.querySelector('.tracking-map')).not.toBeNull()
-  expect(screen.getByRole('heading',{name:'동두천'})).toBeInTheDocument()
+  // Departure typed first, not skipped to its neighbour.
+  expect(current()).toContain('소요산')
   const input=screen.getByRole('textbox')
+  fireEvent.change(input,{target:{value:'소요산'}})
+  fireEvent.keyDown(input,{key:'Enter',isComposing:false})
+  expect(current()).toContain('동두천')
   fireEvent.change(input,{target:{value:'동두천'}})
   fireEvent.keyDown(input,{key:'Enter',isComposing:false})
-  expect(screen.getByRole('heading',{name:'보산'})).toBeInTheDocument()
+  expect(current()).toContain('보산')
 })
 
 test('Tab at a transfer station switches the line and recolours; ignored elsewhere',()=>{
