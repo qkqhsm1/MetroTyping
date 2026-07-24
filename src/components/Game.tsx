@@ -45,7 +45,9 @@ export default function Game({ lineId,stations,color,sound=true,durationSeconds,
   }
   const changeInput=(event:ChangeEvent<HTMLInputElement>)=>{
     const next=event.target.value,added=Math.max(0,countJaso(next)-countJaso(value))
-    if(added){const timestamp=Date.now();playSound('key',sound);setStartedAt(start=>start??timestamp);setTypedJaso(count=>count+added);setNow(timestamp)}
+    // The first jaso only starts the clock; counting it too would credit N jaso against N-1 keystroke
+    // intervals, which reads roughly double early on. Speed is jaso entered *after* the first input.
+    if(added){const timestamp=Date.now();playSound('key',sound);setStartedAt(start=>start??timestamp);if(startedAt!==undefined)setTypedJaso(count=>count+added);setNow(timestamp)}
     setValue(next)
   }
   const elapsed=startedAt===undefined?0:(now-startedAt)/60000

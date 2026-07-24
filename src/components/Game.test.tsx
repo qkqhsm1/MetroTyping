@@ -165,7 +165,7 @@ test('keeps the train on the map and never blocks the next answer', () => {
   expect(container.querySelector('.train')).toBeInTheDocument()
 })
 
-test('starts Korean keystrokes per minute at the first printable key', () => {
+test('the first keystroke starts the clock and is not itself counted', () => {
   vi.useFakeTimers()
   render(<Game stations={['신도림', '문래']} color="#00A84D" onExit={() => {}} />)
   act(() => vi.advanceTimersByTime(30_000))
@@ -174,7 +174,9 @@ test('starts Korean keystrokes per minute at the first printable key', () => {
   act(() => vi.advanceTimersByTime(6_000))
   fireEvent.change(input, { target: { value: '무' } })
   fireEvent.change(input, { target: { value: '문' } })
-  expect(screen.getByRole('status', { name: '실시간 타수 30 타/분' })).toBeInTheDocument()
+  // ㅁ is the zero mark, so two jaso (ㅜ, ㄴ) span 6s: 2 / 0.1min = 20, not the inflated 30 that
+  // counting the first jaso against zero elapsed time would report.
+  expect(screen.getByRole('status', { name: '실시간 타수 20 타/분' })).toBeInTheDocument()
 })
 
 test('runs a long ordered route through one persistent world without blocking input', () => {
@@ -221,7 +223,8 @@ test('shows the final Korean typing speed on the result screen', () => {
   fireEvent.change(input,{target:{value:'문래'}})
   fireEvent.keyDown(input,{key:'Enter',isComposing:false})
 
-  expect(screen.getByRole('status',{name:'최종 타수 130 타/분'})).toBeInTheDocument()
+  // 신도림 is the zero mark; only 문래's five jaso count, over 6s: 5 / 0.1min = 50.
+  expect(screen.getByRole('status',{name:'최종 타수 50 타/분'})).toBeInTheDocument()
 })
 
 test.each([
