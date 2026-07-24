@@ -181,3 +181,16 @@ test('starts a Line 6 trip that closes the Eungam loop back onto 응암', () => 
   expect(screen.queryByRole('alert')).toBeNull()
   expect(screen.getByRole('heading', { name: '구산' })).toBeInTheDocument()
 })
+
+test('starts a transfer journey from a chosen station and direction', () => {
+  render(<App />)
+  fireEvent.click(screen.getByRole('button', { name: '서울 1호선 선택' }))
+  fireEvent.click(screen.getByRole('button', { name: '환승 여행' }))
+  fireEvent.click(screen.getByRole('combobox', { name: '출발역' }))
+  fireEvent.click(screen.getByRole('option', { name: '소요산' }))
+  fireEvent.click(screen.getByRole('button', { name: '동두천 방향' }))
+  fireEvent.click(screen.getByRole('button', { name: '운행 시작 →' }))
+
+  expect(screen.getByRole('heading', { name: '동두천' })).toBeInTheDocument()
+  expect(document.querySelector('.tracking-map')).not.toBeNull()
+})
