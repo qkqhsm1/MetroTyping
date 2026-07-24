@@ -5,6 +5,12 @@ import { STATION_SPACING,getLineWorld } from '../game/lineWorld'
 const easeOut=(progress:number)=>1-(1-progress)**3
 const smooth=(progress:number)=>progress*progress*(3-2*progress)
 
+// Label geometry, in SVG units, kept beside the font sizes in styles.css that they describe.
+const LABEL_KOREAN=15,LABEL_ENGLISH=9
+const LABEL_BLOCK=LABEL_KOREAN*.75+LABEL_ENGLISH+3+LABEL_ENGLISH*.25
+// Past the 22-wide casing and the 13+4 station circle, with room for the train riding the track.
+const LABEL_CLEARANCE=32
+
 export default function TrackingMap({lineId,stations,targetIndex,color}:{lineId:string;stations:string[];targetIndex:number;color:string}) {
   const world=useMemo(()=>getLineWorld(lineId,stations),[lineId,stations])
   const targetDistance=world.stationDistances[targetIndex]!,targetWidth=world.cameraWidth(targetIndex)
@@ -48,12 +54,22 @@ export default function TrackingMap({lineId,stations,targetIndex,color}:{lineId:
     {world.stationNames.map((name,index)=>{
       // Paired by index, never by name: a full loop lap legitimately visits the same name twice.
       const info=stationInfo(lineId,name),point=world.pointAt(world.stationDistances[index]!)
-      const radians=point.angle*Math.PI/180,side=index%2===0?1:-1,offset=30+(index%3)*9
-      const labelX=point.x-Math.sin(radians)*offset*side,labelY=point.y+Math.cos(radians)*offset*side
+      const radians=point.angle*Math.PI/180,side=index%2===0?1:-1
+      const away={x:-Math.sin(radians)*side,y:Math.cos(radians)*side}
+      // One clearance for every label, so the column reads evenly instead of stepping in and out.
+      // Only the part of the block that actually points at the track is added: a steep segment pushes
+      // labels sideways, where the block's height costs nothing.
+      const distance=LABEL_CLEARANCE+LABEL_BLOCK/2*Math.abs(away.y)
+      const labelX=point.x+away.x*distance
+      // The two lines hang below their anchor, so the anchor is raised to centre the block on the
+      // offset point; otherwise every label above the track leans back into it.
+      const labelY=point.y+away.y*distance-LABEL_BLOCK/2+LABEL_KOREAN*.75
+      // Anchoring the inner edge keeps a long name clear of a steep track without guessing its width.
+      const anchor=away.x>.3?'start':away.x<-.3?'end':'middle'
       return <g key={index} data-station={name} data-current={index===targetIndex||undefined}>
         <circle cx={point.x} cy={point.y} r="13" fill="white" stroke={color} strokeWidth="4" />
-        <text className="node-number" x={point.x} y={point.y} textAnchor="middle" dominantBaseline="middle">{info.number}</text>
-        <text className="station-label" x={labelX} y={labelY} textAnchor="middle"><tspan className="station-ko" x={labelX}>{info.korean}</tspan><tspan className="station-en" x={labelX} dy="13">{info.english}</tspan></text>
+        <text className="node-number" data-long={info.number.length>3||undefined} x={point.x} y={point.y} textAnchor="middle" dominantBaseline="middle">{info.number}</text>
+        <text className="station-label" x={labelX} y={labelY} textAnchor={anchor}><tspan className="station-ko" x={labelX}>{info.korean}</tspan><tspan className="station-en" data-long={info.english.length>18||undefined} x={labelX} dy={LABEL_ENGLISH+3}>{info.english}</tspan></text>
       </g>
     })}
     <g className="train tracking-train" transform={`translate(${train.x} ${train.y}) rotate(${train.angle})`}>

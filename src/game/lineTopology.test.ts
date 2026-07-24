@@ -1,5 +1,4 @@
 import { expect,test } from 'vitest'
-import type { Point } from './geometry'
 import { getRoute,getFullLoopRoute } from './routes'
 import { resolveTopology } from './lineTopology'
 
@@ -87,15 +86,13 @@ test.each([['clockwise'],['counterclockwise']])('the line 2 loop rotates to the 
   expect(topology.sequence).toEqual(stations)
 })
 
-test('both directions of a line 2 loop run anchor their path at the same point',()=>{
+test('both directions of a line 2 loop run ride the identical ring',()=>{
   const clockwise=resolveTopology('seoul-2',getFullLoopRoute('seoul-2','신도림','clockwise').stationIds)
   const counter=resolveTopology('seoul-2',getFullLoopRoute('seoul-2','신도림','counterclockwise').stationIds)
-  expect(counter.path[0]).toEqual(clockwise.path[0])
-  // Anchoring alone would also pass if the reversed branch returned the path untouched.
-  expect(counter.path[1]).toEqual(clockwise.path.at(-1))
-  expect(counter.path.length).toBe(clockwise.path.length)
-  const sorted=(path:readonly Point[])=>[...path].map(point=>point.join(',')).sort()
-  expect(sorted(counter.path)).toEqual(sorted(clockwise.path))
+  // The track does not move when a rider turns around; only the order the stations are visited does.
+  expect(counter.path).toEqual(clockwise.path)
+  expect(counter.sequence[0]).toBe(clockwise.sequence[0])
+  expect(counter.sequence[1]).toBe(clockwise.sequence.at(-1))
 })
 
 test('yamanote is a loop world',()=>{

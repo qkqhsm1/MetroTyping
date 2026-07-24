@@ -54,7 +54,10 @@ test('morphs continuously and retargets rapid answers even when the run travels 
   const {container,rerender}=render(<TrackingMap lineId="seoul-2" stations={backwards} targetIndex={0} color="#00A84D" />)
   const svg=container.querySelector('svg')!
   const start=svg.getAttribute('viewBox'),distanceAt=()=>Number(svg.getAttribute('data-train-distance'))
-  expect(distanceAt()).toBe(0)
+  // Seats are measured from where the run's first station sits on the ring, not from the polyline's
+  // own start, so progress is asserted relative to that origin.
+  const origin=distanceAt()
+  expect(Number.isFinite(origin)).toBe(true)
 
   rerender(<TrackingMap lineId="seoul-2" stations={backwards} targetIndex={1} color="#00A84D" />)
   expect(container.querySelector('svg')).toBe(svg)
@@ -62,8 +65,8 @@ test('morphs continuously and retargets rapid answers even when the run travels 
   act(()=>callback?.(100))
   act(()=>callback?.(210))
   const intermediate=svg.getAttribute('viewBox')
-  expect(distanceAt()).toBeGreaterThan(-77)
-  expect(distanceAt()).toBeLessThan(0)
+  expect(distanceAt()).toBeGreaterThan(origin-77)
+  expect(distanceAt()).toBeLessThan(origin)
   expect(svg).toHaveAttribute('data-motion-state','moving')
 
   rerender(<TrackingMap lineId="seoul-2" stations={backwards} targetIndex={2} color="#00A84D" />)
@@ -72,7 +75,7 @@ test('morphs continuously and retargets rapid answers even when the run travels 
   act(()=>callback?.(800))
   expect(svg).toHaveAttribute('data-camera-station','구로디지털단지')
   expect(svg).toHaveAttribute('data-motion-state','settled')
-  expect(distanceAt()).toBeCloseTo(-154,6)
+  expect(distanceAt()).toBeCloseTo(origin-154,6)
 })
 
 test('settles immediately when reduced motion is requested',()=>{

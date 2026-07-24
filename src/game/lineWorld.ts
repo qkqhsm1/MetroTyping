@@ -22,46 +22,21 @@ const quadratic=(a:Point,b:Point,c:Point,t:number):Point=>{
   const u=1-t
   return [u*u*a[0]+2*u*t*b[0]+t*t*c[0],u*u*a[1]+2*u*t*b[1]+t*t*c[1]]
 }
-const cubic=(a:Point,b:Point,c:Point,d:Point,t:number):Point=>{
-  const u=1-t
-  return [
-    u**3*a[0]+3*u*u*t*b[0]+3*u*t*t*c[0]+t**3*d[0],
-    u**3*a[1]+3*u*u*t*b[1]+3*u*t*t*c[1]+t**3*d[1],
-  ]
-}
-
-// The two loop lines (Seoul 2, Yamanote) keep the ring their map already ships: the cubics of the
-// old LINE_2_PATH_D as anchor,control,control,anchor,… sampled into the same polyline every other
-// line goes through, so there is one geometry pipeline rather than two.
-const LOOP_CURVE:Point[]=[
-  [0,0],
-  [0,-289.885],[-235.001,-524.886],[-524.887,-524.886],
-  [-814.773,-524.886],[-1049.771,-289.885],[-1049.771,0],
-  [-1049.771,279.822],[-830.81,508.501],[-554.873,524.045],
-  [-544.948,524.603],[-534.949,524.885],[-524.887,524.885],
-  [-477.946,524.885],[-432.447,518.727],[-389.148,507.164],
-  [-165.057,447.344],[0,242.946],[0,0],
-]
-const loopRing=():Point[]=>{
-  const result:Point[]=[LOOP_CURVE[0]!]
-  for(let start=0;start+3<LOOP_CURVE.length;start+=3){
-    const [a,b,c,d]=[LOOP_CURVE[start]!,LOOP_CURVE[start+1]!,LOOP_CURVE[start+2]!,LOOP_CURVE[start+3]!]
-    for(let step=1;step<=SAMPLES_PER_SEGMENT;step++)result.push(cubic(a,b,c,d,step/SAMPLES_PER_SEGMENT))
-  }
-  return result
-}
-
-// Round every interior corner so the world reads as track rather than as a chevron.
-const roundCorners=(points:readonly Point[]):Point[]=>{
+// Round every interior corner so the world reads as track rather than as a chevron. A loop is closed,
+// so its first and last point are corners too and are rounded like any other.
+const roundCorners=(points:readonly Point[],closed:boolean):Point[]=>{
   if(points.length<3)return [...points]
-  const result:Point[]=[points[0]!]
-  for(let index=1;index<points.length-1;index++){
-    const current=points[index]!
-    const entry=lerp(current,points[index-1]!,CORNER),exit=lerp(current,points[index+1]!,CORNER)
+  const count=closed?points.length:points.length-1
+  const result:Point[]=closed?[]:[points[0]!]
+  for(let index=closed?0:1;index<count;index++){
+    const current=points[(index+points.length)%points.length]!
+    const previous=points[(index-1+points.length)%points.length]!
+    const next=points[(index+1)%points.length]!
+    const entry=lerp(current,previous,CORNER),exit=lerp(current,next,CORNER)
     result.push(entry)
     for(let step=1;step<=SAMPLES_PER_SEGMENT;step++)result.push(quadratic(entry,current,exit,step/SAMPLES_PER_SEGMENT))
   }
-  result.push(points.at(-1)!)
+  result.push(closed?result[0]!:points.at(-1)!)
   return result
 }
 
@@ -79,16 +54,22 @@ const length=(points:readonly Point[])=>measure(points,1).at(-1)!.distance
 
 export function getLineWorld(lineId:string,stations:string[]):LineWorld{
   const topology=resolveTopology(lineId,stations)
-  const shape=topology.loop?loopRing():roundCorners(topology.path)
+  const shape=roundCorners(topology.path,topology.loop)
   // A loop closes, so it holds one gap per station; an open line holds one fewer than its stations.
   const gaps=Math.max(1,topology.loop?topology.sequence.length:topology.sequence.length-1)
-  const samples=measure(shape,STATION_SPACING*gaps/(length(shape)||1))
+  const factor=STATION_SPACING*gaps/(length(shape)||1)
+  const samples=measure(shape,factor)
   const total=samples.at(-1)!.distance
+  // Rounding a closed ring moves its polyline start off the first station, and by a different amount
+  // in each direction of travel, so seats are measured from where that station actually sits.
+  const anchor={x:topology.path[0]![0]*factor,y:topology.path[0]![1]*factor}
+  const origin=!topology.loop?0:samples.reduce((best,sample)=>
+    Math.hypot(sample.x-anchor.x,sample.y-anchor.y)<Math.hypot(best.x-anchor.x,best.y-anchor.y)?sample:best).distance
 
   // A loop station keeps one fixed seat on the ring whichever way the run travels, so choosing the
   // opposite direction actually reverses the on-screen rotation. Consecutive seats are unwrapped by
   // the shorter way round, which keeps distance continuous across the seam.
-  const seat=(name:string)=>getLine(lineId).sequences[0]!.indexOf(name)*STATION_SPACING
+  const seat=(name:string)=>origin+getLine(lineId).sequences[0]!.indexOf(name)*STATION_SPACING
   const unwrapped=(names:string[])=>names.reduce<number[]>((result,name,index)=>{
     if(!index)return [seat(name)]
     let delta=seat(name)-seat(names[index-1]!)

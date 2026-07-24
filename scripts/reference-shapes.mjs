@@ -1,9 +1,12 @@
-import { type Point } from './geometry'
+// The hand-digitised polylines the game shipped before the official vectors were traced. They are
+// kept only so build-line-shapes.mjs can decide which way each traced chain should run; nothing at
+// runtime reads them.
+
 
 // Source-guided control polylines consumed by lineTopology.ts to build each line's persistent world.
-type RouteShape={path:Point[];context?:Point[];directedClosure?:boolean}
 
-export const baseRoutes:Record<string,Point[]>={
+
+export const baseRoutes={
   // 신도림(서쪽 끝)에서 위로 올라가 당산 부근에서 오른쪽으로 꺾이는 실제 지리 방향을 보존
   'seoul-2':[[70,255],[90,190],[450,35],[530,90],[530,210],[460,255]],
   'seoul-3':[[45,45],[180,45],[230,95],[230,205],[285,255],[455,255],[555,155]],
@@ -15,7 +18,7 @@ export const baseRoutes:Record<string,Point[]>={
   yamanote:[[70,255],[90,190],[450,35],[530,90],[530,210],[460,255]],
 }
 
-export const line1Legs:Point[][]=[
+export const line1Legs=[
   [[450,35],[410,90],[360,140],[300,180]], // Yeoncheon -> Guro
   [[300,180],[210,180],[125,220],[35,220]], // Guro -> Incheon
   [[300,180],[230,235],[160,325]], // Guro -> Sinchang
@@ -25,7 +28,7 @@ export const line1Legs:Point[][]=[
 // public/assets/seoul-supported-lines.svg. They preserve recognizable bends,
 // endpoints, junction choice, and loop direction; they are schematic, not
 // geospatial coordinates. Named comments record the reference topology.
-export const topologyRoutes:Record<string,RouteShape>={
+export const topologyRoutes={
   'seoul-4':{path:[[530,35],[430,35],[365,95],[365,180],[270,250],[70,250]]}, // 진접 → 오이도
   'seoul-5-trunk':{path:[[45,145],[145,145],[230,105],[360,105],[455,145],[555,145]]}, // 방화 → 강동
   'seoul-5-hanam':{path:[[45,145],[145,145],[230,105],[360,105],[430,65],[555,65]],context:[[360,105],[430,200],[555,250]]}, // 강동 → 길동 → 하남검단산; sibling 마천 branch
