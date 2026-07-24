@@ -2,7 +2,7 @@ import type { Point } from './geometry'
 import { getLine } from '../data/lines'
 import { resolveTopology } from './lineTopology'
 
-export const STATION_SPACING=77
+export const STATION_SPACING=110
 const CORNER=0.28
 const SAMPLES_PER_SEGMENT=24
 

@@ -1,6 +1,7 @@
 import { afterEach,expect,test,vi } from 'vitest'
 import { act,render } from '@testing-library/react'
 import TrackingMap from './TrackingMap'
+import { STATION_SPACING } from '../game/lineWorld'
 import { getRoute } from '../game/routes'
 
 const renderLine=(lineId:string,from:string,to:string,targetIndex=0)=>{
@@ -65,7 +66,7 @@ test('morphs continuously and retargets rapid answers even when the run travels 
   act(()=>callback?.(100))
   act(()=>callback?.(210))
   const intermediate=svg.getAttribute('viewBox')
-  expect(distanceAt()).toBeGreaterThan(origin-77)
+  expect(distanceAt()).toBeGreaterThan(origin-STATION_SPACING)
   expect(distanceAt()).toBeLessThan(origin)
   expect(svg).toHaveAttribute('data-motion-state','moving')
 
@@ -75,7 +76,7 @@ test('morphs continuously and retargets rapid answers even when the run travels 
   act(()=>callback?.(800))
   expect(svg).toHaveAttribute('data-camera-station','구로디지털단지')
   expect(svg).toHaveAttribute('data-motion-state','settled')
-  expect(distanceAt()).toBeCloseTo(origin-154,6)
+  expect(distanceAt()).toBeCloseTo(origin-STATION_SPACING*2,6)
 })
 
 test('settles immediately when reduced motion is requested',()=>{

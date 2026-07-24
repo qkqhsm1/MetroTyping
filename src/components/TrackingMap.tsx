@@ -10,6 +10,14 @@ const LABEL_KOREAN=15,LABEL_ENGLISH=9
 const LABEL_BLOCK=LABEL_KOREAN*.75+LABEL_ENGLISH+3+LABEL_ENGLISH*.25
 // Past the 22-wide casing and the 13+4 station circle, with room for the train riding the track.
 const LABEL_CLEARANCE=32
+const NODE_RADIUS=17
+type Box={left:number;right:number;top:number;bottom:number}
+const overlaps=(a:Box,b:Box)=>a.left<b.right+4&&b.left<a.right+4&&a.top<b.bottom+2&&b.top<a.bottom+2
+const hitsNode=(box:Box,node:{x:number;y:number})=>
+  Math.hypot(node.x-Math.min(Math.max(node.x,box.left),box.right),node.y-Math.min(Math.max(node.y,box.top),box.bottom))<NODE_RADIUS
+// Korean glyphs are close to square; Latin averages a little over half its size.
+const labelWidth=(korean:string,english:string,shrunk:boolean)=>
+  Math.max([...korean].length*LABEL_KOREAN,english.length*(shrunk?LABEL_ENGLISH*.83:LABEL_ENGLISH)*.55)
 
 export default function TrackingMap({lineId,stations,targetIndex,color}:{lineId:string;stations:string[];targetIndex:number;color:string}) {
   const world=useMemo(()=>getLineWorld(lineId,stations),[lineId,stations])
@@ -47,31 +55,52 @@ export default function TrackingMap({lineId,stations,targetIndex,color}:{lineId:
   const currentPoint=world.pointAt(targetDistance),currentRadians=currentPoint.angle*Math.PI/180
   const tangent={x:Math.cos(currentRadians),y:Math.sin(currentRadians)},normal={x:-tangent.y,y:tangent.x}
   const haloStyle={'--halo-from-x':`${-normal.x*22}px`,'--halo-from-y':`${-normal.y*22}px`,'--halo-to-x':`${normal.x*22}px`,'--halo-to-y':`${normal.y*22}px`} as CSSProperties
+  // Placed once for the whole run rather than per camera frame, so a label never shifts as the camera
+  // slides past it. Sides alternate by default; where a bend puts two labels in the same place, the
+  // second takes the far side or steps further out until it clears every node and earlier label.
+  const labels=useMemo(()=>{
+    const nodes=world.stationNames.map((_,index)=>world.pointAt(world.stationDistances[index]!))
+    const placed:Box[]=[]
+    return world.stationNames.map((name,index)=>{
+      const info=stationInfo(lineId,name),point=nodes[index]!
+      const radians=point.angle*Math.PI/180
+      const width=labelWidth(info.korean,info.english,info.english.length>18)
+      const preferred=index%2===0?1:-1
+      let fallback
+      for(const side of [preferred,-preferred])for(const stretch of [1,1.5,2.1]){
+        const away={x:-Math.sin(radians)*side,y:Math.cos(radians)*side}
+        // Only the part of the block facing the track is added: a steep segment pushes labels
+        // sideways, where the block's height costs nothing.
+        const distance=(LABEL_CLEARANCE+LABEL_BLOCK/2*Math.abs(away.y))*stretch
+        const x=point.x+away.x*distance,y=point.y+away.y*distance
+        // Anchoring the inner edge keeps a long name clear of steep track without guessing its width.
+        const anchor:'start'|'end'|'middle'=away.x>.3?'start':away.x<-.3?'end':'middle'
+        const left=anchor==='start'?x:anchor==='end'?x-width:x-width/2
+        const box={left,right:left+width,top:y-LABEL_BLOCK/2,bottom:y+LABEL_BLOCK/2}
+        // The two lines hang below their anchor, so it is raised to centre the block on the offset
+        // point; otherwise every label above the track leans back into it.
+        const candidate={name,info,point,labelX:x,labelY:y-LABEL_BLOCK/2+LABEL_KOREAN*.75,anchor,index,box}
+        fallback??=candidate
+        if(!placed.some(other=>overlaps(box,other))&&!nodes.some(node=>hitsNode(box,node))){
+          placed.push(box)
+          return candidate
+        }
+      }
+      placed.push(fallback!.box)
+      return fallback!
+    })
+  },[lineId,world])
   return <svg className="route-map tracking-map" data-camera-station={current} data-camera-width={rendered.width} data-train-distance={rendered.train} data-motion-state={rendered.moving?'moving':'settled'} viewBox={`${camera.x-rendered.width/2} ${camera.y-height/2} ${rendered.width} ${height}`} role="img" aria-label={`${lineId} 추적 노선도`}>
     <path d={world.pathD} fill="none" stroke="#deddd7" strokeWidth="22" strokeLinecap="round" />
     <path d={world.pathD} fill="none" stroke={color} strokeWidth="13" strokeLinecap="round" />
     <circle className="target-ring tracking-target-halo" data-halo-normal={`${normal.x},${normal.y}`} data-route-tangent={`${tangent.x},${tangent.y}`} style={haloStyle} cx={currentPoint.x} cy={currentPoint.y} r="20" fill="white" stroke={color} strokeWidth="4" />
-    {world.stationNames.map((name,index)=>{
+    {labels.map(({name,info,point,labelX,labelY,anchor,index})=>
       // Paired by index, never by name: a full loop lap legitimately visits the same name twice.
-      const info=stationInfo(lineId,name),point=world.pointAt(world.stationDistances[index]!)
-      const radians=point.angle*Math.PI/180,side=index%2===0?1:-1
-      const away={x:-Math.sin(radians)*side,y:Math.cos(radians)*side}
-      // One clearance for every label, so the column reads evenly instead of stepping in and out.
-      // Only the part of the block that actually points at the track is added: a steep segment pushes
-      // labels sideways, where the block's height costs nothing.
-      const distance=LABEL_CLEARANCE+LABEL_BLOCK/2*Math.abs(away.y)
-      const labelX=point.x+away.x*distance
-      // The two lines hang below their anchor, so the anchor is raised to centre the block on the
-      // offset point; otherwise every label above the track leans back into it.
-      const labelY=point.y+away.y*distance-LABEL_BLOCK/2+LABEL_KOREAN*.75
-      // Anchoring the inner edge keeps a long name clear of a steep track without guessing its width.
-      const anchor=away.x>.3?'start':away.x<-.3?'end':'middle'
-      return <g key={index} data-station={name} data-current={index===targetIndex||undefined}>
+      <g key={index} data-station={name} data-current={index===targetIndex||undefined}>
         <circle cx={point.x} cy={point.y} r="13" fill="white" stroke={color} strokeWidth="4" />
         <text className="node-number" data-long={info.number.length>3||undefined} x={point.x} y={point.y} textAnchor="middle" dominantBaseline="middle">{info.number}</text>
         <text className="station-label" x={labelX} y={labelY} textAnchor={anchor}><tspan className="station-ko" x={labelX}>{info.korean}</tspan><tspan className="station-en" data-long={info.english.length>18||undefined} x={labelX} dy={LABEL_ENGLISH+3}>{info.english}</tspan></text>
-      </g>
-    })}
+      </g>)}
     <g className="train tracking-train" transform={`translate(${train.x} ${train.y}) rotate(${train.angle})`}>
       <rect x="-23" y="-14" width="46" height="28" rx="9" fill="white" stroke="#111" strokeWidth="3" />
       <rect x="-14" y="-8" width="10" height="8" rx="2" fill="#20252a" /><rect x="4" y="-8" width="10" height="8" rx="2" fill="#20252a" />
