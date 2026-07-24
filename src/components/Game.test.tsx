@@ -339,9 +339,33 @@ test('quick Tab transfers to the priority line at a transfer station',()=>{
   fireEvent.keyUp(input,{key:'Tab'})
   // Priority option at 김포공항 from seoul-5 is seoul-9; its world colour is #BDB092.
   expect(container.querySelector('.tracking-map[data-line="seoul-9"]')).not.toBeNull()
-  // After the transfer the direction is undecided: empty typing target, no remaining target glyphs.
-  expect(container.querySelector('.typing-field input')).toHaveValue('')
-  expect(container.querySelector('.typing-name .remaining')).toBeNull()
+  // After the transfer the direction is undecided: a numbered choice replaces the typing field.
+  expect(container.querySelector('.typing-field')).toBeNull()
+  const choices=[...container.querySelectorAll('.transfer-direction-choices button')].map(b=>b.textContent)
+  expect(choices.length).toBe(2)
+  expect(choices.join(' ')).toContain('개화')
+  expect(choices.join(' ')).toContain('공항시장')
+})
+
+test('picking a transfer direction by number key resolves it and resumes typing',()=>{
+  const {container}=render(<Game journey={{line:'seoul-5',station:'김포공항',toward:'송정'}} color="#996CAC" onExit={()=>{}} />)
+  fireEvent.keyDown(screen.getByRole('textbox'),{key:'Tab'})
+  fireEvent.keyUp(screen.getByRole('textbox'),{key:'Tab'})
+  // 김포공항 on Line 9 offers [개화, 공항시장]; key 2 heads to 공항시장 and the typing field returns.
+  fireEvent.keyDown(container.querySelector('.transfer-direction')!,{key:'2'})
+  expect(container.querySelector('.transfer-direction')).toBeNull()
+  expect(container.querySelector('.typing-field')).not.toBeNull()
+  expect(container.querySelector('.direction-panel [data-position="current"]')?.textContent).toContain('공항시장')
+})
+
+test('picking a transfer direction by clicking a choice button also resolves it',()=>{
+  const {container}=render(<Game journey={{line:'seoul-5',station:'김포공항',toward:'송정'}} color="#996CAC" onExit={()=>{}} />)
+  fireEvent.keyDown(screen.getByRole('textbox'),{key:'Tab'})
+  fireEvent.keyUp(screen.getByRole('textbox'),{key:'Tab'})
+  const first=container.querySelector('.transfer-direction-choices button')!
+  fireEvent.click(first)
+  expect(container.querySelector('.transfer-direction')).toBeNull()
+  expect(container.querySelector('.typing-field')).not.toBeNull()
 })
 
 test('the hold menu picks a transfer line by number key and Esc closes it',()=>{

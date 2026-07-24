@@ -76,3 +76,11 @@ footer { padding-top:24px; border-top:1px solid #cbc8bf; color:#74756e; font-siz
 .transfer-option{display:flex;align-items:center;gap:8px}
 .transfer-key{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:1.5px solid #888;border-radius:6px;font-size:12px}
 .transfer-hold{position:absolute;inset:-2px;border-radius:999px;border:2px solid var(--line);clip-path:inset(0 calc(100% * (1 - var(--hold,0))) 0 0);pointer-events:none}
+.transfer-direction{text-align:center;margin:8px auto 0;width:min(100%,var(--sign-interaction-width))}
+.transfer-direction .eyebrow{color:var(--line)}
+.transfer-direction-choices{display:flex;gap:12px;justify-content:center;margin-top:10px}
+.transfer-direction-choices button{display:flex;align-items:center;gap:10px;padding:18px 26px;border:2px solid var(--line);border-radius:16px;background:#fff;font-size:22px;font-weight:850;cursor:pointer}
+.transfer-direction-choices button:hover{color:#fff;background:var(--line)}
+.transfer-direction-choices .transfer-key{width:26px;height:26px;border-radius:8px;background:var(--line);color:#fff;display:grid;place-items:center;font-size:14px}
+.transfer-direction-choices button:hover .transfer-key{background:#fff;color:var(--line)}
+.transfer-direction-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}

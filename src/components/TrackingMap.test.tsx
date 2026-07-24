@@ -25,15 +25,14 @@ test.each([
   expect(numbers.every(text=>text&&text.length>0)).toBe(true)
 })
 
-test('the current station keeps its node but drops its map label, which the sign already carries',()=>{
+test('every visible station, including the current one, shows its map label',()=>{
   const {container,stations}=renderLine('seoul-3','대화','오금',5)
   const current=container.querySelector('[data-station][data-current]')
   expect(current?.getAttribute('data-station')).toBe(stations[5])
   expect(current?.querySelector('.node-number')).not.toBeNull()
-  expect(current?.querySelector('.station-label')).toBeNull()
-  // Every other station still shows its label.
+  expect(current?.querySelector('.station-label')).not.toBeNull()
   const labelled=[...container.querySelectorAll('[data-station]')].filter(node=>node.querySelector('.station-label'))
-  expect(labelled).toHaveLength(stations.length-1)
+  expect(labelled).toHaveLength(stations.length)
 })
 
 test('the camera focuses the current target',()=>{
