@@ -1,8 +1,36 @@
 import { expect,test } from 'vitest'
+import { LINES } from '../data/lines'
+import { getLineWorld } from './lineWorld'
 import { LINE_PRIORITY,nextLineAt,onwardStations,transferOptionsAt } from './transfers'
 
-test('priority lists numbered lines first, then the rest, and excludes yamanote',()=>{
-  expect(LINE_PRIORITY).toEqual(['seoul-1','seoul-2','seoul-3','seoul-4','seoul-5','seoul-6','seoul-7','seoul-8','seoul-9','arex','suin-bundang','incheon-1','incheon-2'])
+test('priority lists numbered lines first, then the rest; excludes yamanote and the one-way seoul-6',()=>{
+  expect(LINE_PRIORITY).toEqual(['seoul-1','seoul-2','seoul-3','seoul-4','seoul-5','seoul-7','seoul-8','seoul-9','arex','suin-bundang','incheon-1','incheon-2'])
+})
+
+// A transfer boards the new line and lays out its forward run to the terminus; that run must resolve to a
+// drawable world for every station on every transferable line, or the transfer blanks the map.
+const walkForward=(line:string,station:string,from:string|undefined):string[]=>{
+  const path=[station]
+  let previous=from,current=onwardStations(line,station).find(name=>name!==from)
+  while(current&&path.length<80&&!path.includes(current)&&current!==station){
+    path.push(current)
+    const onward=onwardStations(line,current).find(name=>name!==previous)
+    previous=current;current=onward
+  }
+  return path
+}
+
+test('every station on every transferable line boards into a drawable forward run',()=>{
+  const failures:string[]=[]
+  for(const id of LINE_PRIORITY){
+    const line=LINES.find(item=>item.id===id)!
+    const stations=new Set([...line.sequences.flat(),...(line.oneWaySequences?.flat()??[])])
+    for(const station of stations)for(const from of [undefined,...onwardStations(id,station)]){
+      try{getLineWorld(id,walkForward(id,station,from))}
+      catch(error){failures.push(`${id} @ ${station} from=${from}: ${(error as Error).message}`)}
+    }
+  }
+  expect(failures.slice(0,20).join('\n')).toBe('')
 })
 
 test('transfer options exclude the current line and sort by priority',()=>{

@@ -1,6 +1,8 @@
 import { LINES,getLine } from '../data/lines'
 
-export const LINE_PRIORITY=['seoul-1','seoul-2','seoul-3','seoul-4','seoul-5','seoul-6','seoul-7','seoul-8','seoul-9','arex','suin-bundang','incheon-1','incheon-2'] as const
+// seoul-6 is left out on purpose: its one-way Eungam loop cannot resolve a free-roam run across the
+// trunk/loop junction (route mode guards against the same case), so it is not a transfer destination.
+export const LINE_PRIORITY=['seoul-1','seoul-2','seoul-3','seoul-4','seoul-5','seoul-7','seoul-8','seoul-9','arex','suin-bundang','incheon-1','incheon-2'] as const
 
 const stationsOf=(line:typeof LINES[number])=>new Set([...line.sequences.flat(),...(line.oneWaySequences?.flat()??[])])
 

@@ -4,6 +4,7 @@ import { dailyStations, getQuickRoutePairs, getRoute, getStations, type QuickRou
 import { getLineWorld } from './game/lineWorld'
 import { onwardStations } from './game/transfers'
 import Game from './components/Game'
+import ErrorBoundary from './components/ErrorBoundary'
 import MapExplorer from './components/MapExplorer'
 import ProfilePanel from './components/ProfilePanel'
 import QuickRoutes from './components/QuickRoutes'
@@ -52,10 +53,10 @@ export default function App() {
     }
   }
   if (playing && line) {
-    if(mode==='transfer')return <main className="shell"><Game journey={{line:line.id,station:from,toward}} color={line.color} sound={sound} onExit={()=>setPlaying(false)} /></main>
+    if(mode==='transfer')return <main className="shell"><ErrorBoundary onReset={()=>setPlaying(false)}><Game journey={{line:line.id,station:from,toward}} color={line.color} sound={sound} onExit={()=>setPlaying(false)} /></ErrorBoundary></main>
     const dateKey=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul'}).format(new Date())
     const route=mode==='random' ? dailyStations(line.id,dateKey,serviceId) : routeOverride??getRoute(line.id,from,to,line.loop?direction:'forward',serviceId).stationIds
-    return <main className="shell"><Game lineId={line.id} stations={route} color={line.color} sound={sound} durationSeconds={mode==='random'?60:undefined} onExit={()=>{setPlaying(false);setRouteOverride(null)}} /></main>
+    return <main className="shell"><ErrorBoundary onReset={()=>{setPlaying(false);setRouteOverride(null)}}><Game lineId={line.id} stations={route} color={line.color} sound={sound} durationSeconds={mode==='random'?60:undefined} onExit={()=>{setPlaying(false);setRouteOverride(null)}} /></ErrorBoundary></main>
   }
   return (
     <main className="shell">

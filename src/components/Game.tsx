@@ -38,15 +38,15 @@ const walkAway=(line:string,origin:string,first:string|undefined,count:number):s
   }
   return path
 }
-// The fixed world for one transfer-mode leg: the whole line through the boarding station, laid out with
-// the way behind you first, then the boarding station, then the forward run to the terminus. It is built
-// once when a leg begins (board/transfer/flip) and never per answer, so stations you pass stay on the
-// map and the train just advances its index along it — the way ordered play keeps its route.
+// The fixed world for one transfer-mode leg: the forward run from the boarding station to its terminus.
+// Built once when a leg begins (board/transfer/reverse) and never per answer, so stations you pass stay
+// on the map and the train just advances its index — the way ordered play keeps its route. Forward-only
+// (not both ways) keeps it a clean, resolvable run: a loop stops after one lap instead of covering itself
+// twice, and reversing rebuilds it the other way rather than gliding a full lap around the ring.
 const buildLegPath=(position:Position):string[]=>{
   const {line,station,from}=position
   const forward=onwardStations(line,station).find(name=>name!==from)
-  const behind=from?walkAway(line,station,from,80).reverse():[]
-  return [...behind,station,...walkAway(line,station,forward,80)]
+  return [station,...walkAway(line,station,forward,80)]
 }
 
 export default function Game({ lineId,stations=[],color,sound=true,durationSeconds,journey,onExit }:{ lineId?:string; stations?:string[]; color:string; sound?:boolean; durationSeconds?:number; journey?:{line:string;station:string;toward:string}; onExit:()=>void }) {
@@ -169,7 +169,7 @@ export default function Game({ lineId,stations=[],color,sound=true,durationSecon
       <div className="game-top"><button className="back" onClick={onExit}>← 운행 종료</button><div className="game-metrics"><div className="live-time"><span>PLAY TIME</span><b>{formatElapsed(elapsedMilliseconds)}</b></div><div className="speed-meter" role="status" aria-label={`실시간 타수 ${liveSpeed} 타/분`}><span>실시간 타수</span><b>{liveSpeed}</b><small>타/분</small></div><div className="route-progress"><b>{trip.typed.length}</b>개 역 · 환승 {trip.transfers}회</div></div></div>
       <div className="map-stage route-segment"><TrackingMap lineId={trip.position.line} stations={roamStations} targetIndex={roamIndex} color={roamColor} /><div className="current-station" role="status">{pill}</div></div>
       <TransferSign currentLine={trip.position.line} station={here} menuOpen={menuOpen} holdProgress={holdProgress} />
-      <DirectionSign lineId={trip.position.line} previous={roamStations[roamIndex-1]} current={here} next={roamStations[roamIndex+1]} ctrlSide={flippable?'previous':undefined} />
+      <DirectionSign lineId={trip.position.line} previous={trip.position.from} current={here} next={roamStations[roamIndex+1]} ctrlSide={flippable?'previous':undefined} />
       <StationTypingField target={roamTarget} number={roamNumber} value={value} errorAttempt={errors} inputRef={input} onChange={changeInput} onKeyDown={roamKeyDown} onKeyUp={roamKeyUp} />
     </section>
   }

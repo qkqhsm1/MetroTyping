@@ -121,6 +121,18 @@ test('morphs continuously and retargets rapid answers even when the run travels 
   expect(distanceAt()).toBeCloseTo(origin-STATION_SPACING*2,6)
 })
 
+test('reversing direction snaps to the new layout instead of gliding a full lap',()=>{
+  const request=vi.spyOn(window,'requestAnimationFrame')
+  vi.stubGlobal('matchMedia',()=>({matches:false,addEventListener:()=>{},removeEventListener:()=>{}}))
+  // Same loop line and topology, opposite station order: reversing must be treated as a new world and
+  // snap, not animate the train around the ring.
+  const {container,rerender}=render(<TrackingMap lineId="seoul-2" stations={backwards} targetIndex={0} color="#00A84D" />)
+  request.mockClear()
+  rerender(<TrackingMap lineId="seoul-2" stations={[...backwards].reverse()} targetIndex={0} color="#00A84D" />)
+  expect(container.querySelector('svg')).toHaveAttribute('data-motion-state','settled')
+  expect(request).not.toHaveBeenCalled()
+})
+
 test('settles immediately when reduced motion is requested',()=>{
   const request=vi.spyOn(window,'requestAnimationFrame')
   vi.stubGlobal('matchMedia',()=>({matches:true,addEventListener:()=>{},removeEventListener:()=>{}}))

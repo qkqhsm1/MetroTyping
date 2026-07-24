@@ -65,10 +65,13 @@ export default function TrackingMap({lineId,stations,targetIndex,color}:{lineId:
   const motionRef=useRef(motion),frame=useRef<number|undefined>(undefined)
   const reducedMotion=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
   useEffect(()=>{motionRef.current=motion},[motion])
-  // A transfer swaps in a whole new line, so distances measured on the old map mean nothing on the
-  // new one. Snap to the new target rather than gliding the train across the fresh map — that glide is
-  // what read as a sudden spin through every corner in between.
-  const worldKey=`${lineId}|${world.key}`
+  // A transfer swaps in a whole new line, and a direction reversal re-lays the same line the other way,
+  // so distances measured on the old map mean nothing on the new one. Snap to the new target rather than
+  // gliding the train across the fresh map — that glide is what read as a sudden spin through every corner
+  // in between (worst on a loop, where reversing glided a full lap around the ring). The station endpoints
+  // are part of the key so a reversal (same line and topology, opposite order) also counts as a new world,
+  // while a plain advance inside one leg leaves the stations unchanged and keeps its smooth glide.
+  const worldKey=`${lineId}|${world.key}|${stations.length}|${stations[0]}|${stations[1]}|${stations.at(-1)}`
   const worldRef=useRef(worldKey)
   useEffect(()=>{
     window.cancelAnimationFrame(frame.current!)
