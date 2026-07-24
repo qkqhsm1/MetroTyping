@@ -70,6 +70,23 @@ test('a narrower band shows fewer stations than a wide one',()=>{
   expect(world.cameraWidth(6,{min:240,max:400})).toBeLessThan(world.cameraWidth(6,{min:360,max:620}))
 })
 
+test('the view opens over a journey’s first stops and closes again near its last',()=>{
+  const world=getLineWorld('seoul-3',getRoute('seoul-3','대화','오금').stationIds)
+  const desktop={min:360,max:620}
+  const last=world.stationNames.length-1
+  const at=(index:number)=>world.cameraWidth(index,desktop)
+  // Only the stops ahead exist at a departure, so the opening view is genuinely tighter and widens.
+  expect(at(0)).toBeLessThan(at(1))
+  expect(at(1)).toBeLessThan(at(2))
+  expect(at(0)).toBeLessThan(at(3)*.75)
+  // The same clipping at the far end draws the view back in as the terminus approaches.
+  expect(at(last)).toBeLessThan(at(last-1))
+  expect(at(last)).toBeLessThan(at(last-2))
+  // Neither end may sit on the upper limit, or the reveal would be flattened into one fixed width.
+  expect(at(0)).toBeLessThan(desktop.max)
+  expect(at(last)).toBeLessThan(desktop.max)
+})
+
 test('a single-station run does not divide by zero',()=>{
   const world=getLineWorld('arex',['서울역'])
   expect(world.stationDistances).toHaveLength(1)

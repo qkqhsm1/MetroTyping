@@ -100,11 +100,15 @@ export function getLineWorld(lineId:string,stations:string[]):LineWorld{
     }
   }
 
+  // Framed on the stations within two stops, so the view tightens where the track bunches up and opens
+  // where it runs straight. At a run's first stop only the stops ahead exist, which is what starts a
+  // journey close in and pulls back over its opening stations; the coefficients keep that reveal off
+  // the upper limit, since a clamped view would hold one width from the very first stop.
   const cameraWidth=(index:number,limits:CameraLimits)=>{
     const nearby=stationDistances.slice(Math.max(0,index-2),index+3).map(pointAt)
     const xs=nearby.map(point=>point.x),ys=nearby.map(point=>point.y)
     const span=Math.max(Math.max(...xs)-Math.min(...xs),(Math.max(...ys)-Math.min(...ys))*1.55)
-    return Math.max(limits.min,Math.min(limits.max,span*1.45+150))
+    return Math.max(limits.min,Math.min(limits.max,span*.86+240))
   }
 
   // Clipped to the run. Walking the interval rather than filtering world vertices keeps this correct
