@@ -42,6 +42,7 @@ export function beginTransfer(journey:Journey,toLine:string):Journey{
 // always reopens travel (its neighbour is a fresh direction), so the presence of any option means the
 // journey can continue. A loop line has two neighbours everywhere, so it is never a terminus.
 export function isDeadEnd(position:Position):boolean{
+  if(position.direction!==undefined)return false
   const atTerminus=onwardStations(position.line,position.station).length<=1
   return atTerminus&&transferOptionsAt(position.station,position.line).length===0
 }

@@ -299,6 +299,13 @@ test('random play accepts a correct answer through the typing field and moves to
   expect(container.querySelector('.direction-panel [data-position="current"]')?.textContent).toContain('강남')
 })
 
+test('boarding a no-transfer terminus with a direction plays instead of ending instantly',()=>{
+  const {container}=render(<Game journey={{line:'seoul-1',station:'연천',toward:'전곡'}} color="#0052A4" onExit={()=>{}} />)
+  expect(container.querySelector('.tracking-map')).not.toBeNull()
+  expect(screen.queryByText('환승 여행 완료')).toBeNull()
+  expect(screen.getByRole('heading',{name:'전곡'})).toBeInTheDocument()
+})
+
 test('transfer mode renders the boarded line world and advances by typing',()=>{
   const {container}=render(<Game journey={{line:'seoul-1',station:'소요산',toward:'동두천'}} color="#0052A4" onExit={()=>{}} />)
   expect(container.querySelector('.tracking-map')).not.toBeNull()

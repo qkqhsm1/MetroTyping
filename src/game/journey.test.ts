@@ -45,3 +45,7 @@ test('a terminus a transfer line continues from is not a dead end',()=>{
 test('a loop line never dead-ends',()=>{
   expect(isDeadEnd({line:'seoul-2',station:'신도림',direction:undefined})).toBe(false)
 })
+
+test('a terminus you boarded with a decided direction is not a dead end',()=>{
+  expect(isDeadEnd({line:'seoul-1',station:'연천',direction:'전곡'})).toBe(false)
+})
