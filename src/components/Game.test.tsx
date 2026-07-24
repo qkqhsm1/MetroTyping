@@ -322,6 +322,19 @@ test('transfer mode types the departure first, then advances along the line',()=
   expect(current()).toContain('보산')
 })
 
+test('a mid-line leg shows the whole line, including the stops behind you',()=>{
+  // Boarding 창동 toward 녹천 on Line 1: 방학·도봉 sit behind 창동 and must still be drawn, not clipped to
+  // the way ahead. Reversing with Ctrl keeps them — it only flips the direction, never drops the line.
+  const {container}=render(<Game journey={{line:'seoul-1',station:'창동',toward:'녹천'}} color="#0052A4" onExit={()=>{}} />)
+  const behind=()=>container.querySelector('.tracking-map [data-station="방학"]')
+  expect(behind()).not.toBeNull()
+  expect(container.querySelector('.direction-panel [data-position="current"]')?.textContent).toContain('창동')
+  const input=screen.getByRole('textbox')
+  fireEvent.keyDown(input,{key:'Control'})
+  expect(behind()).not.toBeNull()
+  expect(container.querySelector('.direction-panel [data-position="current"]')?.textContent).toContain('창동')
+})
+
 test('Tab at a transfer station switches the line and recolours; ignored elsewhere',()=>{
   const {container}=render(<Game journey={{line:'seoul-1',station:'구로',toward:'가산디지털단지'}} color="#0052A4" onExit={()=>{}} />)
   const input=screen.getByRole('textbox')

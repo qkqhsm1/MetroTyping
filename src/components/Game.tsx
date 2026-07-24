@@ -8,6 +8,7 @@ import { stationInfo } from '../data/stationInfo'
 import { playSound } from '../audio/sounds'
 import { boardJourney,advance,beginTransfer,flipDirection,isDeadEnd,type Journey,type Position } from '../game/journey'
 import { nextLineAt,onwardStations,transferOptionsAt } from '../game/transfers'
+import { resolveTopology } from '../game/lineTopology'
 
 // Keystrokes per syllable, the 자소 unit Hancom Typing uses: 한 = ㅎ+ㅏ+ㄴ = 3, 값 = ㄱ+ㅏ+ㅂ+ㅅ = 4.
 // A compound vowel (ㅘㅙㅚㅝㅞㅟㅢ) and a compound final (ㄳㄵㄶㄺㄻㄼㄽㄾㄿㅀㅄ) each take two keys.
@@ -39,14 +40,18 @@ const walkAway=(line:string,origin:string,first:string|undefined,count:number):s
   return path
 }
 // The fixed world for one transfer-mode leg: the forward run from the boarding station to its terminus.
-// Built once when a leg begins (board/transfer/reverse) and never per answer, so stations you pass stay
-// on the map and the train just advances its index — the way ordered play keeps its route. Forward-only
-// (not both ways) keeps it a clean, resolvable run: a loop stops after one lap instead of covering itself
-// twice, and reversing rebuilds it the other way rather than gliding a full lap around the ring.
+// The whole line the boarding station sits on, oriented so travel runs from it toward `forward` — the
+// stops behind you included, not just the ones ahead. Built once when a leg begins (board/transfer/
+// reverse), so every stop stays drawn and the train only advances its index. Using the resolved topology
+// sequence (not a neighbour walk) keeps the run canonical: it never wanders across a junction into an
+// unresolvable path, a loop appears once instead of twice, and reversing just re-orients the same line so
+// the stations behind you never disappear. A forward walk is the fallback if a run cannot be resolved.
 const buildLegPath=(position:Position):string[]=>{
   const {line,station,from}=position
   const forward=onwardStations(line,station).find(name=>name!==from)
-  return [station,...walkAway(line,station,forward,80)]
+  if(!forward)return [station]
+  try{return resolveTopology(line,[station,forward]).sequence}
+  catch{return [station,...walkAway(line,station,forward,80)]}
 }
 
 export default function Game({ lineId,stations=[],color,sound=true,durationSeconds,journey,onExit }:{ lineId?:string; stations?:string[]; color:string; sound?:boolean; durationSeconds?:number; journey?:{line:string;station:string;toward:string}; onExit:()=>void }) {
