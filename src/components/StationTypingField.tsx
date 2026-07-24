@@ -6,7 +6,7 @@ export default function StationTypingField({target,number,value,errorAttempt,inp
     <div className="typing-visual" data-error-attempt={errorAttempt} key={errorAttempt}>
       <div className="typing-shell" aria-hidden="true" />
       <div className="typing-content">
-        <span className="typing-number" aria-hidden="true">{number}</span>
+        <span className="typing-number" data-long={number.length>3||undefined} aria-hidden="true">{number}</span>
         <div className="typing-name">
           <div className="typing-feedback" data-motion="input-only" aria-hidden="true">
             {targetCharacters.slice(0,typed.length).map((character,index)=><span className={typed[index]===character?'correct':'wrong'} key={index}>{typed[index]}</span>)}

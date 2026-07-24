@@ -2,7 +2,7 @@ import { stationInfo } from '../data/stationInfo'
 
 function Region({lineId,name,position}:{lineId:string;name?:string;position:'previous'|'current'|'next'}) {
   const info=name?stationInfo(lineId,name):undefined
-  return <div className="direction-station" data-position={position}>{info&&<><span className="direction-number">{info.number}</span><span className="direction-names"><b data-long={info.korean.length>6||undefined} role="heading" aria-level={position==='current'?1:2}>{info.korean}</b><small data-long={info.english.length>20||undefined}>{info.english}</small></span></>}</div>
+  return <div className="direction-station" data-position={position}>{info&&<><span className="direction-number" data-long={info.number.length>3||undefined}>{info.number}</span><span className="direction-names"><b data-long={info.korean.length>6||undefined} role="heading" aria-level={position==='current'?1:2}>{info.korean}</b><small data-long={info.english.length>20||undefined}>{info.english}</small></span></>}</div>
 }
 
 export default function DirectionSign({lineId,previous,current,next,solo=false}:{lineId:string;previous?:string;current:string;next?:string;solo?:boolean}) {
